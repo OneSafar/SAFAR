@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { mockDataManager } from "./utils/mockData";
+import { authService } from "./utils/authService";
 
 // Pages
 import Login from "./pages/Login";
@@ -27,11 +27,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const state = mockDataManager.getState();
-    setIsAuthenticated(state.isAuthenticated);
+    console.log('🔵 [PROTECTED ROUTE] Checking authentication...');
+    const checkAuth = async () => {
+      try {
+        const user = await authService.getCurrentUser();
+        console.log('🔵 [PROTECTED ROUTE] getCurrentUser result:', user);
+        setIsAuthenticated(!!user);
+        console.log('🟢 [PROTECTED ROUTE] isAuthenticated set to:', !!user);
+      } catch (error) {
+        console.error('🔴 [PROTECTED ROUTE] Error checking auth:', error);
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
   }, []);
 
   if (isAuthenticated === null) {
+    console.log('🟡 [PROTECTED ROUTE] Still checking auth, showing loading...');
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -40,6 +52,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    console.log('🔴 [PROTECTED ROUTE] Not authenticated, redirecting to /login');
+  } else {
+    console.log('🟢 [PROTECTED ROUTE] Authenticated, rendering children');
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
@@ -125,32 +143,5 @@ const App = () => (
   </QueryClientProvider>
 );
 
-// Use Vite HMR data persistence to store React root across reloads
-type HotData = {
-  root?: ReturnType<typeof createRoot>;
-};
-
-const container = document.getElementById("root");
-
-if (container) {
-  const hotData: HotData = import.meta.hot?.data ?? {};
-
-  if (!hotData.root) {
-    // First load: create new root
-    hotData.root = createRoot(container);
-    if (import.meta.hot) {
-     Object.assign(import.meta.hot.data, hotData);
-    }
-  }
-
-  // Render with the persistent root
-  hotData.root.render(<App />);
-} else {
-  console.error("Could not find element with id 'root'");
-}
-
-// Accept HMR updates
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
+// HMR and rendering logic is handled in main.tsx
 export default App;

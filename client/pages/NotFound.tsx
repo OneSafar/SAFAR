@@ -14,8 +14,8 @@ export default function NotFound() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pastel-blue/20 via-background to-pastel-lavender/20 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-pastel-blue/30 shadow-lg">
+    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-primary/10 shadow-lg glass-card">
         <CardContent className="pt-12 pb-12 text-center space-y-6">
           <div>
             <p className="text-6xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">

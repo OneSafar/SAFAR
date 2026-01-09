@@ -8,8 +8,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { mockDataManager } from "@/utils/mockData";
-import { LogOut, Settings } from "lucide-react";
+import { authService } from "@/utils/authService";
+import { LogOut, Settings, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 // 1. IMPORT THE IMAGE (Using the exact name from your screenshot)
 import safarLogo from "@/assets/safar-logo.png.jpeg";
 
@@ -21,9 +22,14 @@ interface TopNavbarProps {
 
 export default function TopNavbar({ userName = "Student", userAvatar = "", onLogout }: TopNavbarProps) {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
-  const handleLogout = () => {
-    mockDataManager.logoutUser();
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
     if (onLogout) {
       onLogout();
     }
@@ -35,18 +41,18 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
   };
 
   return (
-    <nav className="h-16 bg-white border-b border-border shadow-sm sticky top-0 z-40">
+    <nav className="h-16 glass border-b border-border sticky top-0 z-40">
       <div className="h-full px-6 flex items-center justify-between">
         {/* Left side - Logo and Portal Name */}
         <div className="flex items-center gap-3">
-          
+
           {/* 2. LOGO IMAGE (Replaces the 🎯 emoji) */}
-          <img 
-            src={safarLogo} 
-            alt="Safar Logo" 
-            className="w-10 h-10 rounded-full object-cover" 
+          <img
+            src={safarLogo}
+            alt="Safar Logo"
+            className="w-10 h-10 rounded-full object-cover"
           />
-          
+
           <div className="hidden sm:block">
             <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               NISHTHA
@@ -54,14 +60,28 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
           </div>
         </div>
 
-        {/* Right side - User Avatar and Menu */}
+        {/* Right side - Theme Toggle and User Avatar */}
         <div className="flex items-center gap-2">
+          {/* Theme Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="rounded-full h-10 w-10"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-5 w-5 text-yellow-500" />
+            ) : (
+              <Moon className="h-5 w-5 text-slate-700" />
+            )}
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="rounded-full h-10 w-10 p-0 hover:bg-muted">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={userAvatar} alt={userName} />
-                  <AvatarFallback className="bg-gradient-to-br from-pastel-blue to-pastel-lavender text-white font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-semibold">
                     {userName
                       .split(" ")
                       .map((n) => n[0])

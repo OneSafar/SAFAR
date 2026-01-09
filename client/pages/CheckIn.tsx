@@ -1,421 +1,268 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { authService } from "@/utils/authService";
+import { dataService } from "@/utils/dataService";
+import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
-import { mockDataManager, MoodType, AppState } from "@/utils/mockData";
-import { useEffect } from "react";
-import { Check } from "lucide-react";
+import {
+  CheckCircle,
+  Moon,
+  Edit3,
+  ArrowRight,
+  Sparkles,
+  Zap,
+  Heart
+} from "lucide-react";
+
+type MoodType = "peaceful" | "happy" | "okay" | "motivated" | "anxious" | "low" | "frustrated" | "overwhelmed" | "numb";
 
 interface MoodOption {
   type: MoodType;
   emoji: string;
   label: string;
-  description: string;
+  subLabel: string;
+  gradient: string;
 }
 
 const moodOptions: MoodOption[] = [
-  {
-    type: "peaceful",
-    emoji: "😌",
-    label: "Peaceful / Happy",
-    description: "Feeling calm and content",
-  },
-  {
-    type: "happy",
-    emoji: "😊",
-    label: "Happy",
-    description: "Feeling great and positive",
-  },
-  {
-    type: "okay",
-    emoji: "🙂",
-    label: "Okay",
-    description: "Feeling neutral and balanced",
-  },
-  {
-    type: "motivated",
-    emoji: "🌱",
-    label: "Motivated",
-    description: "Feeling inspired and driven",
-  },
-  {
-    type: "anxious",
-    emoji: "😟",
-    label: "Anxious",
-    description: "Feeling worried or concerned",
-  },
-  {
-    type: "low",
-    emoji: "😔",
-    label: "Low",
-    description: "Feeling down or discouraged",
-  },
-  {
-    type: "frustrated",
-    emoji: "😠",
-    label: "Frustrated",
-    description: "Feeling irritated or annoyed",
-  },
-  {
-    type: "overwhelmed",
-    emoji: "😵",
-    label: "Overwhelmed",
-    description: "Feeling stressed and exhausted",
-  },
-  {
-    type: "numb",
-    emoji: "😶",
-    label: "Numb",
-    description: "Feeling disconnected or empty",
-  },
+  { type: "peaceful", emoji: "😌", label: "Peaceful", subLabel: "Calm & Content", gradient: "from-teal-500/20 to-emerald-500/20" },
+  { type: "happy", emoji: "😃", label: "Happy", subLabel: "Great & Positive", gradient: "from-yellow-500/20 to-orange-500/20" },
+  { type: "okay", emoji: "😐", label: "Okay", subLabel: "Neutral & Balanced", gradient: "from-slate-500/20 to-gray-500/20" },
+  { type: "motivated", emoji: "🌱", label: "Motivated", subLabel: "Inspired & Driven", gradient: "from-green-500/20 to-lime-500/20" },
+  { type: "anxious", emoji: "😟", label: "Anxious", subLabel: "Worried", gradient: "from-rose-500/20 to-orange-500/20" },
+  { type: "low", emoji: "😔", label: "Low", subLabel: "Down or Discouraged", gradient: "from-blue-500/20 to-indigo-500/20" },
+  { type: "frustrated", emoji: "😠", label: "Frustrated", subLabel: "Irritated", gradient: "from-red-500/20 to-orange-600/20" },
+  { type: "overwhelmed", emoji: "😵", label: "Overwhelmed", subLabel: "Stressed", gradient: "from-purple-500/20 to-pink-500/20" },
+  { type: "numb", emoji: "😶", label: "Numb", subLabel: "Disconnected", gradient: "from-gray-500/20 to-slate-600/20" },
 ];
+
+const quickTags = ["Work", "Family", "Sleep", "Health", "Relationship", "Finance", "Study"];
 
 export default function CheckIn() {
   const navigate = useNavigate();
-  const [appState, setAppState] = useState<AppState | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
   const [intensity, setIntensity] = useState<number>(3);
-  const [energyLevel, setEnergyLevel] = useState<number>(3);
-  const [thought1, setThought1] = useState<string>("");
-  const [thought2, setThought2] = useState<string>("");
-  const [target, setTarget] = useState<string>("");
-  const [targetCompletion, setTargetCompletion] = useState<number>(50);
-  const [journalEntry, setJournalEntry] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
+  const [note, setNote] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const state = mockDataManager.getState();
-    if (!state.isAuthenticated || !state.user) {
-      navigate("/login");
-      return;
-    }
-    setAppState(state);
+    const checkAuth = async () => {
+      try {
+        const data = await authService.getCurrentUser();
+        if (!data || !data.user) {
+          navigate("/login");
+          return;
+        }
+        setUser(data.user);
+      } catch (error) {
+        navigate("/login");
+      }
+    };
+    checkAuth();
   }, [navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
 
+  const handleSubmit = async () => {
     if (!selectedMood) {
-      alert("Please select a mood");
+      toast.error("Please select a mood");
       return;
     }
 
     setIsSubmitting(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    const newState = mockDataManager.addMood(selectedMood, intensity, notes);
-    setAppState(newState);
-
-    setShowSuccess(true);
-    setSelectedMood(null);
-    setIntensity(3);
-    setEnergyLevel(3);
-    setThought1("");
-    setThought2("");
-    setTarget("");
-    setTargetCompletion(50);
-    setJournalEntry("");
-    setNotes("");
-
-    // Hide success message and navigate
-    setTimeout(() => {
-      setShowSuccess(false);
+    try {
+      const finalNote = note + (selectedTags.length > 0 ? `\n\nTags: ${selectedTags.join(", ")}` : "");
+      await dataService.addMood(selectedMood, intensity, finalNote);
+      toast.success("Check-in saved successfully!");
       navigate("/dashboard");
-    }, 2000);
-
-    setIsSubmitting(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save check-in");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (!appState) {
-    return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </MainLayout>
-    );
-  }
+  if (!user) return null;
 
   return (
-    <MainLayout userName={appState.user?.name} userAvatar={appState.user?.avatar}>
-      <div className="flex-1 p-4 sm:p-6 max-w-2xl mx-auto">
-        {/* Success Message */}
-        {showSuccess && (
-          <div className="mb-6 p-4 rounded-lg bg-accent/10 border border-accent/30 flex items-center gap-3 animate-fade-in">
-            <Check className="w-5 h-5 text-accent" />
-            <p className="text-sm font-medium text-accent">
-              Check-in saved! Keep up the great work! 🎉
-            </p>
-          </div>
-        )}
+    <MainLayout userName={user.name} userAvatar={user.avatar}>
+      <div className="flex-1 overflow-y-auto w-full h-full bg-background font-['Plus_Jakarta_Sans'] p-4 md:p-8 lg:p-10 relative selection:bg-primary/30 selection:text-primary transition-colors duration-300">
 
-        <div className="space-y-6">
-          {/* Header */}
+        {/* Deep Space Ambient Glows */}
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-primary/10 rounded-full blur-[100px] animate-pulse-slow"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-secondary/10 rounded-full blur-[120px] animate-pulse-slower"></div>
+        </div>
+
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8 relative z-10">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              How are you feeling today? 💭
-            </h1>
-            <p className="text-muted-foreground">
-              Your emotional check-ins help us understand your well-being and provide better support.
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-3xl font-bold text-foreground tracking-tight">Evening Reflection</h2>
+              <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+            </div>
+            <p className="text-muted-foreground font-light">Pause. Breathe. Connect with yourself.</p>
           </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-full bg-muted border border-border text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer backdrop-blur-sm">
+              <Moon className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
 
-          {/* Mood Selector */}
-          <Card className="border-pastel-blue/30 shadow-md">
-            <CardHeader>
-              <CardTitle>What was your overall emotional state today?</CardTitle>
-              <CardDescription>Click on the emotion that best represents how you're feeling</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                {moodOptions.map((option) => (
-                  <button
-                    key={option.type}
-                    onClick={() => setSelectedMood(option.type)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200 ${
-                      selectedMood === option.type
-                        ? "bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary scale-110"
-                        : "bg-muted/50 border-2 border-transparent hover:bg-muted"
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10 pb-8">
+
+          {/* Mood Selector Card (Col Span 2) */}
+          <div className="glass-high lg:col-span-2 rounded-[2rem] p-8 relative overflow-hidden group/card shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+
+            <div className="mb-8 flex items-center justify-between relative z-10">
+              <div>
+                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  Current State <span className="text-sm px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">Select One</span>
+                </h3>
+              </div>
+              <div className="h-1 w-20 bg-gradient-to-r from-primary to-transparent rounded-full"></div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1 relative z-10">
+              {moodOptions.map((option) => (
+                <button
+                  key={option.type}
+                  onClick={() => setSelectedMood(option.type)}
+                  className={`group relative flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 ${selectedMood === option.type
+                    ? `bg-gradient-to-br ${option.gradient} border-primary/30 shadow-[0_0_30px_rgba(0,0,0,0.3)] transform scale-[1.02]`
+                    : "bg-muted/50 border-transparent hover:bg-muted hover:border-border"
                     }`}
-                  >
-                    <span className="text-4xl sm:text-5xl">{option.emoji}</span>
-                    <span className="text-xs sm:text-sm font-medium text-center text-foreground">
-                      {option.label}
-                    </span>
-                    <span className="text-xs text-muted-foreground text-center hidden sm:block">
-                      {option.description}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                >
+                  {selectedMood === option.type && (
+                    <div className="absolute top-3 right-3 text-primary animate-in zoom-in duration-300">
+                      <CheckCircle className="w-5 h-5 fill-current" />
+                    </div>
+                  )}
+                  <span className="text-4xl mb-3 filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-transform group-hover:scale-110 duration-300">{option.emoji}</span>
+                  <span className={`font-semibold text-sm transition-colors ${selectedMood === option.type ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{option.label}</span>
+                  <span className={`text-[10px] text-center mt-1 uppercase tracking-wider font-medium transition-colors hidden xl:block ${selectedMood === option.type ? "text-foreground/60" : "text-muted-foreground group-hover:text-muted-foreground/80"}`}>{option.subLabel}</span>
 
-          {/* Intensity Slider */}
-          <Card className="border-pastel-lavender/30 shadow-md">
-            <CardHeader>
-              <CardTitle>Mood Intensity</CardTitle>
-              <CardDescription>How intense is this feeling? (1 = mild, 5 = very intense)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-left">
-                  <p className="text-sm text-muted-foreground">Intensity Level</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    {intensity}/5
-                  </p>
-                </div>
-                <div className="text-5xl">
-                  {intensity === 1 && "😌"}
-                  {intensity === 2 && "😐"}
-                  {intensity === 3 && "😕"}
-                  {intensity === 4 && "😟"}
-                  {intensity === 5 && "😫"}
-                </div>
-              </div>
-
-              <Slider
-                value={[intensity]}
-                onValueChange={(value) => setIntensity(value[0])}
-                min={1}
-                max={5}
-                step={1}
-                className="cursor-pointer"
-              />
-
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Mild</span>
-                <span>Very Intense</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top 2 Thoughts Section */}
-          <Card className="border-pastel-pink/30 shadow-md">
-            <CardHeader>
-              <CardTitle>What were your top 2 thoughts today?</CardTitle>
-              <CardDescription>Capture the main thoughts on your mind</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Thought 1</label>
-                <input
-                  type="text"
-                  placeholder="First thought on your mind..."
-                  value={thought1}
-                  onChange={(e) => setThought1(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-pastel-pink/30 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white text-foreground placeholder-muted-foreground transition-colors"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Thought 2</label>
-                <input
-                  type="text"
-                  placeholder="Second thought on your mind..."
-                  value={thought2}
-                  onChange={(e) => setThought2(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-pastel-pink/30 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white text-foreground placeholder-muted-foreground transition-colors"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Target Section */}
-          <Card className="border-pastel-yellow/30 shadow-md">
-            <CardHeader>
-              <CardTitle>What target did you set?</CardTitle>
-              <CardDescription>Define your goal for today</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Your Target</label>
-                <input
-                  type="text"
-                  placeholder="What's your target for today?"
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-pastel-yellow/30 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-white text-foreground placeholder-muted-foreground transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-foreground mb-3 block">How much of the target did you complete?</label>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Completion Progress</span>
-                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                      {targetCompletion}%
-                    </span>
-                  </div>
-                  <Slider
-                    value={[targetCompletion]}
-                    onValueChange={(value) => setTargetCompletion(value[0])}
-                    min={0}
-                    max={100}
-                    step={10}
-                    className="cursor-pointer"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>0%</span>
-                    <span>50%</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Energy Level Section */}
-          <Card className="border-pastel-lavender/30 shadow-md">
-            <CardHeader>
-              <CardTitle>Your energy level right now?</CardTitle>
-              <CardDescription>Rate your current energy (1 = low, 5 = high)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-left">
-                  <p className="text-sm text-muted-foreground">Energy Level</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    {energyLevel}/5
-                  </p>
-                </div>
-                <div className="text-5xl">
-                  {energyLevel === 1 && "⚫"}
-                  {energyLevel === 2 && "🔵"}
-                  {energyLevel === 3 && "🟡"}
-                  {energyLevel === 4 && "🟢"}
-                  {energyLevel === 5 && "🔴"}
-                </div>
-              </div>
-
-              <Slider
-                value={[energyLevel]}
-                onValueChange={(value) => setEnergyLevel(value[0])}
-                min={1}
-                max={5}
-                step={1}
-                className="cursor-pointer"
-              />
-
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Low Energy</span>
-                <span>High Energy</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Journal Section */}
-          <Card className="border-pastel-green/30 shadow-md">
-            <CardHeader>
-              <CardTitle>Journal Entry</CardTitle>
-              <CardDescription>Write about your day (this is private)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="What happened today? How did you feel? What did you learn?"
-                value={journalEntry}
-                onChange={(e) => setJournalEntry(e.target.value)}
-                className="min-h-32 border-pastel-green/30 focus:border-primary focus:ring-primary/20 resize-none"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Quote Section */}
-          <Card className="border-pastel-pink/30 shadow-md hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-pastel-pink/5 to-pastel-lavender/5">
-            <CardHeader>
-              <CardTitle className="text-xl">💭 Daily Inspiration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-base font-medium text-foreground italic leading-relaxed">
-                "{mockDataManager.getRandomQuote()}"
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Notes Section */}
-          <Card className="border-pastel-green/30 shadow-md">
-            <CardHeader>
-              <CardTitle>Additional Notes (Optional)</CardTitle>
-              <CardDescription>Share what's on your mind (this is private)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="How are you feeling today? What triggered this mood? What's on your mind?..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="min-h-32 border-pastel-green/30 focus:border-primary focus:ring-primary/20 resize-none"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                This information is stored privately and helps us provide personalized suggestions.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button
-              onClick={() => navigate("/dashboard")}
-              variant="outline"
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!selectedMood || isSubmitting}
-              className="flex-1 bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300"
-            >
-              {isSubmitting ? "Saving..." : "Submit Check-In"}
-            </Button>
+                  {/* Glow effect on hover */}
+                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-tr ${option.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none`}></div>
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Intensity Slider Card */}
+          <div className="glass-high rounded-[2rem] p-8 relative flex flex-col items-center justify-between overflow-hidden min-h-[400px] group/card shadow-2xl">
+            {/* Dynamic Background Blob based on Intensity */}
+            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full blur-[80px] transition-all duration-700 opacity-40`}
+              style={{
+                backgroundColor: intensity > 3 ? '#ef4444' : intensity > 2 ? '#eab308' : 'hsl(var(--primary))',
+                transform: `translate(-50%, -50%) scale(${0.8 + (intensity * 0.2)})`
+              }}
+            ></div>
+
+            <div className="text-center z-10 w-full">
+              <h3 className="text-lg font-bold text-foreground flex items-center justify-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-400" /> Intensity
+              </h3>
+              <p className="text-xs text-muted-foreground mb-6 uppercase tracking-wider font-semibold">Scale of Feeling</p>
+              <div className="flex items-end justify-center gap-1 mb-2">
+                <span className={`text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b ${intensity > 3 ? 'from-red-400 to-red-600' : intensity > 2 ? 'from-yellow-400 to-yellow-600' : 'from-primary to-primary/60'
+                  }`}>
+                  {intensity}
+                </span>
+                <span className="text-2xl font-medium text-muted-foreground mb-2">/5</span>
+              </div>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center w-full z-10 py-6">
+              <div className="h-48 relative flex items-center justify-center w-24">
+                <div className="absolute inset-y-0 w-1 bg-muted rounded-full"></div>
+                <Slider
+                  defaultValue={[3]}
+                  value={[intensity]}
+                  onValueChange={(vals) => setIntensity(vals[0])}
+                  max={5}
+                  min={1}
+                  step={1}
+                  orientation="vertical"
+                  className="h-full [&>.relative>.absolute]:bg-gradient-to-t [&>.relative>.absolute]:from-primary [&>.relative>.absolute]:to-primary/60 [&_span]:border-none [&_span]:shadow-[0_0_20px_hsl(var(--primary)/0.5)]"
+                />
+              </div>
+            </div>
+
+            <div className="w-full flex justify-between text-[10px] uppercase font-bold text-muted-foreground z-10 px-4 tracking-widest">
+              <span>Mild</span>
+              <span>Extreme</span>
+            </div>
+          </div>
+
+          {/* Daily Note & Tags (Full Width Bottom) */}
+          <div className="glass-high lg:col-span-3 rounded-[2rem] p-8 flex flex-col md:flex-row gap-8 relative overflow-hidden group/card shadow-2xl">
+            <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-50"></div>
+
+            <div className="flex-1 z-10">
+              <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
+                Daily Journal <Edit3 className="text-primary w-4 h-4" />
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6 font-light">
+                Unpack your thoughts. How does this mood manifest for you today?
+              </p>
+              <div className="relative">
+                <textarea
+                  className="w-full h-40 bg-muted/50 border border-border rounded-2xl p-6 text-foreground placeholder-muted-foreground focus:bg-muted focus:border-primary/30 focus:ring-1 focus:ring-primary/30 resize-none transition-all outline-none leading-relaxed"
+                  placeholder="Start typing your thoughts here..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                ></textarea>
+                <div className="absolute bottom-4 right-4 text-xs text-muted-foreground pointer-events-none">
+                  {note.length} chars
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between md:w-80 border-l border-border md:pl-8 pt-8 md:pt-0 z-10">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Heart className="w-4 h-4 text-secondary" />
+                  <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Context Tags</h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {quickTags.map(tag => (
+                    <span
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all border ${selectedTags.includes(tag)
+                        ? "bg-primary/20 text-primary border-primary/30 shadow-[0_0_10px_hsl(var(--primary)/0.1)]"
+                        : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80 hover:text-foreground"
+                        }`}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={!selectedMood || isSubmitting}
+                className="mt-8 md:mt-0 w-full py-4 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 disabled:opacity-50 disabled:cursor-not-allowed text-secondary-foreground rounded-xl font-bold tracking-wide shadow-lg hover:shadow-secondary/20 transform hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 group/btn"
+              >
+                <span>{isSubmitting ? "Saving Entry..." : "Complete Check-In"}</span>
+                <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </MainLayout>

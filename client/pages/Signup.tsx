@@ -10,7 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDataManager } from "@/utils/mockData";
+import { authService } from "@/utils/authService";
+import nishthaLogo from "@/assets/nishtha-logo.jpg";
+import { toast } from "sonner";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -48,24 +50,33 @@ export default function Signup() {
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      mockDataManager.signupUser(name, email, examType, preparationStage);
-      setIsLoading(false);
+    try {
+      await authService.signup(name, email, password, examType || undefined, preparationStage || undefined);
+      toast.success("Account created successfully!");
+      // Set flag to show welcome dialog on dashboard
+      sessionStorage.setItem("showWelcome", "true");
       navigate("/dashboard");
-    }, 500);
+    } catch (err: any) {
+      setError(err.message || "Signup failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pastel-blue/20 via-background to-pastel-lavender/20 flex items-center justify-center p-4 py-8">
-      <Card className="w-full max-w-md border-pastel-blue/30 shadow-lg">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 py-8 transition-colors duration-300">
+      <Card className="w-full max-w-md border-primary/10 shadow-lg glass-card">
         <CardHeader className="space-y-2">
           <div className="text-center">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary mx-auto mb-4 flex items-center justify-center">
-              <span className="text-2xl">🎯</span>
+            <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+              <img
+                src={nishthaLogo}
+                alt="Nishtha Logo"
+                className="w-full h-full rounded-full object-cover shadow-lg border-2 border-primary/20"
+              />
             </div>
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              SSC Wellness
+              Nishtha
             </CardTitle>
             <CardDescription className="text-base mt-2">
               Create your account to get started
@@ -82,7 +93,7 @@ export default function Signup() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
-                className="border-pastel-blue/30 focus:border-primary focus:ring-primary/20"
+                className="border-input focus:border-primary focus:ring-primary/20"
               />
             </div>
 
@@ -94,7 +105,7 @@ export default function Signup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                className="border-pastel-blue/30 focus:border-primary focus:ring-primary/20"
+                className="border-input focus:border-primary focus:ring-primary/20"
               />
             </div>
 
@@ -106,7 +117,7 @@ export default function Signup() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="border-pastel-blue/30 focus:border-primary focus:ring-primary/20"
+                className="border-input focus:border-primary focus:ring-primary/20"
               />
             </div>
 
@@ -118,14 +129,14 @@ export default function Signup() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
-                className="border-pastel-blue/30 focus:border-primary focus:ring-primary/20"
+                className="border-input focus:border-primary focus:ring-primary/20"
               />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Exam Type</label>
               <Select value={examType} onValueChange={setExamType} disabled={isLoading}>
-                <SelectTrigger className="border-pastel-blue/30">
+                <SelectTrigger className="border-input">
                   <SelectValue placeholder="Select exam type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -144,7 +155,7 @@ export default function Signup() {
                 onValueChange={setPreparationStage}
                 disabled={isLoading}
               >
-                <SelectTrigger className="border-pastel-blue/30">
+                <SelectTrigger className="border-input">
                   <SelectValue placeholder="Select your stage" />
                 </SelectTrigger>
                 <SelectContent>
@@ -184,3 +195,4 @@ export default function Signup() {
     </div>
   );
 }
+

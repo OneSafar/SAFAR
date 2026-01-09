@@ -59,7 +59,7 @@ export default function LeftSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-border h-screen sticky top-0 overflow-y-auto">
+    <aside className="hidden lg:flex flex-col w-64 glass border-r border-border h-screen sticky top-0 overflow-y-auto">
       <div className="flex-1 px-4 py-6 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -102,7 +102,7 @@ export default function LeftSidebar() {
 
       {/* Footer Info */}
       <div className="px-4 py-6 border-t border-border">
-        <div className="bg-gradient-to-br from-pastel-blue/20 to-pastel-lavender/20 rounded-lg p-4 text-center">
+        <div className="bg-gradient-to-br from-secondary/10 to-accent/10 border border-border/50 rounded-lg p-4 text-center">
           <p className="text-xs text-muted-foreground mb-2">
             💚 Remember: Your well-being matters
           </p>

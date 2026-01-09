@@ -1,12 +1,43 @@
-/**
- * Shared code between client and server
- * Useful to share types between client and server
- * and/or small pure JS functions that can be used on both client and server
- */
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  examType?: string;
+  preparationStage?: string;
+}
 
-/**
- * Example response type for /api/demo
- */
-export interface DemoResponse {
-  message: string;
+export interface MoodEntry {
+  id: string;
+  userId: string;
+  mood: string;
+  intensity: number;
+  notes: string;
+  timestamp: string;
+}
+
+export interface Goal {
+  id: string;
+  userId: string;
+  text: string;
+  type: "daily" | "weekly";
+  completed: boolean;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface JournalEntry {
+  id: string;
+  userId: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface Streak {
+  id: string;
+  userId: string;
+  loginStreak: number;
+  checkInStreak: number;
+  goalCompletionStreak: number;
+  lastActiveDate: string;
 }

@@ -1,114 +1,156 @@
 /** @import must precede all other statements */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@200..800&family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+
   /**
-   * Tailwind CSS theme
-   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
-   * A different format will require also updating the theme in tailwind.config.ts.
-  */
+   * Dark Mode (Default)
+   * Elegant dark design with teal/maroon accents
+   */
   :root {
-    --background: 240 100% 98.5%;
-    --foreground: 240 10% 20%;
+    /* Dark Theme - Default */
+    --background: 220 15% 7%;
+    /* #0f1115 */
+    --foreground: 210 20% 92%;
+    /* Light gray text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 20%;
+    /* Card - Dark Surface */
+    --card: 220 15% 11%;
+    /* #181a20 */
+    --card-foreground: 210 20% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 20%;
+    --popover: 220 15% 11%;
+    --popover-foreground: 210 20% 92%;
 
-    --primary: 221 88% 58%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - Teal */
+    --primary: 168 76% 50%;
+    /* #2dd4bf */
+    --primary-foreground: 220 15% 7%;
 
-    --secondary: 280 60% 70%;
+    /* Secondary - Maroon */
+    --secondary: 335 80% 42%;
+    /* #be185d */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 10% 85%;
-    --muted-foreground: 240 5% 45%;
+    /* Muted */
+    --muted: 220 15% 18%;
+    --muted-foreground: 215 16% 60%;
 
-    --accent: 160 70% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent */
+    --accent: 168 76% 50%;
+    --accent-foreground: 220 15% 7%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 90%;
-    --input: 240 10% 95%;
-    --ring: 221 88% 58%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 168 76% 50%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 240 50% 97%;
-
-    --sidebar-foreground: 240 10% 30%;
-
-    --sidebar-primary: 221 88% 58%;
-
-    --sidebar-primary-foreground: 0 0% 100%;
-
-    --sidebar-accent: 280 60% 70%;
-
+    /* Sidebar - Dark */
+    --sidebar-background: 220 15% 5%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 168 76% 50%;
+    --sidebar-primary-foreground: 220 15% 7%;
+    --sidebar-accent: 335 80% 42%;
     --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 15% 15%;
+    --sidebar-ring: 168 76% 50%;
 
-    --sidebar-border: 240 10% 90%;
-
-    --sidebar-ring: 221 88% 58%;
-
-    /* Pastel colors */
-    --pastel-blue: 221 88% 85%;
-    --pastel-lavender: 280 60% 85%;
-    --pastel-green: 160 70% 85%;
-    --pastel-pink: 350 80% 85%;
-    --pastel-yellow: 45 100% 80%;
+    /* Glass - High Intensity (Dark) */
+    --glass-bg: rgba(20, 22, 27, 0.3);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --glass-blur: 40px;
   }
 
-  .dark {
-    --background: 240 20% 12%;
-    --foreground: 240 10% 92%;
+  /**
+   * Light Mode
+   * Clean light design with same accent colors
+   */
+  /**
+   * Light Mode
+   * Customizable Light Theme (User Request: #EDDEA4 Background)
+   */
+  .light {
+    /* Light Theme - Light Turquoise Background */
+    --background: 175 50% 85%;
+    /* Light Turquoise #bfe8e5 */
+    --foreground: 0 0% 0%;
+    /* Black for max contrast */
 
-    --card: 240 20% 18%;
-    --card-foreground: 240 10% 92%;
+    /* Card - White Surface for contrast against yellow */
+    --card: 0 0% 100%;
+    /* #ffffff */
+    --card-foreground: 0 0% 0%;
 
-    --popover: 240 20% 18%;
-    --popover-foreground: 240 10% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 221 88% 60%;
-    --primary-foreground: 240 20% 12%;
+    /* Primary - Teal (Darker/Bolder Shade) */
+    --primary: 168 100% 25%;
+    /* #00806d - Darker Teal for contrast */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 280 60% 65%;
-    --secondary-foreground: 240 20% 12%;
+    /* Secondary - Maroon */
+    --secondary: 335 100% 30%;
+    /* #990f4b - Darker Maroon */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 20% 30%;
-    --muted-foreground: 240 10% 70%;
+    /* Muted */
+    --muted: 175 30% 92%;
+    /* Pale turquoise/white */
+    --muted-foreground: 0 0% 20%;
+    /* Dark Grey - Bolder */
 
-    --accent: 160 70% 60%;
-    --accent-foreground: 240 20% 12%;
+    /* Accent */
+    --accent: 168 100% 25%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 240 10% 92%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 20% 25%;
-    --input: 240 20% 25%;
-    --ring: 221 88% 60%;
-    --sidebar-background: 240 20% 12%;
-    --sidebar-foreground: 240 10% 85%;
-    --sidebar-primary: 221 88% 60%;
-    --sidebar-primary-foreground: 240 20% 12%;
-    --sidebar-accent: 280 60% 65%;
-    --sidebar-accent-foreground: 240 20% 12%;
-    --sidebar-border: 240 20% 25%;
-    --sidebar-ring: 221 88% 60%;
+    --border: 0 0% 0%;
+    /* Black border for "bolder" look */
+    --input: 175 30% 92%;
+    --ring: 168 100% 25%;
 
-    /* Pastel colors for dark mode */
-    --pastel-blue: 221 60% 45%;
-    --pastel-lavender: 280 50% 50%;
-    --pastel-green: 160 50% 50%;
-    --pastel-pink: 350 60% 55%;
-    --pastel-yellow: 45 80% 50%;
+    /* Sidebar - Light (Match Background) */
+    --sidebar-background: 175 50% 85%;
+    /* Light Turquoise */
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 168 100% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 335 100% 30%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 0%;
+    /* Bold border */
+    --sidebar-ring: 168 100% 25%;
+
+    /* Glass - High Intensity (Light mode on Yellow) */
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    /* Higher opacity for whiter look */
+    --glass-border: rgba(255, 255, 255, 0.8);
+    /* Stronger frosty border */
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --glass-blur: 40px;
+    /* High blur */
+  }
+}
+
+@layer components {
+  .glass-high {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 }
 
@@ -118,7 +160,8 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
@@ -131,4 +174,361 @@
     overflow-x: auto;
     white-space: pre;
   }
+}
+
+/* Glassmorphism Utility Classes */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  /* Gradient backgrounds - Dark Sanctuary */
+  .bg-gradient-subtle {
+    background: #121212;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.03) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, rgba(76, 175, 80, 0.03) 0%, transparent 20%);
+  }
+
+  /* Wind Animation Container - Ghost of Tsushima Style */
+  .wind-background {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .wind-background::before,
+  .wind-background::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 300%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* First Wind Layer - Flowing gusts */
+  .wind-background::before {
+    background:
+      linear-gradient(90deg, transparent 0%, rgba(255, 200, 100, 0.08) 5%, transparent 15%),
+      linear-gradient(90deg, transparent 20%, rgba(34, 197, 94, 0.06) 28%, transparent 38%),
+      linear-gradient(90deg, transparent 45%, rgba(59, 130, 246, 0.07) 52%, transparent 62%),
+      linear-gradient(90deg, transparent 70%, rgba(255, 165, 0, 0.05) 80%, transparent 90%);
+    animation: windGust 6s ease-in-out infinite;
+  }
+
+  /* Second Wind Layer - Slower ethereal flow */
+  .wind-background::after {
+    background:
+      linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 8%, transparent 18%),
+      linear-gradient(90deg, transparent 30%, rgba(255, 200, 150, 0.08) 40%, transparent 50%),
+      linear-gradient(90deg, transparent 60%, rgba(200, 255, 200, 0.06) 70%, transparent 80%);
+    animation: windGust 10s ease-in-out infinite;
+    animation-delay: -3s;
+  }
+
+  @keyframes windGust {
+    0% {
+      transform: translateX(0) skewX(-2deg);
+      opacity: 0.6;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateX(33%) skewX(2deg);
+      opacity: 0.6;
+    }
+  }
+
+  /* Wind Streaks - Visible flowing particles like leaves/petals */
+  .wind-streak {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .wind-streak::before {
+    content: '';
+    position: absolute;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 200, 100, 0.6) 20%,
+        rgba(255, 165, 0, 0.8) 50%,
+        rgba(255, 200, 100, 0.6) 80%,
+        transparent);
+    border-radius: 50%;
+    animation: particleFlow 4s ease-in-out infinite;
+  }
+
+  .wind-streak:nth-child(1)::before {
+    top: 12%;
+    width: 80px;
+    height: 3px;
+    animation-duration: 3s;
+    animation-delay: 0s;
+  }
+
+  .wind-streak:nth-child(2)::before {
+    top: 28%;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.7) 50%, transparent);
+    animation-duration: 4s;
+    animation-delay: 0.5s;
+  }
+
+  .wind-streak:nth-child(3)::before {
+    top: 45%;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6) 50%, transparent);
+    animation-duration: 2.5s;
+    animation-delay: 1s;
+  }
+
+  .wind-streak:nth-child(4)::before {
+    top: 62%;
+    width: 100px;
+    height: 2px;
+    animation-duration: 3.5s;
+    animation-delay: 0.2s;
+  }
+
+  .wind-streak:nth-child(5)::before {
+    top: 78%;
+    width: 70px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.5) 50%, transparent);
+    animation-duration: 4.5s;
+    animation-delay: 1.5s;
+  }
+
+  .wind-streak:nth-child(6)::before {
+    top: 35%;
+    width: 150px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
+    animation-duration: 5s;
+    animation-delay: 0.8s;
+  }
+
+  @keyframes particleFlow {
+    0% {
+      left: -150px;
+      opacity: 0;
+      transform: translateY(0) scaleX(0.8);
+    }
+
+    10% {
+      opacity: 1;
+      transform: translateY(-5px) scaleX(1);
+    }
+
+    50% {
+      transform: translateY(5px) scaleX(1.2);
+    }
+
+    90% {
+      opacity: 1;
+      transform: translateY(-3px) scaleX(1);
+    }
+
+    100% {
+      left: calc(100% + 150px);
+      opacity: 0;
+      transform: translateY(0) scaleX(0.8);
+    }
+  }
+
+  /* Vibrant Solid Utility Classes */
+  .bg-safar-orange {
+    background-color: hsl(25 95% 60%);
+    color: white;
+    border: none;
+  }
+
+  .bg-safar-green {
+    background-color: hsl(150 70% 45%);
+    color: white;
+    border: none;
+  }
+
+  .bg-safar-blue {
+    background-color: hsl(210 90% 60%);
+    color: white;
+    border: none;
+  }
+
+  .bg-safar-navy {
+    background-color: hsl(215 40% 18%);
+    color: white;
+    border: 1px solid hsl(215 30% 25%);
+  }
+
+  /* Tinted Glass Utility Classes - Dark Sanctuary Theme */
+  .glass-orange {
+    background: linear-gradient(to bottom right, #2c2c2c, #25201b);
+    border: 1px solid rgba(255, 183, 77, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.16);
+  }
+
+  .glass-orange::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8rem;
+    height: 8rem;
+    background: radial-gradient(circle, rgba(255, 183, 77, 0.1), transparent 70%);
+    transform: translate(2.5rem, -2.5rem);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .glass-green {
+    background: linear-gradient(to bottom right, #2c2c2c, #1a261b);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.16);
+  }
+
+  .glass-blue {
+    background: linear-gradient(to bottom right, #2c2c2c, #1b2229);
+    border: 1px solid rgba(100, 181, 246, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.16);
+  }
+
+  .glass-navy {
+    background: #2c2c2c;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .glass-welcome {
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.15), 0 20px 80px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Font family utilities */
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Gold glow effect for premium feel */
+  .shadow-glow {
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+  }
+
+  .dark .bg-gradient-subtle {
+    background: radial-gradient(at 0% 0%, hsla(220, 25%, 15%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(220, 25%, 12%, 1) 0px, transparent 50%),
+      hsl(220 20% 10%);
+    background-attachment: fixed;
+  }
+}
+
+/* Card hover animation */
+.animate-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Teal Sanctuary Journal Styles */
+.bg-teal-sanctuary {
+  background-color: #041818;
+}
+
+.text-maroon-gradient {
+  background: linear-gradient(135deg, #fb7185 0%, #be123c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(190, 18, 60, 0.3);
+}
+
+.glass-panel-teal {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-glass-teal {
+  background: rgba(17, 94, 89, 0.35);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(45, 212, 191, 0.1);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Scrollbar for Journal */
+.journal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.journal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.journal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(45, 212, 191, 0.2);
+  border-radius: 10px;
+}
+
+.journal-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(45, 212, 191, 0.4);
+}
+
+/* Utility Animations */
+.animate-pulse-slow {
+  animation: pulse 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-slower {
+  animation: pulse 14s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }

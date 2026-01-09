@@ -3,24 +3,25 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDataManager } from "@/utils/mockData";
+import { authService } from "@/utils/authService";
 // 1. Import the logo
-import safarLogo from "@/assets/safar-logo.png.jpeg";
+import nishthaLogo from "@/assets/nishtha-logo.jpg";
+import { toast } from "sonner";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(""); // Kept for UI consistency, though not needed for login
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      setError("Please fill in all fields");
+    if (!email.trim() || !password.trim()) {
+      setError("Please fill in email and password");
       return;
     }
 
@@ -30,28 +31,39 @@ export default function Login() {
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      mockDataManager.loginUser(name, email);
-      setIsLoading(false);
+    console.log('🔵 [CLIENT LOGIN] Starting login...');
+    try {
+      const user = await authService.login(email, password);
+      console.log('🟢 [CLIENT LOGIN] Login successful, user:', user);
+      toast.success("Welcome back!");
+      console.log('🟢 [CLIENT LOGIN] Calling navigate("/dashboard")...');
+      // Set flag to show welcome dialog on dashboard
+      sessionStorage.setItem("showWelcome", "true");
+      // Navigate using React Router instead of hard reload
       navigate("/dashboard");
-    }, 500);
+      console.log('🟢 [CLIENT LOGIN] navigate() called');
+    } catch (err: any) {
+      console.error('🔴 [CLIENT LOGIN] Error:', err);
+      setError(err.message || "Invalid credentials");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pastel-blue/20 via-background to-pastel-lavender/20 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-pastel-blue/30 shadow-lg">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 transition-colors duration-300">
+      <Card className="w-full max-w-md border-primary/10 shadow-lg glass-card">
         <CardHeader className="space-y-2">
           <div className="text-center">
             {/* 2. Replaced the emoji <div> with this image <div> */}
-            <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-              <img 
-                src={safarLogo} 
-                alt="Safar Logo" 
-                className="w-full h-full rounded-full object-cover" 
+            <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+              <img
+                src={nishthaLogo}
+                alt="Nishtha Logo"
+                className="w-full h-full rounded-full object-cover shadow-lg border-2 border-primary/20"
               />
             </div>
-            
+
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               NISHTHA- Consistency ka सफर
             </CardTitle>
@@ -62,17 +74,6 @@ export default function Login() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Full Name</label>
-              <Input
-                type="text"
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isLoading}
-                className="border-pastel-blue/30 focus:border-primary focus:ring-primary/20"
-              />
-            </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Email</label>
@@ -82,7 +83,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                className="border-pastel-blue/30 focus:border-primary focus:ring-primary/20"
+                className="border-input focus:border-primary focus:ring-primary/20"
               />
             </div>
 
@@ -94,7 +95,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="border-pastel-blue/30 focus:border-primary focus:ring-primary/20"
+                className="border-input focus:border-primary focus:ring-primary/20"
               />
             </div>
 
