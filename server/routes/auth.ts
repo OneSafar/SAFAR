@@ -80,12 +80,64 @@ router.post('/login', async (req: Request, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Update login streak
-        await db.execute({
-            sql: `UPDATE streaks SET login_streak = login_streak + 1, last_active_date = CURRENT_TIMESTAMP WHERE user_id = ?`,
+        // Update login streak (once per day only, IST timezone)
+        const streakResult = await db.execute({
+            sql: 'SELECT * FROM streaks WHERE user_id = ?',
             args: [user.id]
         });
-        console.log('🟢 [LOGIN] Streak updated');
+        const currentStreak = streakResult.rows[0] as any;
+
+        // Get current date in IST (UTC+5:30)
+        const now = new Date();
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
+        const nowIST = new Date(now.getTime() + istOffset);
+        const todayIST = nowIST.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        if (currentStreak && currentStreak.last_active_date) {
+            const lastActiveDate = new Date(currentStreak.last_active_date);
+            const lastActiveIST = new Date(lastActiveDate.getTime() + istOffset);
+            const lastDateIST = lastActiveIST.toISOString().split('T')[0];
+
+            // First login ever (streak is 0 from signup), set to 1
+            if (currentStreak.login_streak === 0) {
+                await db.execute({
+                    sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
+                    args: [now.toISOString(), user.id]
+                });
+                console.log('🟢 [LOGIN] First login after signup, streak set to 1');
+            } else if (lastDateIST === todayIST) {
+                // Already logged in today, don't increment streak
+                console.log('🟡 [LOGIN] Already logged in today, streak unchanged');
+            } else {
+                // Check if yesterday (to maintain streak) or gap (reset streak)
+                const yesterday = new Date(nowIST);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayIST = yesterday.toISOString().split('T')[0];
+
+                if (lastDateIST === yesterdayIST) {
+                    // Consecutive day, increment streak
+                    await db.execute({
+                        sql: `UPDATE streaks SET login_streak = login_streak + 1, last_active_date = ? WHERE user_id = ?`,
+                        args: [now.toISOString(), user.id]
+                    });
+                    console.log('🟢 [LOGIN] Streak incremented (consecutive day)');
+                } else {
+                    // Missed days, reset streak to 1
+                    await db.execute({
+                        sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
+                        args: [now.toISOString(), user.id]
+                    });
+                    console.log('🟠 [LOGIN] Streak reset to 1 (missed days)');
+                }
+            }
+        } else {
+            // First login ever, set streak to 1
+            await db.execute({
+                sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
+                args: [now.toISOString(), user.id]
+            });
+            console.log('🟢 [LOGIN] First login, streak set to 1');
+        }
 
         req.session.userId = user.id;
         console.log('🟢 [LOGIN] Session userId set:', req.session.userId);

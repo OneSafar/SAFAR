@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
 import { authService } from "@/utils/authService";
@@ -23,8 +23,15 @@ import {
 export default function Journal() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const [newEntry, setNewEntry] = useState("");
+  const [title, setTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Active formatting states
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isList, setIsList] = useState(false);
 
   const today = new Date();
   const dateString = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -45,13 +52,71 @@ export default function Journal() {
     loadData();
   }, [navigate]);
 
+  // Check current formatting state when selection changes
+  const checkFormattingState = () => {
+    setIsBold(document.queryCommandState('bold'));
+    setIsItalic(document.queryCommandState('italic'));
+    setIsList(document.queryCommandState('insertUnorderedList'));
+  };
+
+  // Formatting functions
+  const formatBold = () => {
+    document.execCommand('bold', false);
+    setIsBold(!isBold);
+    editorRef.current?.focus();
+  };
+
+  const formatItalic = () => {
+    document.execCommand('italic', false);
+    setIsItalic(!isItalic);
+    editorRef.current?.focus();
+  };
+
+  const formatBulletList = () => {
+    document.execCommand('insertUnorderedList', false);
+    setIsList(!isList);
+    editorRef.current?.focus();
+  };
+
+  const insertImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      const img = `<img src="${base64}" alt="Journal image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0;" />`;
+      document.execCommand('insertHTML', false, img);
+      editorRef.current?.focus();
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input for re-selection
+    e.target.value = '';
+  };
+
   const handleAddEntry = async () => {
-    if (!newEntry.trim()) return;
+    const content = editorRef.current?.innerHTML || "";
+    if (!content.trim() || content === '<br>') {
+      toast.error("Please write something first");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await dataService.addJournalEntry(newEntry);
-      setNewEntry("");
+      const fullContent = title ? `<h2>${title}</h2>${content}` : content;
+      await dataService.addJournalEntry(fullContent);
+      setTitle("");
+      if (editorRef.current) editorRef.current.innerHTML = "";
       toast.success("Journal entry saved!");
     } catch (error) {
       toast.error("Failed to save entry");
@@ -64,7 +129,16 @@ export default function Journal() {
 
   return (
     <MainLayout userName={user.name} userAvatar={user.avatar}>
-      <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden bg-background font-['Manrope'] text-foreground transition-colors duration-300">
+      <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden bg-background font-['Poppins'] text-foreground transition-colors duration-300">
+
+        {/* Hidden file input for image upload */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImageUpload}
+          accept="image/*"
+          className="hidden"
+        />
 
         {/* Animated Background Blobs */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -100,16 +174,41 @@ export default function Journal() {
                     <span className="text-foreground">Feeling Calm</span>
                   </div>
                   <div className="h-4 w-px bg-border mx-2"></div>
-                  <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                  <button
+                    onClick={formatBold}
+                    className={`p-2 rounded-lg transition-all ${isBold
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                    title="Bold (Ctrl+B)"
+                  >
                     <Bold className="w-5 h-5" />
                   </button>
-                  <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                  <button
+                    onClick={formatItalic}
+                    className={`p-2 rounded-lg transition-all ${isItalic
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                    title="Italic (Ctrl+I)"
+                  >
                     <Italic className="w-5 h-5" />
                   </button>
-                  <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                  <button
+                    onClick={formatBulletList}
+                    className={`p-2 rounded-lg transition-all ${isList
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                    title="Bullet List"
+                  >
                     <List className="w-5 h-5" />
                   </button>
-                  <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                  <button
+                    onClick={insertImage}
+                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                    title="Insert Image"
+                  >
                     <ImageIcon className="w-5 h-5" />
                   </button>
                 </div>
@@ -119,18 +218,26 @@ export default function Journal() {
               </div>
 
               {/* Text Area */}
-              <div className="flex-1 relative overflow-hidden p-6 md:p-10">
+              <div className="flex-1 relative overflow-auto p-6 md:p-10">
                 <input
-                  className="w-full bg-transparent border-none text-2xl md:text-3xl font-bold text-foreground placeholder:text-muted-foreground/50 focus:ring-0 px-0 mb-4 outline-none"
+                  className="w-full bg-transparent border-none text-2xl md:text-3xl font-bold text-foreground placeholder:text-muted-foreground/50 focus:ring-0 px-0 mb-4 outline-none font-['Poppins']"
                   placeholder="Title your entry..."
                   type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
-                <textarea
-                  className="w-full h-[calc(100%-4rem)] bg-transparent resize-none border-none focus:ring-0 text-lg leading-relaxed text-foreground/90 placeholder:text-muted-foreground/30 px-0 font-medium outline-none journal-scroll"
-                  placeholder="What's on your mind today? Start writing here..."
-                  value={newEntry}
-                  onChange={(e) => setNewEntry(e.target.value)}
-                ></textarea>
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  className="w-full min-h-[calc(100%-4rem)] bg-transparent resize-none border-none focus:ring-0 text-lg leading-relaxed text-foreground/90 placeholder:text-muted-foreground/30 px-0 font-medium outline-none journal-scroll font-['Poppins']"
+                  style={{ minHeight: '300px' }}
+                  data-placeholder="What's on your mind today? Start writing here..."
+                  onFocus={(e) => {
+                    if (e.currentTarget.innerHTML === '' || e.currentTarget.innerHTML === '<br>') {
+                      e.currentTarget.classList.remove('empty');
+                    }
+                  }}
+                ></div>
               </div>
 
               {/* Save Button */}
@@ -165,7 +272,12 @@ export default function Journal() {
                   "What is one thing you are grateful for right now?"
                 </p>
                 <button
-                  onClick={() => setNewEntry(prev => prev + "\n\nPrompt: What is one thing you are grateful for right now?\nAnswer: ")}
+                  onClick={() => {
+                    if (editorRef.current) {
+                      editorRef.current.innerHTML += "<p><strong>Prompt:</strong> What is one thing you are grateful for right now?</p><p><strong>Answer:</strong> </p>";
+                      editorRef.current.focus();
+                    }
+                  }}
                   className="text-xs font-bold text-primary hover:text-foreground transition-colors flex items-center gap-1"
                 >
                   Answer this prompt

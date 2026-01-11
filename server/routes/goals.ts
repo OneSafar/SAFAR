@@ -5,6 +5,13 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
+// Helper function to get IST timestamp
+const getISTTimestamp = () => {
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+    return new Date(now.getTime() + istOffset).toISOString();
+};
+
 // Get all goals
 router.get('/', requireAuth, async (req: Request, res) => {
     try {
@@ -30,10 +37,11 @@ router.post('/', requireAuth, async (req: Request, res) => {
     try {
         const id = uuidv4();
         const userId = req.session.userId;
+        const createdAt = getISTTimestamp();
 
         await db.execute({
-            sql: `INSERT INTO goals (id, user_id, text, type, completed) VALUES (?, ?, ?, ?, 0)`,
-            args: [id, userId, text, type]
+            sql: `INSERT INTO goals (id, user_id, text, type, completed, created_at) VALUES (?, ?, ?, ?, 0, ?)`,
+            args: [id, userId, text, type, createdAt]
         });
 
         res.status(201).json({
@@ -42,7 +50,7 @@ router.post('/', requireAuth, async (req: Request, res) => {
             text,
             type,
             completed: false,
-            createdAt: new Date().toISOString()
+            createdAt: createdAt
         });
     } catch (error) {
         console.error('Create goal error:', error);
@@ -57,7 +65,7 @@ router.patch('/:id', requireAuth, async (req: Request, res) => {
     const userId = req.session.userId;
 
     try {
-        const completedAt = completed ? new Date().toISOString() : null;
+        const completedAt = completed ? getISTTimestamp() : null;
 
         const result = await db.execute({
             sql: `UPDATE goals SET completed = ?, completed_at = ? WHERE id = ? AND user_id = ?`,

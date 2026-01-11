@@ -6,9 +6,18 @@ import { dataService } from "@/utils/dataService";
 import { Goal, User } from "@shared/api";
 import { toast } from "sonner";
 import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import {
   Rocket,
   PlusCircle,
   CheckCircle2,
+  TrendingUp,
 } from "lucide-react";
 
 export default function Goals() {
@@ -17,6 +26,7 @@ export default function Goals() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [newGoal, setNewGoal] = useState("");
   const [goalType, setGoalType] = useState<"daily" | "weekly">("daily");
+  const [loginStreak, setLoginStreak] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -29,6 +39,11 @@ export default function Goals() {
         setUser(data.user);
         const goalsData = await dataService.getGoals();
         setGoals(goalsData || []);
+        // Fetch login streak
+        try {
+          const streakData = await dataService.getStreaks();
+          setLoginStreak(streakData.loginStreak || 0);
+        } catch (e) { console.error('Failed to fetch streaks', e); }
       } catch (error) {
         navigate("/login");
       }
@@ -69,6 +84,69 @@ export default function Goals() {
   const completedGoals = safeGoals.filter(g => g.completed);
   const completionRate = safeGoals.length > 0 ? Math.round((completedGoals.length / safeGoals.length) * 100) : 0;
 
+  // Generate simple 7-day chart data
+  const chartData = (() => {
+    const data = [];
+    const now = new Date();
+
+    // Helper to extract just the date part (YYYY-MM-DD) from any timestamp
+    const extractDate = (timestamp: string) => {
+      if (!timestamp) return null;
+      // Handle both ISO strings and other formats
+      const date = new Date(timestamp);
+      // Convert to IST for comparison
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istDate = new Date(date.getTime() + istOffset);
+      return istDate.toISOString().split('T')[0];
+    };
+
+    // Get today's date in IST
+    const getTodayIST = () => {
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      return new Date(now.getTime() + istOffset).toISOString().split('T')[0];
+    };
+
+    const todayIST = getTodayIST();
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dayName = date.toLocaleDateString('en-IN', { weekday: 'short' });
+
+      // Get this day's date in IST format
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const dateIST = new Date(date.getTime() + istOffset);
+      const dateStr = dateIST.toISOString().split('T')[0];
+      const isToday = dateStr === todayIST;
+
+      // For today: show all goals created anytime but count completed ones
+      // For past days: check if goal was created on that day
+      let goalsOnDay, completedOnDay;
+
+      if (isToday) {
+        // Today: show current goals status
+        goalsOnDay = safeGoals.length;
+        completedOnDay = completedGoals.length;
+      } else {
+        // Past days: filter by creation date
+        const goalsCreatedOnDay = safeGoals.filter((g: any) => {
+          const createdAt = g.createdAt || g.created_at;
+          const goalDate = extractDate(createdAt);
+          return goalDate === dateStr;
+        });
+        goalsOnDay = goalsCreatedOnDay.length;
+        completedOnDay = goalsCreatedOnDay.filter((g: any) => g.completed).length;
+      }
+
+      data.push({
+        day: dayName,
+        goals: completedOnDay,
+        total: goalsOnDay
+      });
+    }
+    return data;
+  })();
+
   if (!user) return null;
 
   return (
@@ -84,7 +162,7 @@ export default function Goals() {
           </div>
           <div className="flex gap-6 items-center">
             <div className="text-right">
-              <div className="text-3xl font-bold text-foreground leading-none">12</div>
+              <div className="text-3xl font-bold text-foreground leading-none">{loginStreak}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Day Streak</div>
             </div>
             <div className="w-px h-10 bg-border"></div>
@@ -207,24 +285,101 @@ export default function Goals() {
           {/* Quick Stats / Visuals (Right - 35%) - Floating Style */}
           <div className="lg:w-[350px] flex flex-col gap-10 lg:pt-20">
 
-            {/* Abstract Focus Distribution */}
+            {/* Focus Distribution by Goal Type */}
             <div className="bg-transparent">
               <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-6 border-b border-border pb-2">Focus Distribution</h3>
               <div className="flex flex-wrap gap-4">
-                <div className="flex-1 min-w-[140px] p-4 glass-high rounded-2xl hover:border-primary/30 transition-colors">
-                  <span className="text-2xl font-bold text-foreground block mb-1">6/8</span>
-                  <span className="text-xs text-primary font-bold uppercase tracking-wider">Learning</span>
-                  <div className="w-full bg-muted h-1 mt-3 rounded-full overflow-hidden">
-                    <div className="bg-primary w-[75%] h-full"></div>
-                  </div>
+                {(() => {
+                  const dailyGoals = safeGoals.filter(g => g.type === 'daily');
+                  const weeklyGoals = safeGoals.filter(g => g.type === 'weekly');
+                  const dailyCompleted = dailyGoals.filter(g => g.completed).length;
+                  const weeklyCompleted = weeklyGoals.filter(g => g.completed).length;
+                  const dailyPercent = dailyGoals.length > 0 ? Math.round((dailyCompleted / dailyGoals.length) * 100) : 0;
+                  const weeklyPercent = weeklyGoals.length > 0 ? Math.round((weeklyCompleted / weeklyGoals.length) * 100) : 0;
+                  return (
+                    <>
+                      <div className="flex-1 min-w-[140px] p-4 glass-high rounded-2xl hover:border-primary/30 transition-colors">
+                        <span className="text-2xl font-bold text-foreground block mb-1">{dailyCompleted}/{dailyGoals.length}</span>
+                        <span className="text-xs text-primary font-bold uppercase tracking-wider">Daily</span>
+                        <div className="w-full bg-muted h-1 mt-3 rounded-full overflow-hidden">
+                          <div className="bg-primary h-full transition-all" style={{ width: `${dailyPercent}%` }}></div>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-[140px] p-4 glass-high rounded-2xl hover:border-secondary/30 transition-colors">
+                        <span className="text-2xl font-bold text-foreground block mb-1">{weeklyCompleted}/{weeklyGoals.length}</span>
+                        <span className="text-xs text-secondary font-bold uppercase tracking-wider">Weekly</span>
+                        <div className="w-full bg-muted h-1 mt-3 rounded-full overflow-hidden">
+                          <div className="bg-secondary h-full transition-all" style={{ width: `${weeklyPercent}%` }}></div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Weekly Progress Chart - Simple and Clear */}
+            <div className="bg-transparent">
+              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                Weekly Progress
+              </h3>
+              <div className="glass-high rounded-2xl p-4">
+                <p className="text-xs text-muted-foreground mb-3">Goals completed each day</p>
+                <div className="h-32 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="goalGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="day"
+                        tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                        tickLine={false}
+                        axisLine={false}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-card border border-border rounded-lg p-2 shadow-lg text-foreground">
+                                <p className="font-bold">{data.day}</p>
+                                <p className="text-sm">{data.goals}/{data.total} completed</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="goals"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fill="url(#goalGradient)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="flex-1 min-w-[140px] p-4 glass-high rounded-2xl hover:border-secondary/30 transition-colors">
-                  <span className="text-2xl font-bold text-foreground block mb-1">2/3</span>
-                  <span className="text-xs text-secondary font-bold uppercase tracking-wider">Health</span>
-                  <div className="w-full bg-muted h-1 mt-3 rounded-full overflow-hidden">
-                    <div className="bg-secondary w-[66%] h-full"></div>
-                  </div>
-                </div>
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  Stay consistent! Complete at least 1 goal daily 🎯
+                </p>
               </div>
             </div>
 

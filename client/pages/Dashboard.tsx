@@ -37,6 +37,7 @@ export default function Dashboard() {
     const [user, setUser] = useState<any>(null);
     const [streaks, setStreaks] = useState({ checkInStreak: 0, loginStreak: 0, goalCompletionStreak: 0 });
     const [todayMood, setTodayMood] = useState<{ mood: string; intensity: number } | null>(null);
+    const [goals, setGoals] = useState<{ total: number; completed: number }>({ total: 0, completed: 0 });
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -59,6 +60,13 @@ export default function Dashboard() {
                     const todaysMood = moods.find(m => m.timestamp?.startsWith(today));
                     if (todaysMood) setTodayMood({ mood: todaysMood.mood, intensity: todaysMood.intensity });
                 } catch (e) { console.error('Failed to fetch moods', e); }
+                // Fetch goals
+                try {
+                    const goalsData = await dataService.getGoals();
+                    const total = goalsData.length;
+                    const completed = goalsData.filter((g: any) => g.completed).length;
+                    setGoals({ total, completed });
+                } catch (e) { console.error('Failed to fetch goals', e); }
             } catch (error) {
                 navigate("/login");
             }
@@ -189,16 +197,23 @@ export default function Dashboard() {
                                     <Zap className="text-blue-500 w-5 h-5" />
                                     <div>
                                         <h3 className="font-semibold text-lg text-foreground">Today's Goals</h3>
-                                        <p className="text-xs text-blue-500">0 goals for today</p>
+                                        <p className="text-xs text-blue-500">{goals.total} goals total</p>
                                     </div>
                                 </div>
-                                <span className="bg-blue-500/20 text-blue-600 px-2 py-1 rounded text-xs font-bold border border-blue-500/30">0%</span>
+                                <span className="bg-blue-500/20 text-blue-600 px-2 py-1 rounded text-xs font-bold border border-blue-500/30">
+                                    {goals.total > 0 ? Math.round((goals.completed / goals.total) * 100) : 0}%
+                                </span>
                             </div>
                             <div className="flex-1 flex flex-col items-center justify-center my-6">
-                                <div className="text-4xl font-bold text-foreground mb-2">0<span className="text-muted-foreground text-2xl">/0</span></div>
+                                <div className="text-4xl font-bold text-foreground mb-2">
+                                    {goals.completed}<span className="text-muted-foreground text-2xl">/{goals.total}</span>
+                                </div>
                                 <p className="text-xs tracking-widest text-muted-foreground uppercase">Goals Completed</p>
                                 <div className="w-full h-1 bg-muted rounded-full mt-6 overflow-hidden">
-                                    <div className="h-full bg-blue-500 w-0 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                                    <div
+                                        className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500"
+                                        style={{ width: goals.total > 0 ? `${(goals.completed / goals.total) * 100}%` : '0%' }}
+                                    ></div>
                                 </div>
                             </div>
                             <button
