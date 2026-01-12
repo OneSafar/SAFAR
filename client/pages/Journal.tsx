@@ -17,7 +17,8 @@ import {
   History,
   CheckCircle,
   X,
-  Trash2
+  Trash2,
+  ChevronDown
 } from "lucide-react";
 
 export default function Journal() {
@@ -36,6 +37,24 @@ export default function Journal() {
   const [showPromptAnswer, setShowPromptAnswer] = useState(false);
   const [promptAnswer, setPromptAnswer] = useState("");
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+  const [selectedMood, setSelectedMood] = useState("Calm");
+  const [showMoodDropdown, setShowMoodDropdown] = useState(false);
+
+  // Mood options
+  const moodOptions = [
+    { label: "Calm", emoji: "😌" },
+    { label: "Happy", emoji: "😊" },
+    { label: "Grateful", emoji: "🙏" },
+    { label: "Motivated", emoji: "💪" },
+    { label: "Peaceful", emoji: "☮️" },
+    { label: "Sad", emoji: "😢" },
+    { label: "Anxious", emoji: "😰" },
+    { label: "Angry", emoji: "😠" },
+    { label: "Tired", emoji: "😴" },
+    { label: "Confused", emoji: "😕" },
+    { label: "Hopeful", emoji: "🌟" },
+    { label: "Neutral", emoji: "😐" }
+  ];
 
   // Daily inspiration questions - rotate by day of week
   const dailyQuestions = [
@@ -125,14 +144,23 @@ export default function Journal() {
 
   const handleAddEntry = async () => {
     const content = editorRef.current?.innerHTML || "";
-    if (!content.trim() || content === '<br>') {
-      toast.error("Please write something first");
+    const bodyText = editorRef.current?.textContent?.trim() || "";
+
+    // Validate both title and body
+    if (!title.trim()) {
+      toast.error("Please add a title for your entry");
+      return;
+    }
+
+    if (!bodyText || bodyText === '') {
+      toast.error("Please write your thoughts in the body section");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const fullContent = title ? `<h2>${title}</h2>${content}` : content;
+      // Include mood in the entry
+      const fullContent = `<h2>${title}</h2><p class="mood-tag">Feeling: ${selectedMood}</p>${content}`;
       await dataService.addJournalEntry(fullContent);
       setTitle("");
       if (editorRef.current) editorRef.current.innerHTML = "";
@@ -237,10 +265,36 @@ export default function Journal() {
                 {/* Toolbar */}
                 <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/30">
                   <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20">
-                      <Smile className="w-4 h-4" />
-                      Feeling Calm
-                    </button>
+                    {/* Mood Dropdown */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowMoodDropdown(!showMoodDropdown)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-colors"
+                      >
+                        <span>{moodOptions.find(m => m.label === selectedMood)?.emoji || "😌"}</span>
+                        Feeling {selectedMood}
+                        <ChevronDown className={`w-3 h-3 transition-transform ${showMoodDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {showMoodDropdown && (
+                        <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-50 py-2 min-w-[180px] max-h-[250px] overflow-y-auto">
+                          {moodOptions.map((mood) => (
+                            <button
+                              key={mood.label}
+                              onClick={() => {
+                                setSelectedMood(mood.label);
+                                setShowMoodDropdown(false);
+                              }}
+                              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-muted transition-colors ${selectedMood === mood.label ? 'bg-primary/10 text-primary font-bold' : 'text-foreground'
+                                }`}
+                            >
+                              <span>{mood.emoji}</span>
+                              {mood.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div className="h-4 w-px bg-border"></div>
                     <div className="flex items-center gap-1">
                       <button onClick={formatBold} className={`p-1.5 rounded-lg transition-all ${isBold ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
@@ -262,21 +316,30 @@ export default function Journal() {
 
                 {/* Editor Area */}
                 <div className="p-8 min-h-[750px]">
-                  <input
-                    className="w-full text-2xl md:text-3xl font-bold bg-transparent border-none focus:ring-0 text-foreground placeholder:text-muted-foreground/40 mb-6 outline-none font-['Outfit']"
-                    placeholder="Title your entry..."
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                  <div
-                    ref={editorRef}
-                    contentEditable
-                    className="w-full min-h-[350px] bg-transparent border-none focus:ring-0 text-lg leading-relaxed text-foreground/80 placeholder:text-muted-foreground/40 resize-none outline-none"
-                    data-placeholder="Start writing your thoughts here..."
-                    onSelect={checkFormattingState}
-                    onKeyUp={checkFormattingState}
-                  ></div>
+                  {/* Title Input with Label */}
+                  <div className="mb-6">
+                    <label className="text-xs font-bold text-primary uppercase tracking-wider mb-2 block">Title (required)</label>
+                    <input
+                      className="w-full text-2xl md:text-3xl font-bold bg-transparent border-b border-border focus:border-primary text-foreground placeholder:text-muted-foreground/40 pb-2 outline-none font-['Outfit'] transition-colors"
+                      placeholder="Give your entry a short title..."
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Body Editor with Label */}
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Your Thoughts (required)</label>
+                    <div
+                      ref={editorRef}
+                      contentEditable
+                      className="w-full min-h-[350px] bg-transparent border-none focus:ring-0 text-lg leading-relaxed text-foreground/80 placeholder:text-muted-foreground/40 resize-none outline-none"
+                      data-placeholder="Write the details of your thoughts here... What happened? How do you feel? What are you thinking about?"
+                      onSelect={checkFormattingState}
+                      onKeyUp={checkFormattingState}
+                    ></div>
+                  </div>
                 </div>
 
                 {/* Save Button */}
@@ -432,15 +495,21 @@ export default function Journal() {
                   const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                   const hasEntry = journalEntries.some((e: any) => toISTDateStr(e.timestamp || e.createdAt || e.created_at) === dateStr);
                   const now = new Date();
-                  const isToday = dayNum === now.getDate();
-                  const isFuture = dayNum > now.getDate();
+                  const isToday = dayNum === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
+                  const isFuture = dayNum > now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
                   return (
-                    <div key={i} className={`p-2 text-base ${isFuture ? 'text-muted-foreground/40' : 'text-foreground'} ${hasEntry ? 'font-bold' : ''}`}>
-                      {isToday ? (
-                        <span className="w-8 h-8 mx-auto bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
-                          {dayNum}
-                        </span>
-                      ) : dayNum}
+                    <div
+                      key={i}
+                      className={`p-2 text-base rounded-lg transition-colors ${isToday
+                          ? 'bg-primary text-primary-foreground font-bold'
+                          : hasEntry
+                            ? 'bg-primary/20 text-primary font-bold'
+                            : isFuture
+                              ? 'text-muted-foreground/40'
+                              : 'text-foreground'
+                        }`}
+                    >
+                      {dayNum}
                     </div>
                   );
                 })}

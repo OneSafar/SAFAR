@@ -189,6 +189,43 @@ router.get('/me', requireAuth, async (req: Request, res) => {
         });
         const streaks = streaksResult.rows[0] as any;
 
+        // Log daily activity in login_history (once per day)
+        try {
+            const now = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const todayIST = new Date(now.getTime() + istOffset).toISOString().split('T')[0];
+
+            const historyCheck = await db.execute({
+                sql: "SELECT timestamp FROM login_history WHERE user_id = ? ORDER BY timestamp DESC LIMIT 1",
+                args: [user.id]
+            });
+
+            let shouldInsert = true;
+            if (historyCheck.rows.length > 0) {
+                const lastTimestamp = historyCheck.rows[0].timestamp as string;
+                // Treat DB timestamp as UTC (automatically handled by Date usually if ISO string)
+                // If DB stores as "YYYY-MM-DD HH:MM:SS" without Z, it might be treated as local or UTC. 
+                // Turso/SQLite CURRENT_TIMESTAMP is UTC "YYYY-MM-DD HH:MM:SS".
+                const lastDate = new Date(lastTimestamp + (lastTimestamp.includes('Z') ? '' : 'Z'));
+                const lastDateIST = new Date(lastDate.getTime() + istOffset).toISOString().split('T')[0];
+
+                if (lastDateIST === todayIST) {
+                    shouldInsert = false;
+                }
+            }
+
+            if (shouldInsert) {
+                await db.execute({
+                    sql: "INSERT INTO login_history (id, user_id) VALUES (?, ?)",
+                    args: [uuidv4(), user.id]
+                });
+                console.log('🟢 [ME] Logged daily activity for:', todayIST);
+            }
+        } catch (logError) {
+            console.error('Failed to log daily activity:', logError);
+            // Don't block the actual response
+        }
+
         res.json({
             user: {
                 id: user.id,
@@ -209,6 +246,20 @@ router.get('/me', requireAuth, async (req: Request, res) => {
 
     } catch (error) {
         console.error('Get user error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Get Login History
+router.get('/login-history', requireAuth, async (req: Request, res) => {
+    try {
+        const result = await db.execute({
+            sql: 'SELECT timestamp FROM login_history WHERE user_id = ? ORDER BY timestamp DESC',
+            args: [req.session.userId]
+        });
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Get login history error:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });

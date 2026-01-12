@@ -97,4 +97,17 @@ export const authService = {
 
         return response.json();
     },
+
+    async getLoginHistory(): Promise<{ timestamp: string }[]> {
+        try {
+            const response = await fetch("/api/auth/login-history", {
+                credentials: 'include',
+            });
+            if (!response.ok) return [];
+            return response.json();
+        } catch (error) {
+            console.error('getLoginHistory error:', error);
+            return [];
+        }
+    },
 };

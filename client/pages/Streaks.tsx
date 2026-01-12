@@ -28,6 +28,9 @@ export default function Streaks() {
   const [streakData, setStreakData] = useState<any>(null);
   const [consistencyData, setConsistencyData] = useState<any[]>([]);
   const [goalsData, setGoalsData] = useState<any[]>([]);
+  const [moodsData, setMoodsData] = useState<any[]>([]);
+  const [journalData, setJournalData] = useState<any[]>([]);
+  const [loginData, setLoginData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +46,20 @@ export default function Streaks() {
         // Fetch goals for consistency chart
         try {
           const goals = await dataService.getGoals();
-          setGoalsData(goals); // Store for calendar use
+          setGoalsData(goals);
+
+          // Fetch moods for activity calendar
+          const moods = await dataService.getMoods();
+          setMoodsData(moods || []);
+
+          // Fetch journal entries for activity calendar
+          const journal = await dataService.getJournalEntries();
+          setJournalData(journal || []);
+
+          // Fetch login history
+          const logins = await authService.getLoginHistory();
+          setLoginData(logins || []);
+
           // Generate last 7 days CONSISTENCY data (% of goals completed each day)
           const last7Days = [];
 
@@ -166,18 +182,52 @@ export default function Streaks() {
         const pct = (completed / goalsData.length) * 100;
         level = pct === 100 ? 2 : pct > 0 ? 1 : 0;
       } else {
-        // Past days: check goals created that day
+        // Past days: check ANY activity (goals, journal, moods)
+        let hasActivity = false;
+
+        // Check goals created on this day
         const goalsOnDay = goalsData.filter((g: any) => {
           const createdAt = g.createdAt || g.created_at;
           if (!createdAt) return false;
-          return createdAt.split('T')[0] === dateStr;
+          const goalDate = new Date(createdAt.replace(' ', 'T') + (createdAt.includes('Z') ? '' : 'Z'));
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const goalDateIST = new Date(goalDate.getTime() + istOffset).toISOString().split('T')[0];
+          return goalDateIST === dateStr;
         });
 
-        if (goalsOnDay.length > 0) {
-          const completedOnDay = goalsOnDay.filter((g: any) => g.completed).length;
-          const pct = (completedOnDay / goalsOnDay.length) * 100;
-          level = pct === 100 ? 2 : pct > 0 ? 1 : 0;
-        }
+        // Check journal entries on this day
+        const journalOnDay = journalData.filter((j: any) => {
+          const timestamp = j.timestamp || j.createdAt || j.created_at;
+          if (!timestamp) return false;
+          const journalDate = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : 'Z'));
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const journalDateIST = new Date(journalDate.getTime() + istOffset).toISOString().split('T')[0];
+          return journalDateIST === dateStr;
+        });
+
+        // Check mood check-ins on this day
+        const moodsOnDay = moodsData.filter((m: any) => {
+          const timestamp = m.timestamp || m.createdAt || m.created_at;
+          if (!timestamp) return false;
+          const moodDate = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : 'Z'));
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const moodDateIST = new Date(moodDate.getTime() + istOffset).toISOString().split('T')[0];
+          return moodDateIST === dateStr;
+        });
+
+        // Check login history on this day
+        const loginOnDay = loginData.filter((l: any) => {
+          const timestamp = l.timestamp;
+          if (!timestamp) return false;
+          const loginDate = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : 'Z'));
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const loginDateIST = new Date(loginDate.getTime() + istOffset).toISOString().split('T')[0];
+          return loginDateIST === dateStr;
+        });
+
+        // If ANY activity exists, mark as active
+        hasActivity = goalsOnDay.length > 0 || journalOnDay.length > 0 || moodsOnDay.length > 0 || loginOnDay.length > 0;
+        level = hasActivity ? 1 : 0;
       }
 
       days.push({ date: d, level, dateStr, isToday });

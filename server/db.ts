@@ -87,5 +87,15 @@ export async function initDatabase() {
         )
     `);
 
+  // Login/Activity history
+  await db.execute(`
+        CREATE TABLE IF NOT EXISTS login_history (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `);
+
   console.log('Database initialized successfully');
 }
