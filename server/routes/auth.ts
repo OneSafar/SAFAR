@@ -34,8 +34,8 @@ router.post('/signup', async (req: Request, res) => {
             // User uploaded a custom profile image (base64 data URL)
             avatarUrl = profileImage;
         } else {
-            // Common default avatar for all users (blue silhouette)
-            avatarUrl = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+            // Common default avatar for all users (blue silhouette - Google style)
+            avatarUrl = 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
         }
 
         await db.execute({
