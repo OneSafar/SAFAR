@@ -185,44 +185,43 @@ export default function Streaks() {
         // Past days: check ANY activity (goals, journal, moods)
         let hasActivity = false;
 
+        // Helper to extract just the date portion (YYYY-MM-DD) from any timestamp
+        const extractDateStr = (timestamp: string): string | null => {
+          if (!timestamp) return null;
+          try {
+            // Handle various formats: "2026-01-12T10:30:00Z", "2026-01-12 10:30:00", etc.
+            const cleanTimestamp = timestamp.replace(' ', 'T');
+            const d = new Date(cleanTimestamp);
+            if (isNaN(d.getTime())) return null;
+            // Convert to IST and get date string
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            return new Date(d.getTime() + istOffset).toISOString().split('T')[0];
+          } catch {
+            return null;
+          }
+        };
+
         // Check goals created on this day
         const goalsOnDay = goalsData.filter((g: any) => {
           const createdAt = g.createdAt || g.created_at;
-          if (!createdAt) return false;
-          const goalDate = new Date(createdAt.replace(' ', 'T') + (createdAt.includes('Z') ? '' : 'Z'));
-          const istOffset = 5.5 * 60 * 60 * 1000;
-          const goalDateIST = new Date(goalDate.getTime() + istOffset).toISOString().split('T')[0];
-          return goalDateIST === dateStr;
+          return extractDateStr(createdAt) === dateStr;
         });
 
         // Check journal entries on this day
         const journalOnDay = journalData.filter((j: any) => {
           const timestamp = j.timestamp || j.createdAt || j.created_at;
-          if (!timestamp) return false;
-          const journalDate = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : 'Z'));
-          const istOffset = 5.5 * 60 * 60 * 1000;
-          const journalDateIST = new Date(journalDate.getTime() + istOffset).toISOString().split('T')[0];
-          return journalDateIST === dateStr;
+          return extractDateStr(timestamp) === dateStr;
         });
 
         // Check mood check-ins on this day
         const moodsOnDay = moodsData.filter((m: any) => {
           const timestamp = m.timestamp || m.createdAt || m.created_at;
-          if (!timestamp) return false;
-          const moodDate = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : 'Z'));
-          const istOffset = 5.5 * 60 * 60 * 1000;
-          const moodDateIST = new Date(moodDate.getTime() + istOffset).toISOString().split('T')[0];
-          return moodDateIST === dateStr;
+          return extractDateStr(timestamp) === dateStr;
         });
 
         // Check login history on this day
         const loginOnDay = loginData.filter((l: any) => {
-          const timestamp = l.timestamp;
-          if (!timestamp) return false;
-          const loginDate = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : 'Z'));
-          const istOffset = 5.5 * 60 * 60 * 1000;
-          const loginDateIST = new Date(loginDate.getTime() + istOffset).toISOString().split('T')[0];
-          return loginDateIST === dateStr;
+          return extractDateStr(l.timestamp) === dateStr;
         });
 
         // If ANY activity exists, mark as active
