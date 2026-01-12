@@ -81,6 +81,14 @@ export default function Profile() {
         avatar: avatarPreview || undefined,
       });
       setUser(updatedUser);
+      // Also sync formData with the response to ensure changes persist
+      setFormData({
+        name: updatedUser.name || "",
+        email: updatedUser.email || "",
+        examType: updatedUser.examType || "CHSL",
+        preparationStage: updatedUser.preparationStage || "Intermediate",
+        gender: updatedUser.gender || "male",
+      });
       setAvatarPreview(null); // Reset preview after successful save
       toast.success("Profile updated successfully!");
     } catch (error) {

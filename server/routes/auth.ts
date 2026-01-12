@@ -34,15 +34,16 @@ router.post('/signup', async (req: Request, res) => {
             // User uploaded a custom profile image (base64 data URL)
             avatarUrl = profileImage;
         } else {
-            // Generate avatar based on gender using DiceBear
-            avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`;
-
+            // Generate avatar based on gender using silhouette icons
             if (gender === 'male') {
-                // Male avatar with short hair options
-                avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&top=shortHair,shortHairCaesar,shortHairCaesarSidePart,shortHairDreads01,shortHairDreads02,shortHairFrizzle,shortHairShaggyMullet,shortHairShortCurly,shortHairShortFlat,shortHairShortRound,shortHairShortWaved,shortHairSides,shortHairTheCaesar,shortHairTheCaesarSidePart&facialHairProbability=60`;
+                // Male silhouette avatar
+                avatarUrl = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
             } else if (gender === 'female') {
-                // Female avatar with long hair options
-                avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}&top=longHair,longHairBob,longHairBun,longHairCurly,longHairCurvy,longHairDreads,longHairFrida,longHairFro,longHairFroBand,longHairMiaWallace,longHairNotTooLong,longHairShavedSides,longHairStraight,longHairStraight2,longHairStraightStrand&facialHairProbability=0`;
+                // Female silhouette avatar
+                avatarUrl = 'https://cdn-icons-png.flaticon.com/512/3135/3135789.png';
+            } else {
+                // Other/default - neutral avatar
+                avatarUrl = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
             }
         }
 
@@ -346,6 +347,13 @@ router.patch('/profile', requireAuth, async (req: Request, res) => {
     const userId = req.session.userId;
 
     try {
+        // First get current user to check if gender is changing
+        const currentUserResult = await db.execute({
+            sql: 'SELECT * FROM users WHERE id = ?',
+            args: [userId]
+        });
+        const currentUser = currentUserResult.rows[0] as any;
+
         const updates: string[] = [];
         const values: any[] = [];
 
@@ -364,6 +372,23 @@ router.patch('/profile', requireAuth, async (req: Request, res) => {
         if (gender !== undefined) {
             updates.push('gender = ?');
             values.push(gender);
+
+            // Auto-generate avatar when gender changes (unless custom avatar is also being uploaded)
+            if (!avatar && gender !== currentUser.gender) {
+                let newAvatarUrl: string;
+                if (gender === 'male') {
+                    // Male silhouette avatar
+                    newAvatarUrl = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                } else if (gender === 'female') {
+                    // Female silhouette avatar
+                    newAvatarUrl = 'https://cdn-icons-png.flaticon.com/512/3135/3135789.png';
+                } else {
+                    // Other - neutral avatar
+                    newAvatarUrl = 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+                }
+                updates.push('avatar = ?');
+                values.push(newAvatarUrl);
+            }
         }
         if (avatar !== undefined) {
             updates.push('avatar = ?');
@@ -391,7 +416,8 @@ router.patch('/profile', requireAuth, async (req: Request, res) => {
             email: user.email,
             avatar: user.avatar,
             examType: user.exam_type,
-            preparationStage: user.preparation_stage
+            preparationStage: user.preparation_stage,
+            gender: user.gender
         });
     } catch (error) {
         console.error('Update profile error:', error);
