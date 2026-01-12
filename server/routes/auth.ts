@@ -159,7 +159,8 @@ router.post('/login', async (req: Request, res) => {
             email: user.email,
             avatar: user.avatar,
             examType: user.exam_type,
-            preparationStage: user.preparation_stage
+            preparationStage: user.preparation_stage,
+            gender: user.gender
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -301,7 +302,8 @@ router.get('/me', requireAuth, async (req: Request, res) => {
                 email: user.email,
                 avatar: user.avatar,
                 examType: user.exam_type,
-                preparationStage: user.preparation_stage
+                preparationStage: user.preparation_stage,
+                gender: user.gender
             },
             streaks: {
                 loginStreak: streaks?.login_streak || 0,
