@@ -86,7 +86,7 @@ export const authService = {
         }
     },
 
-    async updateProfile(data: { name?: string; examType?: string; preparationStage?: string; gender?: string }): Promise<User> {
+    async updateProfile(data: { name?: string; examType?: string; preparationStage?: string; gender?: string; avatar?: string }): Promise<User> {
         const response = await fetch("/api/auth/profile", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },

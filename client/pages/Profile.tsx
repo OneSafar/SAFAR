@@ -24,6 +24,18 @@ export default function Profile() {
     gender: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -66,8 +78,10 @@ export default function Profile() {
         examType: formData.examType,
         preparationStage: formData.preparationStage,
         gender: formData.gender,
+        avatar: avatarPreview || undefined,
       });
       setUser(updatedUser);
+      setAvatarPreview(null); // Reset preview after successful save
       toast.success("Profile updated successfully!");
     } catch (error) {
       toast.error("Failed to update profile");
@@ -136,12 +150,22 @@ export default function Profile() {
                   <img
                     alt="Profile Picture"
                     className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                    src={user.avatar || "https://via.placeholder.com/150"}
+                    src={avatarPreview || user.avatar || "https://via.placeholder.com/150"}
                   />
                 </div>
-                <button className="absolute bottom-2 right-2 bg-primary text-primary-foreground p-2.5 rounded-full hover:scale-110 transition-all shadow-lg border-2 border-card">
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="avatar-upload"
+                  className="absolute bottom-2 right-2 bg-primary text-primary-foreground p-2.5 rounded-full hover:scale-110 transition-all shadow-lg border-2 border-card cursor-pointer"
+                >
                   <Edit className="w-4 h-4" />
-                </button>
+                </label>
               </div>
 
               {/* User Info */}

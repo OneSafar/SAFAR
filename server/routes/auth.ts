@@ -285,7 +285,7 @@ router.get('/login-history', requireAuth, async (req: Request, res) => {
 
 // Update Profile
 router.patch('/profile', requireAuth, async (req: Request, res) => {
-    const { name, examType, preparationStage } = req.body;
+    const { name, examType, preparationStage, gender, avatar } = req.body;
     const userId = req.session.userId;
 
     try {
@@ -303,6 +303,14 @@ router.patch('/profile', requireAuth, async (req: Request, res) => {
         if (preparationStage !== undefined) {
             updates.push('preparation_stage = ?');
             values.push(preparationStage);
+        }
+        if (gender !== undefined) {
+            updates.push('gender = ?');
+            values.push(gender);
+        }
+        if (avatar !== undefined) {
+            updates.push('avatar = ?');
+            values.push(avatar);
         }
 
         if (updates.length === 0) {
