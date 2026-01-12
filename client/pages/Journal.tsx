@@ -18,7 +18,9 @@ import {
   CheckCircle,
   X,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 export default function Journal() {
@@ -39,6 +41,7 @@ export default function Journal() {
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
   const [selectedMood, setSelectedMood] = useState("Calm");
   const [showMoodDropdown, setShowMoodDropdown] = useState(false);
+  const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
 
   // Mood options
   const moodOptions = [
@@ -56,7 +59,7 @@ export default function Journal() {
     { label: "Neutral", emoji: "😐" }
   ];
 
-  // Daily inspiration questions - rotate by day of week
+  // Daily inspiration questions - 7 reflective prompts the user can navigate through
   const dailyQuestions = [
     "What is one thing you are grateful for right now?",
     "What is the one thing in your life that you wouldn't change right now?",
@@ -64,24 +67,15 @@ export default function Journal() {
     "What part of you deserves more kindness right now?",
     "What is one thing you are proud of, even if it's tiny?",
     "What did you avoid today and why?",
-    "What made today feel even slightly better than yesterday?",
-    "If you could say one thing to your younger self today, what would it be?",
-    "What energy did you bring into the room today?",
-    "Who or what gave you a sense of peace today?",
-    "What is one small victory you had today?",
-    "What are you looking forward to tomorrow?",
-    "Recall a moment today when you felt truly yourself.",
-    "What is a lesson you learned the hard way recently?",
-    "How did you take care of yourself today?"
+    "What made today feel even slightly better than yesterday?"
   ];
 
-  // Get today's question based on day of week (0=Sunday, 1=Monday, etc.)
-  const getDailyQuestion = () => {
-    const dayOfWeek = new Date().getDay();
-    // Map: Sun=6, Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5
-    const questionIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    return dailyQuestions[questionIndex];
-  };
+  // Get current question based on selected index
+  const getDailyQuestion = () => dailyQuestions[currentPromptIndex];
+
+  // Navigate to next/previous prompt
+  const nextPrompt = () => setCurrentPromptIndex((prev) => (prev + 1) % dailyQuestions.length);
+  const prevPrompt = () => setCurrentPromptIndex((prev) => (prev - 1 + dailyQuestions.length) % dailyQuestions.length);
 
   const today = new Date();
   const dateString = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -371,13 +365,49 @@ export default function Journal() {
             {/* Daily Inspiration */}
             <div className="bg-card p-8 rounded-3xl shadow-sm border border-border relative overflow-hidden group mb-8">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full group-hover:scale-110 transition-transform"></div>
-              <div className="flex items-center gap-3 mb-6 text-primary">
-                <Sun className="w-6 h-6" />
-                <span className="text-base font-bold uppercase tracking-wider">Daily Inspiration</span>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3 text-primary">
+                  <Sun className="w-6 h-6" />
+                  <span className="text-base font-bold uppercase tracking-wider">Daily Inspiration</span>
+                </div>
+                {/* Prompt counter */}
+                <span className="text-sm text-muted-foreground font-medium">
+                  {currentPromptIndex + 1} / {dailyQuestions.length}
+                </span>
               </div>
-              <p className="text-2xl font-serif italic text-foreground mb-6 leading-snug">
-                "{getDailyQuestion()}"
-              </p>
+
+              {/* Navigation and Question */}
+              <div className="flex items-center gap-4 mb-6">
+                <button
+                  onClick={prevPrompt}
+                  className="p-2 rounded-full bg-muted hover:bg-primary/20 transition-colors text-muted-foreground hover:text-primary"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <p className="flex-1 text-xl font-serif italic text-foreground leading-snug text-center">
+                  "{getDailyQuestion()}"
+                </p>
+                <button
+                  onClick={nextPrompt}
+                  className="p-2 rounded-full bg-muted hover:bg-primary/20 transition-colors text-muted-foreground hover:text-primary"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Indicator dots */}
+              <div className="flex justify-center gap-2 mb-6">
+                {dailyQuestions.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentPromptIndex(idx)}
+                    className={`w-2 h-2 rounded-full transition-all ${idx === currentPromptIndex
+                        ? 'bg-primary w-6'
+                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                      }`}
+                  />
+                ))}
+              </div>
 
               {!showPromptAnswer ? (
                 <button
