@@ -24,29 +24,17 @@ import courseImg from "@/assets/course-thumbnail.png";
 import WelcomeDialog from "@/components/WelcomeDialog";
 
 const getMoodEmoji = (mood: string): string => {
+    // Must match exactly with CheckIn.tsx moodOptions emojis
     const moodEmojis: Record<string, string> = {
-        // Positive moods
-        great: "🤩",
-        good: "😊",
-        happy: "😊",
-        peaceful: "😌",
-        calm: "😌",
-        energized: "⚡",
-        motivated: "💪",
-        grateful: "🙏",
-        hopeful: "🌟",
-        // Neutral moods
-        okay: "😐",
-        neutral: "😐",
-        numb: "😶",
-        // Negative moods
-        low: "😔",
-        sad: "😢",
-        anxious: "😰",
-        stressed: "😤",
-        angry: "😠",
-        tired: "😴",
-        confused: "😕",
+        peaceful: "😌",     // Calm & Content
+        happy: "😃",        // Great & Positive (NOT 😊)
+        okay: "😐",         // Neutral & Balanced
+        motivated: "🌱",    // Inspired & Driven (NOT 💪)
+        anxious: "😟",      // Worried (NOT 😰)
+        low: "😔",          // Down or Discouraged
+        frustrated: "😠",   // Irritated
+        overwhelmed: "😵",  // Stressed
+        numb: "😶",         // Disconnected
     };
     return moodEmojis[mood.toLowerCase()] || "😐";
 };
