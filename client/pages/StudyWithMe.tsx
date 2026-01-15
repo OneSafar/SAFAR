@@ -43,7 +43,10 @@ export default function StudyWithMe() {
     const [isBreak, setIsBreak] = useState(false);
     const [completedSessions, setCompletedSessions] = useState<Session[]>([]);
     const [currentSessionStart, setCurrentSessionStart] = useState<Date | null>(null);
-    const [isDark, setIsDark] = useState(true);
+    const [isDark, setIsDark] = useState(() => {
+        // Initialize based on current document theme
+        return document.documentElement.classList.contains('dark');
+    });
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [customMinutes, setCustomMinutes] = useState(25);
     const [customBreakMinutes, setCustomBreakMinutes] = useState(5);
