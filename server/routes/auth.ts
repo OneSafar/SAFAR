@@ -267,8 +267,9 @@ router.post('/reset-password', async (req: Request, res) => {
 router.get('/me', requireAuth, async (req: Request, res) => {
     console.log('🔵 [ME] Request received, session userId:', req.session.userId);
     try {
+        // Query user without avatar to avoid timeout with large base64 images
         const userResult = await db.execute({
-            sql: 'SELECT * FROM users WHERE id = ?',
+            sql: 'SELECT id, email, name, exam_type, preparation_stage, gender, created_at FROM users WHERE id = ?',
             args: [req.session.userId]
         });
         const user = userResult.rows[0] as any;
@@ -276,6 +277,21 @@ router.get('/me', requireAuth, async (req: Request, res) => {
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Fetch avatar separately with fallback
+        let avatarUrl = 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
+        try {
+            const avatarResult = await db.execute({
+                sql: 'SELECT avatar FROM users WHERE id = ?',
+                args: [user.id]
+            });
+            if (avatarResult.rows.length > 0) {
+                const avatarRow = avatarResult.rows[0] as any;
+                avatarUrl = avatarRow.avatar || avatarUrl;
+            }
+        } catch (avatarError) {
+            console.warn('⚠️ [ME] Avatar fetch failed, using default');
         }
 
         // Get streaks
@@ -327,7 +343,7 @@ router.get('/me', requireAuth, async (req: Request, res) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar,
+                avatar: avatarUrl,
                 examType: user.exam_type,
                 preparationStage: user.preparation_stage,
                 gender: user.gender
