@@ -15,10 +15,23 @@ interface SessionType {
     label: string;
 }
 
-interface TaskItem {
+interface Task {
     id: string;
     text: string;
     completed: boolean;
+}
+
+interface FocusStats {
+    totalFocusMinutes: number;
+    totalBreakMinutes: number;
+    totalSessions: number;
+    completedSessions: number;
+    weeklyData: number[];
+    focusStreak: number;
+    goalsSet: number;
+    goalsCompleted: number;
+    dailyGoalMinutes: number;
+    dailyGoalProgress: number;
 }
 
 export default function StudyWithMe() {
@@ -33,33 +46,26 @@ export default function StudyWithMe() {
     const [isDark, setIsDark] = useState(true);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [customMinutes, setCustomMinutes] = useState(25);
-    const [activePreset, setActivePreset] = useState<number | null>(null); // Changed default to null
-    const [showCustomSettings, setShowCustomSettings] = useState(false); // For custom timer toggle
-    const [tasks, setTasks] = useState<TaskItem[]>([]);
-    const [newTaskInput, setNewTaskInput] = useState('');
+    const [activePreset, setActivePreset] = useState<number | null>(null);
+    const [showCustomSettings, setShowCustomSettings] = useState(false);
 
-    const addTask = () => {
-        if (!newTaskInput.trim()) return;
-        const newTask: TaskItem = {
-            id: Date.now().toString(),
-            text: newTaskInput,
-            completed: false
-        };
-        setTasks([...tasks, newTask]);
-        setNewTaskInput('');
-    };
+    // Task management state
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [newTaskText, setNewTaskText] = useState('');
 
-    const toggleTask = (id: string) => {
-        setTasks(tasks.map(t =>
-            t.id === id ? { ...t, completed: !t.completed } : t
-        ));
-    };
-
-    const handleKeyDownTask = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            addTask();
-        }
-    };
+    // Focus stats from API
+    const [focusStats, setFocusStats] = useState<FocusStats>({
+        totalFocusMinutes: 0,
+        totalBreakMinutes: 0,
+        totalSessions: 0,
+        completedSessions: 0,
+        weeklyData: [0, 0, 0, 0, 0, 0, 0],
+        focusStreak: 0,
+        goalsSet: 0,
+        goalsCompleted: 0,
+        dailyGoalMinutes: 240,
+        dailyGoalProgress: 0
+    });
 
     const sessionTypes: SessionType[] = [
         { duration: 25, break: 5, label: '25' },
@@ -76,7 +82,36 @@ export default function StudyWithMe() {
             return;
         }
         setUser(currentUser);
+        // Fetch focus stats
+        fetchFocusStats();
     }, [navigate]);
+
+    const fetchFocusStats = async () => {
+        try {
+            const res = await fetch('/api/focus-sessions/stats', { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                setFocusStats(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch focus stats:', error);
+        }
+    };
+
+    const logFocusSession = async (durationMinutes: number, breakMinutes: number, completed: boolean) => {
+        try {
+            await fetch('/api/focus-sessions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ durationMinutes, breakMinutes, completed })
+            });
+            // Refresh stats after logging
+            fetchFocusStats();
+        } catch (error) {
+            console.error('Failed to log focus session:', error);
+        }
+    };
 
     useEffect(() => {
         if (isRunning && timeLeft > 0) {
@@ -115,6 +150,9 @@ export default function StudyWithMe() {
                 duration: selectedSession.duration
             }]);
             setCurrentSessionStart(null);
+
+            // Log completed focus session to database
+            logFocusSession(selectedSession.duration, selectedSession.break, true);
 
             // Start break
             setIsBreak(true);
@@ -174,6 +212,26 @@ export default function StudyWithMe() {
         };
     };
 
+    // Task management functions
+    const addTask = () => {
+        if (newTaskText.trim()) {
+            setTasks(prev => [...prev, {
+                id: Date.now().toString(),
+                text: newTaskText.trim(),
+                completed: false
+            }]);
+            setNewTaskText('');
+        }
+    };
+
+    const toggleTask = (taskId: string) => {
+        setTasks(prev => prev.map(task =>
+            task.id === taskId ? { ...task, completed: !task.completed } : task
+        ));
+    };
+
+    const completedTaskCount = tasks.filter(t => t.completed).length;
+
     // Helper to generate random heatmap data for visualization
     const heatmapData = Array.from({ length: 7 * 24 }, () => Math.random() > 0.7 ? Math.floor(Math.random() * 5) : 0);
     const heatmapColors = [
@@ -188,422 +246,500 @@ export default function StudyWithMe() {
 
     const bgClass = isDark ? 'bg-[#09090b]' : 'bg-[#f1f5f9]';
     const textClass = isDark ? 'text-gray-100' : 'text-gray-800';
-    const cardBgClass = isDark ? 'bg-[#18181b]' : 'bg-white';
-    const borderClass = isDark ? 'border-gray-800' : 'border-gray-200';
+    // Glassmorphism card styling
+    const cardBgClass = isDark
+        ? 'bg-slate-900/70 backdrop-blur-xl shadow-lg shadow-black/20'
+        : 'bg-white/70 backdrop-blur-xl shadow-lg shadow-gray-200/50';
+    const borderClass = isDark ? 'border-slate-700/50' : 'border-gray-300/60';
     const mutedTextClass = isDark ? 'text-gray-400' : 'text-gray-500';
     const primaryColorClass = 'text-[#06b6d4]'; // Cyan-500
 
     // Active Timer Screen
     if (selectedSession) {
-        const progressPercent = ((selectedSession.duration * 60 - timeLeft) / (selectedSession.duration * 60)) * 100;
+        // remainingPercent: 100% at start, 0% when done (for fading effects)
+        const remainingPercent = (timeLeft / (selectedSession.duration * 60)) * 100;
+        // progressPercent: 0% at start, 100% when done (for needle rotation)
+        const progressPercent = 100 - remainingPercent;
+        // Needle rotation angle (0 to 360 degrees)
+        const needleAngle = (progressPercent / 100) * 360;
+        // Session counter
+        const sessionCount = completedSessions.length;
 
         return (
+            <div className={`min-h-screen ${bgClass} ${textClass} transition-colors duration-300 flex`}>
+                <main className="flex-1 flex flex-col md:flex-row">
 
-            {/* Provided "Deep Focus Session" Design with Integrated Logic */ }
-            < div className = {`flex h-screen w-full overflow-hidden ${isDark ? 'bg-[#0f172a] text-slate-100' : 'bg-white text-slate-800'}`
-    }>
-        {/* Left Panel - Timer */ }
-        < div className = "flex-1 flex flex-col border-r border-slate-100 dark:border-slate-800 relative" >
-                        <div className="flex justify-between items-center p-6 w-full">
-                            <button onClick={finishSession} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                                <X className="text-slate-400" size={24} strokeWidth={2} />
-                            </button>
-                            <button onClick={() => setIsDark(!isDark)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                                {isDark ? <Sun className="text-slate-400" size={24} strokeWidth={2} /> : <Moon className="text-slate-400" size={24} strokeWidth={2} />}
-                            </button>
-                        </div>
-                        
-                        <div className="flex-1 flex flex-col items-center justify-center px-8 pb-12">
-                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-50 dark:bg-cyan-900/30 text-cyan-500 mb-4">
-                                <div className={`w-1.5 h-1.5 rounded-full bg-[#00BCD4] animate-pulse`}></div>
-                                <span className="text-xs font-bold uppercase tracking-wider">{isBreak ? 'Rest Mode' : 'Focus Mode'}</span>
-                            </div>
-                            
-                            <h1 className="text-2xl font-bold mb-12 dark:text-white">
-                                {isBreak ? 'Time to Recharge' : 'Deep Focus Session'}
-                            </h1>
-                            
-                            <div className="relative w-72 h-72 mb-12 flex items-center justify-center">
-                                {/* Outer Ring Border */}
-                                <div className="absolute inset-0 rounded-full border-[6px] border-slate-100 dark:border-slate-800"></div>
-                                
-                                {/* SVG Ring */}
-                                <svg className="absolute inset-0 w-full h-full -rotate-90 timer-glow" style={{ filter: 'drop-shadow(0 0 15px rgba(0, 188, 212, 0.4))' }}>
-                                    <circle 
-                                        className="text-[#00BCD4] transition-all duration-1000 ease-linear" 
-                                        cx="144" cy="144" r="141" 
-                                        fill="transparent" 
-                                        stroke="currentColor" 
-                                        strokeWidth="6"
-                                        strokeLinecap="round"
-                                        strokeDasharray={`${2 * Math.PI * 141}`}
-                                        strokeDashoffset={`${2 * Math.PI * 141 * (1 - progressPercent / 100)}`}
-                                    ></circle>
-                                </svg>
-                                
-                                {/* Inner Gradient Circle (Static for now based on image, or could be dynamic) */}
-                                <div className="w-48 h-48 rounded-full bg-[#00BCD4] flex items-center justify-center shadow-lg relative z-10">
-                                    <div className="w-4 h-4 rounded-full bg-white/90"></div>
-                                </div>
-                                
-                                {/* Rotating Hand */}
-                                <div className="absolute inset-0 flex justify-center pointer-events-none z-20" 
-                                     style={{ 
-                                         transform: `rotate(${progressPercent * 3.6}deg)`,
-                                         transition: 'transform 1s linear'
-                                     }}>
-                                    {/* Hand - Lengthened slightly as requested */}
-                                    <div className="w-1.5 h-[55%] bg-[#00BCD4] origin-bottom relative top-0 rounded-full -translate-y-[22%]">
-                                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-[#00BCD4] rounded-full shadow-sm"></div>
-                                    </div>
-                                </div>
-                                
-                                {/* Cardinal Points Markers */}
-                                <div className="absolute inset-0">
-                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-4 bg-slate-800 dark:bg-slate-200 rounded-b-full"></div>
-                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-4 bg-slate-800 dark:bg-slate-200 rounded-t-full"></div>
-                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 w-4 bg-slate-800 dark:bg-slate-200 rounded-r-full"></div>
-                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 h-1.5 w-4 bg-slate-800 dark:bg-slate-200 rounded-l-full"></div>
-                                </div>
-                            </div>
-                            
-                            <div className="text-center mb-8">
-                                <div className="text-6xl font-light tracking-tight dark:text-white tabular-nums">
-                                    {formatTime(timeLeft)}
-                                </div>
-                                <div className="text-sm text-slate-400 mt-2 font-medium">time remaining</div>
-                            </div>
-                            
-                            <button onClick={toggleTimer} className="flex items-center gap-2 text-[#00BCD4] font-bold hover:opacity-80 transition-opacity uppercase tracking-widest text-sm mb-12">
-                                {isRunning ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
-                                {isRunning ? 'Pause' : 'Start'}
-                            </button>
-                            
-                            <button onClick={finishSession} className="w-full max-w-sm bg-[#00BCD4] text-white font-bold py-4 rounded-full shadow-xl shadow-cyan-500/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
-                                Finish Session
-                            </button>
-                        </div>
-                    </div >
+                    {/* Left Panel - Timer (60%) */}
+                    <div className="flex-[3] flex flex-col items-center p-6 md:p-8">
 
-        {/* Right Panel - Tasks */ }
-        < div className = "w-[500px] flex flex-col p-8 bg-slate-50/50 dark:bg-slate-900/50 border-l border-slate-100 dark:border-slate-800" >
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-2">
-                                <GripHorizontal className="text-[#00BCD4]" size={24} />
-                                <h2 className="text-xl font-bold dark:text-white">Tasks</h2>
-                            </div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{tasks.filter(t => t.completed).length}/{tasks.length} done</span>
-                        </div>
-                        
-                        <div className="relative mb-6">
-                            <input 
-                                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-4 pl-6 pr-16 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-[#00BCD4] focus:border-transparent outline-none transition-all shadow-sm" 
-                                placeholder="Add a task for this session..." 
-                                type="text"
-                                value={newTaskInput}
-                                onChange={(e) => setNewTaskInput(e.target.value)}
-                                onKeyDown={handleKeyDownTask}
-                            />
-                            <button onClick={addTask} className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#00BCD4] text-white p-2 rounded-xl hover:bg-cyan-600 transition-colors">
-                                <Plus size={20} />
-                            </button>
-                        </div>
-
-    {
-        tasks.length === 0 ? (
-            <div className="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-center px-12">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6">
-                    <Check className="text-slate-400" size={32} />
-                </div>
-                <h3 className="text-slate-600 dark:text-slate-300 font-semibold mb-2">No tasks yet.</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                    Add tasks to track what you want to accomplish during this session.
-                </p>
-            </div>
-        ) : (
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-            {tasks.map(task => (
-                <div key={task.id} className={`flex items-start gap-4 p-4 rounded-2xl border transition-all ${task.completed
-                        ? 'bg-slate-100 dark:bg-slate-800/50 border-transparent opacity-60'
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm'
-                    }`}>
-                    <button
-                        onClick={() => toggleTask(task.id)}
-                        className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${task.completed
-                                ? 'bg-[#00BCD4] border-[#00BCD4] text-white'
-                                : 'border-slate-300 hover:border-[#00BCD4]'
-                            }`}
-                    >
-                        {task.completed && <Check size={14} strokeWidth={4} />}
-                    </button>
-                    <p className={`text-base font-medium leading-relaxed pt-0.5 ${task.completed ? 'text-slate-500 line-through' : 'text-slate-700 dark:text-slate-200'
-                        }`}>
-                        {task.text}
-                    </p>
-                </div>
-            ))}
-        </div>
-    )
-    }
-                    </div >
-                </div >
-        );
-}
-
-// Dashboard Screen
-return (
-    <div className={`min-h-screen ${bgClass} ${textClass} font-sans transition-colors duration-300 flex items-center justify-center p-4`}>
-        <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
-
-            {/* Navbar */}
-            <div className="flex justify-between items-center px-1">
-                <div className="flex items-center gap-3">
-                    <button onClick={() => navigate('/dashboard')} className="hover:opacity-75 transition-opacity">
-                        <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center gap-2`}>
-                            Study With Me <span className="text-xl">📚</span>
-                        </h1>
-                    </button>
-                    <div className={`h-4 w-px ${isDark ? 'bg-gray-800' : 'bg-gray-300'} mx-1`}></div>
-                    <p className={`text-xs ${mutedTextClass} font-medium`}>Daily focus optimizer</p>
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setIsDark(!isDark)}
-                        className={`p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${isDark ? 'text-yellow-400' : 'text-gray-500'}`}
-                    >
-                        {isDark ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
-                    <button className={`p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${mutedTextClass}`}>
-                        {/* Settings icon placeholder using GripHorizontal as substitute if Settings not imported, checking imports... grip is visually different but works as placeholder or add Settings to import */}
-                        <GripHorizontal size={20} />
-                    </button>
-                </div>
-            </div>
-
-            <main className="grid grid-cols-12 gap-4">
-                {/* Timer Selection Section */}
-                <div className="col-span-12 flex flex-col gap-3">
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        {sessionTypes.map((session) => (
+                        {/* Header */}
+                        <div className="w-full flex justify-between items-center mb-6">
                             <button
-                                key={session.duration}
-                                onClick={() => startSession(session)}
-                                className={`relative p-3 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all duration-200 ${activePreset === session.duration
-                                    ? 'bg-[#06b6d4] text-white shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_-3px_rgba(6,182,212,0.6)] transform -translate-y-[2px]'
-                                    : `${cardBgClass} border ${borderClass} hover:border-[#06b6d4]/50 hover:-translate-y-[2px]`
+                                onClick={finishSession}
+                                className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'} transition-colors`}
+                            >
+                                <X className={mutedTextClass} size={24} />
+                            </button>
+                            <button
+                                onClick={() => setIsDark(!isDark)}
+                                className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'} transition-colors`}
+                            >
+                                {isDark ? <Sun className="text-yellow-400" size={20} /> : <Moon className="text-gray-500" size={20} />}
+                            </button>
+                        </div>
+
+                        {/* Focus Counter Badge */}
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6 ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'
+                            }`}>
+                            <span className={isBreak ? 'text-green-500' : 'text-cyan-500'}>
+                                {isBreak ? 'BREAK' : 'FOCUS'}
+                            </span>
+                            <span>{sessionCount} / 4</span>
+                        </div>
+
+                        {/* Focus/Break Tabs - Glassmorphism */}
+                        <div className="flex gap-3 mb-10 flex-wrap justify-center">
+                            <button
+                                onClick={() => {
+                                    setIsBreak(false);
+                                    setTimeLeft(selectedSession.duration * 60);
+                                    setIsRunning(false);
+                                }}
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all backdrop-blur-lg ${!isBreak
+                                    ? 'bg-cyan-500/90 text-white shadow-lg shadow-cyan-500/20'
+                                    : `bg-slate-800/50 text-gray-300 border border-slate-600/50 hover:bg-slate-700/50`
                                     }`}
                             >
-                                <span className="text-xl font-bold">{session.label}</span>
-                                <span className={`text-[10px] uppercase tracking-wider font-medium ${activePreset === session.duration ? 'opacity-90' : mutedTextClass}`}>
-                                    min focus
-                                </span>
+                                <div className="text-[10px] opacity-70">Focus</div>
+                                <div>{selectedSession.duration} min</div>
                             </button>
-                        ))}
-                    </div>
-
-                    {/* Custom Timer & Settings Row */}
-                    <div
-                        className={`w-full ${cardBgClass} border ${borderClass} rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group`}
-                        onClick={() => setShowCustomSettings(!showCustomSettings)}
-                    >
-                        <div className="flex items-center gap-2">
-                            <GripHorizontal className="text-[#06b6d4]" size={20} />
-                            <span className={`font-medium text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Custom Timer Settings</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <span className="text-[10px] font-bold text-gray-400">POMODORO MODE</span>
-                            <ChevronDown className={`text-gray-400 transition-transform ${showCustomSettings ? 'rotate-180' : ''}`} size={18} />
-                        </div>
-                    </div>
-
-                    {/* Expandable Custom Settings Panel */}
-                    {showCustomSettings && (
-                        <div className={`w-full ${cardBgClass} border ${borderClass} rounded-lg p-4 flex flex-col gap-4 animate-in slide-in-from-top-2 duration-200`}>
-                            <div className="flex flex-col gap-2">
-                                <label className={`text-xs font-bold ${mutedTextClass} uppercase`}>Duration (minutes)</label>
-                                <div className="flex items-center gap-4">
-                                    <input
-                                        type="range"
-                                        min="5"
-                                        max="120"
-                                        step="5"
-                                        value={customMinutes}
-                                        onChange={(e) => setCustomMinutes(parseInt(e.target.value))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#06b6d4]"
-                                    />
-                                    <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} w-16 text-center`}>{customMinutes}m</span>
-                                </div>
-                            </div>
                             <button
-                                onClick={startCustomSession}
-                                className="w-full bg-[#06b6d4] hover:bg-cyan-600 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                onClick={() => {
+                                    setIsBreak(true);
+                                    setTimeLeft(5 * 60);
+                                    setIsRunning(false);
+                                }}
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all backdrop-blur-lg ${isBreak && timeLeft === 5 * 60
+                                    ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20'
+                                    : `bg-slate-800/50 text-gray-300 border border-slate-600/50 hover:bg-slate-700/50`
+                                    }`}
                             >
-                                <Play size={16} fill="currentColor" />
-                                START CUSTOM SESSION
+                                <div className="text-[10px] opacity-70">Short Break</div>
+                                <div>5 min</div>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsBreak(true);
+                                    setTimeLeft(25 * 60);
+                                    setIsRunning(false);
+                                }}
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all backdrop-blur-lg ${isBreak && timeLeft === 25 * 60
+                                    ? 'bg-green-500/90 text-white shadow-lg shadow-green-500/20'
+                                    : `bg-slate-800/50 text-gray-300 border border-slate-600/50 hover:bg-slate-700/50`
+                                    }`}
+                            >
+                                <div className="text-[10px] opacity-70">Long Break</div>
+                                <div>25 min</div>
                             </button>
                         </div>
-                    )}
-                </div>
 
-                {/* Analytics Section */}
-                <div className="col-span-12 flex flex-col gap-3 mt-2">
-                    <div className="flex justify-between items-end px-1">
-                        <div>
-                            <h2 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'} uppercase tracking-wider`}>Performance Analytics</h2>
-                        </div>
-                        <div className="flex gap-2">
-                            <button className={`text-[10px] font-bold border ${borderClass} ${mutedTextClass} px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors uppercase`}>Export</button>
-                            <button className="text-[10px] font-bold bg-[#06b6d4]/10 text-[#06b6d4] px-2 py-1 rounded hover:bg-[#06b6d4]/20 transition-colors uppercase">Weekly View</button>
-                        </div>
-                    </div>
+                        {/* Timer Sphere Container */}
+                        <div className="relative w-56 h-56 md:w-72 md:h-72 flex items-center justify-center mb-10 overflow-visible">
 
-                    <div className="grid grid-cols-12 gap-4">
-                        {/* Daily Overview Chart */}
-                        <div className={`col-span-12 lg:col-span-4 ${cardBgClass} border ${borderClass} rounded-lg p-4 flex flex-col min-h-[240px]`}>
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-tight">Daily Overview</h3>
-                                    <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {getTotalStudyTime().hours}h {getTotalStudyTime().mins}m
-                                    </p>
-                                </div>
-                                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">+12%</span>
-                            </div>
-                            <div className="flex items-end justify-between h-full gap-1.5 px-1">
-                                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                                    const h = [40, 65, 85, 55, 30, 20, 15][i];
-                                    const isToday = i === 2; // Mocking Wednesday as today based on screenshot
-                                    return (
-                                        <div key={i} className="flex-1 flex flex-col items-center gap-1.5 group cursor-pointer h-full justify-end">
-                                            <div
-                                                className={`w-full rounded-sm transition-colors ${isToday
-                                                    ? 'bg-[#06b6d4] shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                                                    : `${isDark ? 'bg-gray-800' : 'bg-gray-100'} group-hover:bg-[#06b6d4]/30`
-                                                    }`}
-                                                style={{ height: `${h}%` }}
-                                            ></div>
-                                            <span className={`text-[9px] font-bold ${isToday ? 'text-[#06b6d4]' : 'text-gray-400'}`}>{day}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                            {/* Outer Ring - SVG Progress Arc (Clean, No Glow) */}
+                            <svg
+                                className="absolute inset-0 w-full h-full z-10 -rotate-90 overflow-visible"
+                                viewBox="0 0 100 100"
+                            >
+                                {/* Background Ring */}
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="46"
+                                    fill="none"
+                                    stroke={isBreak ? 'rgba(34, 197, 94, 0.2)' : 'rgba(6, 182, 212, 0.2)'}
+                                    strokeWidth="3"
+                                />
+                                {/* Progress Arc */}
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="46"
+                                    fill="none"
+                                    stroke={isBreak ? 'rgb(34, 197, 94)' : 'rgb(6, 182, 212)'}
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                    strokeDasharray={`${2 * Math.PI * 46}`}
+                                    strokeDashoffset={`${2 * Math.PI * 46 * (1 - remainingPercent / 100)}`}
+                                    style={{ transition: 'stroke-dashoffset 1s ease-linear' }}
+                                />
+                            </svg>
 
-                        {/* Heatmap */}
-                        <div className={`col-span-12 lg:col-span-5 ${cardBgClass} border ${borderClass} rounded-lg p-4 flex flex-col min-h-[240px]`}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-tight">Focus Intensity Heatmap</h3>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-[9px] text-gray-400">Less</span>
-                                    <div className="flex gap-0.5">
-                                        {heatmapColors.slice(1).map((c, i) => (
-                                            <div key={i} className={`w-2 h-2 rounded-sm ${c.split(' ')[0]} ${c.split(' ')[1] || ''}`}></div>
-                                        ))}
-                                    </div>
-                                    <span className="text-[9px] text-gray-400">More</span>
-                                </div>
-                            </div>
-                            <div className="flex-1 flex flex-col justify-center overflow-x-auto">
-                                <div className="min-w-[400px]" style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'auto repeat(24, 1fr)',
-                                    gap: '3px'
-                                }}>
-                                    {/* Time Labels */}
-                                    <div className="text-[8px] text-gray-400 h-3"></div>
-                                    {Array.from({ length: 12 }).map((_, i) => (
-                                        <div key={i} className="text-[8px] text-gray-400 text-center col-span-2">
-                                            {(i * 2).toString().padStart(2, '0')}
-                                        </div>
-                                    ))}
+                            {/* Inner Sphere - Clean Glassmorphism */}
+                            <div
+                                className="relative w-44 h-44 md:w-56 md:h-56 rounded-full flex items-center justify-center overflow-visible z-20"
+                                style={{
+                                    background: isBreak
+                                        ? 'linear-gradient(145deg, rgba(34, 197, 94, 0.15), rgba(30, 41, 59, 0.9))'
+                                        : 'linear-gradient(145deg, rgba(6, 182, 212, 0.15), rgba(30, 41, 59, 0.9))',
+                                    boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.05), 0 4px 20px rgba(0, 0, 0, 0.3)',
+                                    backdropFilter: 'blur(20px)',
+                                    border: `1px solid ${isBreak ? 'rgba(34, 197, 94, 0.25)' : 'rgba(6, 182, 212, 0.25)'}`
+                                }}
+                            >
+                                {/* Highlight Reflection */}
+                                <div className="absolute top-4 left-1/4 w-1/2 h-1/4 bg-gradient-to-b from-white/10 to-transparent rounded-full blur-md pointer-events-none"></div>
 
-                                    {/* Days Rows */}
-                                    {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day, dIndex) => (
-                                        <>
-                                            <div key={`label-${day}`} className="text-[9px] font-bold text-gray-400 pr-2 self-center">{day}</div>
-                                            {Array.from({ length: 24 }).map((_, hIndex) => {
-                                                const val = Math.floor(Math.random() * 5); // Random intensity
-                                                const colorClass = heatmapColors[val];
-                                                return (
-                                                    <div key={`${day}-${hIndex}`} className={`aspect-square rounded-[2px] ${colorClass}`}></div>
-                                                );
-                                            })}
-                                        </>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Stats Side Column */}
-                        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
-                            {/* Focus Streak */}
-                            <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-lg p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-                                <div className={`w-9 h-9 rounded-lg ${isDark ? 'bg-orange-500/10' : 'bg-orange-100'} flex items-center justify-center text-orange-500`}>
-                                    <Flame size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Focus Streak</h4>
-                                    <p className={`text-sm font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                                        {completedSessions.length > 0 ? `${completedSessions.length} Days` : '0 Days'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Daily Goal */}
-                            <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-lg p-3 flex flex-col justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-                                <div className="flex justify-between items-center">
-                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Daily Goal</h4>
-                                    <span className="text-[10px] text-pink-500 font-bold">
-                                        {Math.round(Math.min((getTotalStudyTime().total / 240) * 100, 100))}%
-                                    </span>
-                                </div>
-                                <div className={`w-full h-1.5 ${isDark ? 'bg-gray-800' : 'bg-gray-100'} rounded-full overflow-hidden`}>
+                                {/* Needle Container - ABOVE the ring (z-50) */}
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-visible z-50">
                                     <div
-                                        className="h-full bg-pink-500 transition-all duration-500"
-                                        style={{ width: `${Math.min((getTotalStudyTime().total / 240) * 100, 100)}%` }}
-                                    ></div>
-                                </div>
-                            </div>
+                                        className="relative w-1 h-full flex flex-col items-center overflow-visible"
+                                        style={{
+                                            transform: `rotate(${needleAngle}deg)`,
+                                            transition: 'transform 1s ease-linear'
+                                        }}
+                                    >
+                                        {/* Needle Shaft */}
+                                        <div
+                                            className="absolute bottom-1/2 left-1/2 -translate-x-1/2 w-1.5 rounded-full origin-bottom"
+                                            style={{
+                                                height: '62%',
+                                                background: '#ff0033',
+                                                filter: 'drop-shadow(0 0 12px rgba(255, 0, 51, 1)) drop-shadow(0 0 25px rgba(255, 0, 51, 0.7))'
+                                            }}
+                                        >
+                                            {/* Needle Tip */}
+                                            <div
+                                                className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-6"
+                                                style={{
+                                                    background: '#ff0033',
+                                                    clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)'
+                                                }}
+                                            ></div>
+                                            {/* Needle Glow */}
+                                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-[#ff0033] rounded-full blur-[6px] opacity-90"></div>
+                                        </div>
 
-                            {/* Total Focus */}
-                            <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-lg p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-                                <div className={`w-9 h-9 rounded-lg ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-100'} flex items-center justify-center text-emerald-500`}>
-                                    <Target size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Total Focus</h4>
-                                    <p className={`text-sm font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{getTotalStudyTime().total} mins</p>
+                                        {/* Center Dot */}
+                                        <div
+                                            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-[#ff0033] rounded-full flex items-center justify-center"
+                                            style={{
+                                                boxShadow: '0 0 25px #ff0033, 0 0 10px rgba(255, 0, 51, 0.8)'
+                                            }}
+                                        >
+                                            <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Recent Activity / Bottom Bar */}
-                <div className="col-span-12">
-                    <div className={`w-full ${cardBgClass} border ${borderClass} rounded-lg px-4 py-2.5 flex justify-between items-center`}>
-                        <div className="flex items-center gap-4">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recent Activity</span>
-                            <div className="flex -space-x-1.5">
-                                <div className={`w-5 h-5 rounded-full border-2 ${isDark ? 'border-gray-900 bg-cyan-900' : 'border-white bg-cyan-100'}`}></div>
-                                <div className={`w-5 h-5 rounded-full border-2 ${isDark ? 'border-gray-900 bg-cyan-800' : 'border-white bg-cyan-200'}`}></div>
-                                <div className={`w-5 h-5 rounded-full border-2 ${isDark ? 'border-gray-900 bg-cyan-700' : 'border-white bg-cyan-300'}`}></div>
-                            </div>
+                        {/* Time Display */}
+                        <div className="text-center mb-8">
+                            <h1 className={`text-5xl md:text-6xl font-light tracking-widest tabular-nums ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {formatTime(timeLeft).split(':').join(' : ')}
+                            </h1>
+                            <p className={`text-xs uppercase tracking-widest mt-3 ${mutedTextClass}`}>
+                                time remaining
+                            </p>
                         </div>
-                        <button className="text-[10px] font-bold text-[#06b6d4] hover:underline uppercase tracking-tight">
-                            Explore Full History →
+
+                        {/* Start/Pause Button */}
+                        <button
+                            onClick={toggleTimer}
+                            className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest transition-all mb-6 ${isBreak ? 'text-green-500 hover:text-green-400' : 'text-cyan-500 hover:text-cyan-400'
+                                }`}
+                        >
+                            {isRunning ? (
+                                <><Pause size={14} /> Pause</>
+                            ) : (
+                                <><Play size={14} fill="currentColor" /> Start</>
+                            )}
+                        </button>
+
+                        {/* Finish Session Button */}
+                        <button
+                            onClick={finishSession}
+                            className={`w-full max-w-xs py-3.5 rounded-full font-bold uppercase tracking-widest text-sm transition-all ${isBreak
+                                ? 'bg-green-500 hover:bg-green-400 text-white'
+                                : 'bg-cyan-500 hover:bg-cyan-400 text-white'
+                                }`}
+                        >
+                            Finish Session
                         </button>
                     </div>
-                </div>
-            </main>
-        </div>
 
-        <script dangerouslySetInnerHTML={{
-            __html: `
+                    {/* Right Panel - Tasks (Increased by 20%) */}
+                    <aside className={`flex-[2.5] w-full md:max-w-[480px] min-h-[500px] border-l ${isDark ? 'border-cyan-500/20 bg-slate-900/60' : 'border-gray-200 bg-white/60'} flex flex-col p-6 transition-colors duration-300`}>
+                        {/* Header */}
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-2">
+                                <GripHorizontal className="text-cyan-500" size={18} />
+                                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Tasks</h2>
+                            </div>
+                            <span className={`text-xs font-medium ${mutedTextClass}`}>
+                                {completedTaskCount}/{tasks.length} done
+                            </span>
+                        </div>
+
+                        {/* Add Task Input */}
+                        <div className="relative mb-4">
+                            <input
+                                type="text"
+                                value={newTaskText}
+                                onChange={(e) => setNewTaskText(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && addTask()}
+                                placeholder="Add a task for this session..."
+                                className={`w-full ${isDark ? 'bg-slate-800/50 border-slate-700 placeholder:text-slate-500' : 'bg-gray-100 border-gray-200 placeholder:text-gray-400'} border rounded-lg py-3 px-4 pr-12 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm`}
+                            />
+                            <button
+                                onClick={addTask}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-cyan-500 hover:bg-cyan-400 text-white p-1.5 rounded-md transition-colors"
+                            >
+                                <Plus size={16} />
+                            </button>
+                        </div>
+
+                        {/* Task List / Empty State */}
+                        <div className={`flex-1 border ${isDark ? 'border-slate-700/50' : 'border-gray-200'} rounded-lg overflow-hidden`}>
+                            {tasks.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                                    <GripHorizontal className={`${mutedTextClass} mb-4`} size={32} />
+                                    <p className={`${mutedTextClass} font-medium mb-1`}>No tasks yet.</p>
+                                    <p className={`text-xs ${mutedTextClass}`}>Add tasks to track what you want to accomplish.</p>
+                                </div>
+                            ) : (
+                                <div className="p-3 space-y-2 overflow-y-auto h-full">
+                                    {tasks.map((task) => (
+                                        <div
+                                            key={task.id}
+                                            onClick={() => toggleTask(task.id)}
+                                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${task.completed
+                                                ? `${isDark ? 'bg-slate-800/30' : 'bg-gray-100/50'} opacity-60`
+                                                : `${isDark ? 'bg-slate-800/50 hover:bg-slate-700/50' : 'bg-white hover:bg-gray-50'}`
+                                                }`}
+                                        >
+                                            {/* Checkbox */}
+                                            <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all ${task.completed
+                                                ? 'border-cyan-500 bg-cyan-500 text-white'
+                                                : `${isDark ? 'border-slate-500' : 'border-gray-300'} hover:border-cyan-400`
+                                                }`}>
+                                                {task.completed && <Check size={12} />}
+                                            </div>
+                                            {/* Task Text */}
+                                            <span className={`flex-1 text-sm ${task.completed
+                                                ? `line-through ${mutedTextClass}`
+                                                : `${isDark ? 'text-slate-200' : 'text-slate-700'}`
+                                                }`}>
+                                                {task.text}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </aside>
+                </main>
+            </div>
+        );
+    }
+
+    // Dashboard Screen
+    return (
+        <div className={`min-h-screen ${bgClass} ${textClass} font-sans transition-colors duration-300 flex items-center justify-center p-6`}>
+            <div className="w-full max-w-7xl mx-auto flex flex-col gap-8">
+
+                {/* Navbar - Simplified */}
+                <div className="flex justify-between items-center px-2">
+                    <button onClick={() => navigate('/dashboard')} className="hover:opacity-75 transition-opacity">
+                        <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            Study With Me
+                        </h1>
+                    </button>
+                    <button
+                        onClick={() => setIsDark(!isDark)}
+                        className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${isDark ? 'text-yellow-400' : 'text-gray-500'}`}
+                    >
+                        {isDark ? <Sun size={24} /> : <Moon size={24} />}
+                    </button>
+                </div>
+
+                <main className="grid grid-cols-12 gap-4">
+                    {/* Timer Selection Section */}
+                    <div className="col-span-12 flex flex-col gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {sessionTypes.map((session) => (
+                                <button
+                                    key={session.duration}
+                                    onClick={() => startSession(session)}
+                                    className={`relative p-4 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${activePreset === session.duration
+                                        ? 'bg-[#06b6d4] text-white shadow-[0_0_25px_-5px_rgba(6,182,212,0.5)] hover:shadow-[0_0_30px_-3px_rgba(6,182,212,0.7)] transform -translate-y-[2px]'
+                                        : `${cardBgClass} border ${borderClass} hover:border-[#06b6d4]/50 hover:-translate-y-[2px]`
+                                        }`}
+                                >
+                                    <span className="text-2xl font-bold">{session.label}</span>
+                                    <span className={`text-xs uppercase tracking-wider font-medium ${activePreset === session.duration ? 'opacity-90' : mutedTextClass}`}>
+                                        min focus
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Custom Timer & Settings Row - Simplified */}
+                        <div
+                            onClick={() => setShowCustomSettings(!showCustomSettings)}
+                            className={`w-full ${cardBgClass} border ${borderClass} rounded-xl px-5 py-3 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <GripHorizontal className="text-[#06b6d4]" size={22} />
+                                <span className={`font-medium text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Custom Timer Settings</span>
+                            </div>
+                            <ChevronDown className={`text-gray-400 transition-transform ${showCustomSettings ? 'rotate-180' : ''}`} size={20} />
+                        </div>
+
+                        {/* Custom Timer Expanded Panel */}
+                        {showCustomSettings && (
+                            <div className={`${cardBgClass} border ${borderClass} rounded-lg px-4 py-4 flex flex-col gap-3`}>
+                                <div className="flex items-center gap-4">
+                                    <label className={`text-sm font-medium ${mutedTextClass}`}>Duration (minutes):</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="180"
+                                        value={customMinutes}
+                                        onChange={(e) => setCustomMinutes(Math.max(1, Math.min(180, parseInt(e.target.value) || 1)))}
+                                        className={`w-24 px-3 py-2 rounded-lg border ${borderClass} ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500`}
+                                    />
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            startCustomSession();
+                                        }}
+                                        className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors"
+                                    >
+                                        Start Custom
+                                    </button>
+                                </div>
+                                <p className={`text-xs ${mutedTextClass}`}>Break time: {Math.max(5, Math.floor(customMinutes / 5))} min (auto-calculated)</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Analytics Section */}
+                    <div className="col-span-12 flex flex-col gap-4 mt-3">
+                        <div className="flex justify-between items-end px-2">
+                            <h2 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'} uppercase tracking-wider`}>Performance Analytics</h2>
+                            <button className="text-xs font-bold bg-[#06b6d4]/10 text-[#06b6d4] px-3 py-1.5 rounded-lg hover:bg-[#06b6d4]/20 transition-colors uppercase">Weekly View</button>
+                        </div>
+
+                        <div className="grid grid-cols-12 gap-5">
+                            {/* Weekly Overview Chart - Using API Data */}
+                            <div className={`col-span-12 lg:col-span-8 ${cardBgClass} border ${borderClass} rounded-xl p-7 flex flex-col min-h-[340px]`}>
+                                <div className="flex justify-between items-start mb-7">
+                                    <div>
+                                        <h3 className="text-base font-bold text-gray-500 uppercase tracking-tight mb-1">Weekly Overview</h3>
+                                        <p className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            {Math.floor(focusStats.totalFocusMinutes / 60)}h {focusStats.totalFocusMinutes % 60}m
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={`text-xs ${mutedTextClass} mb-1`}>Sessions: {focusStats.completedSessions}/{focusStats.totalSessions}</p>
+                                        <p className={`text-xs ${mutedTextClass}`}>Goals: {focusStats.goalsCompleted}/{focusStats.goalsSet}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-end justify-between h-full gap-4 px-3">
+                                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
+                                        const maxMins = Math.max(...focusStats.weeklyData, 60);
+                                        const h = focusStats.weeklyData[i] > 0 ? Math.max(10, (focusStats.weeklyData[i] / maxMins) * 100) : 5;
+                                        const today = new Date().getDay();
+                                        const dayIndex = today === 0 ? 6 : today - 1;
+                                        const isToday = i === dayIndex;
+                                        return (
+                                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer h-full justify-end">
+                                                <div className={`text-xs font-medium ${mutedTextClass} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                                                    {focusStats.weeklyData[i]}m
+                                                </div>
+                                                <div
+                                                    className={`w-full rounded-lg transition-colors ${isToday
+                                                        ? 'bg-[#06b6d4] shadow-[0_0_18px_rgba(6,182,212,0.5)]'
+                                                        : focusStats.weeklyData[i] > 0
+                                                            ? `bg-[#06b6d4]/60`
+                                                            : `${isDark ? 'bg-gray-800' : 'bg-gray-100'}`
+                                                        } group-hover:bg-[#06b6d4]/80`}
+                                                    style={{ height: `${h}%`, minHeight: '8px' }}
+                                                ></div>
+                                                <span className={`text-sm font-bold ${isToday ? 'text-[#06b6d4]' : 'text-gray-400'}`}>{day}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Stats Side Column - Using API Data */}
+                            <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+                                {/* Focus Streak */}
+                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-xl p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
+                                    <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-orange-500/10' : 'bg-orange-100'} flex items-center justify-center text-orange-500`}>
+                                        <Flame size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-tight">Focus Streak</h4>
+                                        <p className={`text-lg font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                                            {focusStats.focusStreak} Days
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Daily Goal */}
+                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-xl p-4 flex flex-col justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
+                                    <div className="flex justify-between items-center">
+                                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-tight">Daily Goal</h4>
+                                        <span className="text-xs text-pink-500 font-bold">
+                                            {focusStats.dailyGoalProgress}%
+                                        </span>
+                                    </div>
+                                    <div className={`w-full h-2 ${isDark ? 'bg-gray-800' : 'bg-gray-100'} rounded-full overflow-hidden`}>
+                                        <div
+                                            className="h-full bg-pink-500 transition-all duration-500"
+                                            style={{ width: `${focusStats.dailyGoalProgress}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className={`text-xs ${mutedTextClass}`}>{Math.floor(focusStats.totalFocusMinutes / 60)}h of 4h goal</p>
+                                </div>
+
+                                {/* Total Focus */}
+                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-xl p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
+                                    <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-100'} flex items-center justify-center text-emerald-500`}>
+                                        <Target size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-tight">Total Focus</h4>
+                                        <p className={`text-lg font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{focusStats.totalFocusMinutes} mins</p>
+                                    </div>
+                                </div>
+
+                                {/* Total Breaks */}
+                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-xl p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
+                                    <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-cyan-500/10' : 'bg-cyan-100'} flex items-center justify-center text-cyan-500`}>
+                                        <BarChart3 size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-tight">Total Breaks</h4>
+                                        <p className={`text-lg font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{focusStats.totalBreakMinutes} mins</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <script dangerouslySetInnerHTML={{
+                __html: `
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     document.documentElement.classList.add('dark');
                 }
             `}} />
-    </div>
-);
+        </div>
+    );
 }

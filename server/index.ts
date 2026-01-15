@@ -9,6 +9,7 @@ import { moodRoutes } from "./routes/moods";
 import { journalRoutes } from "./routes/journal";
 import { goalRoutes } from "./routes/goals";
 import { streakRoutes } from "./routes/streaks";
+import { focusSessionRoutes } from "./routes/focus-sessions";
 import { initDatabase } from "./db";
 
 export async function createServer() {
@@ -55,6 +56,7 @@ export async function createServer() {
   app.use("/api/journal", journalRoutes);
   app.use("/api/goals", goalRoutes);
   app.use("/api/streaks", streakRoutes);
+  app.use("/api/focus-sessions", focusSessionRoutes);
 
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";

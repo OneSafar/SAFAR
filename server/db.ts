@@ -98,5 +98,19 @@ export async function initDatabase() {
         )
     `);
 
+  // Focus sessions table for Study With Me analytics
+  await db.execute(`
+        CREATE TABLE IF NOT EXISTS focus_sessions (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            duration_minutes INTEGER NOT NULL,
+            break_minutes INTEGER DEFAULT 0,
+            completed BOOLEAN DEFAULT 0,
+            started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            completed_at DATETIME,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `);
+
   console.log('Database initialized successfully');
 }
