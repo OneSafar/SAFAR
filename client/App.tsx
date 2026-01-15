@@ -21,6 +21,7 @@ import Suggestions from "./pages/Suggestions";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
+import StudyWithMe from "./pages/StudyWithMe";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/study"
+            element={
+              <ProtectedRoute>
+                <StudyWithMe />
               </ProtectedRoute>
             }
           />

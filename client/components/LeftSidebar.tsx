@@ -8,6 +8,7 @@ import {
   Flame,
   Lightbulb,
   User,
+  Timer,
 } from "lucide-react";
 
 const navItems = [
@@ -16,6 +17,12 @@ const navItems = [
     href: "/dashboard",
     icon: BarChart3,
     description: "Overview & summary",
+  },
+  {
+    label: "Study With Me",
+    href: "/study",
+    icon: Timer,
+    description: "Focus timer sessions",
   },
   {
     label: "Emotional Check-In",
@@ -55,9 +62,10 @@ const navItems = [
   },
 ];
 
-// Mobile bottom nav items - all 7 sections for full navigation
+// Mobile bottom nav items - all sections for full navigation
 const mobileNavItems = [
   { label: "Home", href: "/dashboard", icon: BarChart3 },
+  { label: "Study", href: "/study", icon: Timer },
   { label: "Check-In", href: "/check-in", icon: Heart },
   { label: "Journal", href: "/journal", icon: BookOpen },
   { label: "Goals", href: "/goals", icon: Target },
