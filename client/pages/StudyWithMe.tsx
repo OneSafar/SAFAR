@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/utils/authService';
-import { X, Sun, Moon, Play, Pause, Flame, Target, BarChart3, Info, GripHorizontal, ChevronDown, Check } from 'lucide-react';
+import { X, Sun, Moon, Play, Pause, Flame, Target, BarChart3, Info, GripHorizontal, ChevronDown, Check, ArrowRight, Plus } from 'lucide-react';
 
 interface Session {
     start: Date;
@@ -168,75 +168,139 @@ export default function StudyWithMe() {
 
         return (
             <div className={`min-h-screen ${bgClass} ${textClass} transition-colors duration-300 flex items-center justify-center p-4`}>
-                <div className="w-full max-w-md flex flex-col items-center gap-8">
-                    {/* Header */}
-                    <div className="w-full flex justify-between items-center px-4">
-                        <button
-                            onClick={finishSession}
-                            className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors`}
-                        >
-                            <X className={mutedTextClass} size={24} />
-                        </button>
-                        <h1 className="text-xl font-bold tracking-tight">
-                            {isBreak ? 'Break Time' : 'Focus Session'}
-                        </h1>
-                        <button
-                            onClick={() => setIsDark(!isDark)}
-                            className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors`}
-                        >
-                            {isDark ? <Sun className="text-yellow-400" size={20} /> : <Moon className="text-gray-500" size={20} />}
-                        </button>
-                    </div>
+                <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-8 h-[80vh]">
 
-                    {/* Timer Circle */}
-                    <div className="relative w-72 h-72">
-                        {/* Glow effect */}
-                        <div className={`absolute inset-0 rounded-full blur-2xl ${isBreak ? 'bg-green-500/20' : 'bg-cyan-500/20'} animate-pulse`}></div>
+                    {/* Left Panel - Timer */}
+                    <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-2xl p-8 flex flex-col items-center justify-center relative shadow-xl`}>
+                        {/* Header Controls */}
+                        <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
+                            <button
+                                onClick={finishSession}
+                                className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors group`}
+                            >
+                                <X className={`${mutedTextClass} group-hover:text-red-500`} size={24} />
+                            </button>
+                            <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${isBreak ? 'bg-green-500/10 text-green-500' : 'bg-cyan-500/10 text-cyan-500'}`}>
+                                {isBreak ? 'Break Mode' : 'Focus Mode'}
+                            </div>
+                            <button
+                                onClick={() => setIsDark(!isDark)}
+                                className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors`}
+                            >
+                                {isDark ? <Sun className="text-yellow-400" size={20} /> : <Moon className="text-gray-500" size={20} />}
+                            </button>
+                        </div>
 
-                        <svg className="w-full h-full transform -rotate-90 relative z-10" viewBox="0 0 100 100">
-                            <circle
-                                cx="50" cy="50" r="45"
-                                fill="none"
-                                stroke={isDark ? '#27272a' : '#e5e7eb'}
-                                strokeWidth="3"
-                            />
-                            <circle
-                                cx="50" cy="50" r="45"
-                                fill="none"
-                                stroke={isBreak ? '#22c55e' : '#06b6d4'}
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                                strokeDasharray={`${2 * Math.PI * 45}`}
-                                strokeDashoffset={`${2 * Math.PI * 45 * (1 - progressPercent / 100)}`}
-                                className="transition-all duration-1000 ease-linear"
-                            />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                            <div className={`text-6xl font-bold tracking-tighter ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {formatTime(timeLeft)}
+                        {/* Title */}
+                        <h2 className="text-2xl font-bold mb-10 text-center">
+                            {isBreak ? 'Time to Recharge' : 'Deep Focus Session'}
+                        </h2>
+
+                        {/* Timer Circle */}
+                        <div className="relative w-80 h-80 mb-8">
+                            {/* Outer Glow */}
+                            <div className={`absolute inset-0 rounded-full blur-3xl ${isBreak ? 'bg-green-500/10' : 'bg-cyan-500/10'} opacity-50`}></div>
+
+                            <svg className="w-full h-full transform -rotate-90 relative z-10" viewBox="0 0 100 100">
+                                {/* Track */}
+                                <circle
+                                    cx="50" cy="50" r="45"
+                                    fill="none"
+                                    stroke={isDark ? '#27272a' : '#e2e8f0'}
+                                    strokeWidth="2"
+                                />
+                                {/* Progress */}
+                                <circle
+                                    cx="50" cy="50" r="45"
+                                    fill="none"
+                                    stroke={isBreak ? '#22c55e' : '#06b6d4'}
+                                    strokeWidth="4" // Thicker stroke
+                                    strokeLinecap="round"
+                                    strokeDasharray={`${2 * Math.PI * 45}`}
+                                    strokeDashoffset={`${2 * Math.PI * 45 * (1 - progressPercent / 100)}`}
+                                    className="transition-all duration-1000 ease-linear shadow-[0_0_15px_currentColor]"
+                                />
+                                {/* Marker/Knob */}
+                                <circle
+                                    cx="50" cy="5" r="3"
+                                    fill={isDark ? '#09090b' : '#ffffff'}
+                                    stroke={isBreak ? '#22c55e' : '#06b6d4'}
+                                    strokeWidth="2"
+                                    className="transition-all duration-1000 ease-linear"
+                                    style={{
+                                        transformOrigin: '50px 50px',
+                                        transform: `rotate(${progressPercent * 3.6}deg)`
+                                    }}
+                                />
+                            </svg>
+
+                            {/* Inner Circle Fill */}
+                            <div className={`absolute inset-[25%] rounded-full ${isBreak ? 'bg-green-500' : 'bg-cyan-500'} opacity-10 blur-xl animate-pulse`}></div>
+
+                            <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                                <div className={`text-7xl font-bold tracking-tighter tabular-nums ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {formatTime(timeLeft)}
+                                </div>
+                                <div className={`text-sm font-medium uppercase tracking-widest mt-2 ${isBreak ? 'text-green-500' : 'text-cyan-500'}`}>
+                                    {isRunning ? 'Running' : 'Paused'}
+                                </div>
                             </div>
-                            <div className={`text-sm font-medium uppercase tracking-widest mt-2 ${isBreak ? 'text-green-500' : 'text-cyan-500'}`}>
-                                {isBreak ? 'Rest' : 'Focus'}
-                            </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex flex-col items-center gap-6 w-full max-w-xs">
+                            <button
+                                onClick={toggleTimer}
+                                className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:translate-y-0 active:shadow-md ${isBreak
+                                    ? 'bg-green-500 hover:bg-green-400 text-white shadow-green-500/20'
+                                    : 'bg-cyan-500 hover:bg-cyan-400 text-white shadow-cyan-500/20'
+                                    }`}
+                            >
+                                {isRunning ? (
+                                    <><Pause size={20} fill="currentColor" /> PAUSE SESSION</>
+                                ) : (
+                                    <><Play size={20} fill="currentColor" /> {timeLeft < selectedSession.duration * 60 ? 'RESUME' : 'START FOCUS'}</>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={finishSession}
+                                className={`text-sm font-medium ${mutedTextClass} hover:text-red-500 transition-colors uppercase tracking-wider`}
+                            >
+                                End Session Early
+                            </button>
                         </div>
                     </div>
 
-                    {/* Controls */}
-                    <div className="flex items-center gap-6">
-                        <button
-                            onClick={toggleTimer}
-                            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-105 active:scale-95 ${isBreak
-                                    ? 'bg-green-500 hover:bg-green-400 shadow-green-500/30'
-                                    : 'bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30'
-                                } text-white`}
-                        >
-                            {isRunning ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
-                        </button>
-                    </div>
+                    {/* Right Panel - Tasks */}
+                    <div className={`lg:w-1/3 ${cardBgClass} border ${borderClass} rounded-2xl p-6 flex flex-col shadow-xl`}>
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-2">
+                                <GripHorizontal className="text-[#06b6d4]" size={20} />
+                                <h3 className="font-bold text-lg">Tasks</h3>
+                            </div>
+                            <span className={`text-xs ${mutedTextClass}`}>0/0 done</span>
+                        </div>
 
-                    <p className={`text-xs ${mutedTextClass} mt-4`}>
-                        Use <span className="font-mono bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-[10px]">Space</span> to pause
-                    </p>
+                        <div className={`relative mb-4`}>
+                            <input
+                                type="text"
+                                placeholder="Add a task for this session..."
+                                className={`w-full ${isDark ? 'bg-gray-800/50' : 'bg-gray-50'} border ${borderClass} rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all`}
+                            />
+                            <button className="absolute right-2 top-2 p-1.5 bg-cyan-500 text-white rounded-md hover:bg-cyan-400 transition-colors">
+                                <ArrowRight size={16} /> {/* Note: Need to verify if ArrowRight or Plus is preferred, mimicking image style */}
+                            </button>
+                        </div>
+
+                        <div className={`flex-1 flex flex-col items-center justify-center text-center gap-3 border-2 border-dashed ${borderClass} rounded-xl m-1`}>
+                            <div className={`p-4 rounded-full ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                                <Check className={mutedTextClass} size={32} />
+                            </div>
+                            <p className={`${mutedTextClass} font-medium`}>No tasks yet.</p>
+                            <p className={`text-xs ${mutedTextClass} max-w-[200px]`}>Add tasks to track what you want to accomplish.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -281,8 +345,8 @@ export default function StudyWithMe() {
                                     key={session.duration}
                                     onClick={() => startSession(session)}
                                     className={`relative p-3 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all duration-200 ${activePreset === session.duration
-                                            ? 'bg-[#06b6d4] text-white shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_-3px_rgba(6,182,212,0.6)] transform -translate-y-[2px]'
-                                            : `${cardBgClass} border ${borderClass} hover:border-[#06b6d4]/50 hover:-translate-y-[2px]`
+                                        ? 'bg-[#06b6d4] text-white shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_-3px_rgba(6,182,212,0.6)] transform -translate-y-[2px]'
+                                        : `${cardBgClass} border ${borderClass} hover:border-[#06b6d4]/50 hover:-translate-y-[2px]`
                                         }`}
                                 >
                                     <span className="text-xl font-bold">{session.label}</span>
@@ -339,8 +403,8 @@ export default function StudyWithMe() {
                                             <div key={i} className="flex-1 flex flex-col items-center gap-1.5 group cursor-pointer h-full justify-end">
                                                 <div
                                                     className={`w-full rounded-sm transition-colors ${isToday
-                                                            ? 'bg-[#06b6d4] shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                                                            : `${isDark ? 'bg-gray-800' : 'bg-gray-100'} group-hover:bg-[#06b6d4]/30`
+                                                        ? 'bg-[#06b6d4] shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+                                                        : `${isDark ? 'bg-gray-800' : 'bg-gray-100'} group-hover:bg-[#06b6d4]/30`
                                                         }`}
                                                     style={{ height: `${h}%` }}
                                                 ></div>
