@@ -248,12 +248,12 @@ export default function Goals() {
             </form>
 
             {/* 3. TIMELINE / FLOW (Up Next) */}
-            <div className="mt-4">
+            <div className="mt-4 flex-1 min-h-0">
               <h3 className="text-lg font-bold text-muted-foreground mb-6 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-muted-foreground"></span> Incoming Objectives
               </h3>
 
-              <div className="relative border-l-2 border-border ml-4 space-y-10 pl-8 pb-4">
+              <div className="relative border-l-2 border-border ml-4 space-y-10 pl-8 pb-4 max-h-[400px] overflow-y-auto">
                 {upNextGoals.length > 0 ? upNextGoals.map((goal) => (
                   <div key={goal.id} className="relative">
                     {/* Timeline Node */}

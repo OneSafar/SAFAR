@@ -131,6 +131,12 @@ export default function StudyWithMe() {
     // Keyboard shortcut for space to pause/resume
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+            // Ignore if typing in an input or textarea
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                return;
+            }
+
             if (e.code === 'Space' && selectedSession) {
                 e.preventDefault();
                 toggleTimer();
