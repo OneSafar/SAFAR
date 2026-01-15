@@ -152,10 +152,22 @@ export default function StudyWithMe() {
     // Calculate hand rotation based on time elapsed
     const getHandRotation = () => {
         if (!selectedSession) return 0;
-        const totalSeconds = selectedSession.duration * 60;
+        const totalSeconds = isBreak ? selectedSession.break * 60 : selectedSession.duration * 60;
         const elapsed = totalSeconds - timeLeft;
         return (elapsed / totalSeconds) * 360;
     };
+
+    // Calculate progress percentage (how much time is remaining)
+    const getProgressPercent = () => {
+        if (!selectedSession) return 100;
+        const totalSeconds = isBreak ? selectedSession.break * 60 : selectedSession.duration * 60;
+        return (timeLeft / totalSeconds) * 100;
+    };
+
+    // SVG circle circumference for progress ring
+    const circleRadius = 46;
+    const circumference = 2 * Math.PI * circleRadius;
+    const progressOffset = circumference - (getProgressPercent() / 100) * circumference;
 
     if (!user) return null;
 
@@ -312,6 +324,31 @@ export default function StudyWithMe() {
 
                     {/* Analog Clock Timer */}
                     <div className="relative w-64 h-64 lg:w-80 lg:h-80 my-8 flex items-center justify-center">
+                        {/* Progress Ring (draining animation) */}
+                        <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            {/* Background ring (gray) */}
+                            <circle
+                                cx="50" cy="50" r={circleRadius}
+                                fill="none"
+                                stroke={isDark ? '#3f3f46' : '#d4d4d8'}
+                                strokeWidth="3"
+                            />
+                            {/* Progress ring (cyan/green that drains) */}
+                            <circle
+                                cx="50" cy="50" r={circleRadius}
+                                fill="none"
+                                stroke={isBreak ? '#22c55e' : '#06b6d4'}
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={progressOffset}
+                                className="transition-all duration-1000 ease-linear"
+                                style={{
+                                    filter: `drop-shadow(0 0 6px ${isBreak ? 'rgba(34, 197, 94, 0.6)' : 'rgba(6, 182, 212, 0.6)'})`
+                                }}
+                            />
+                        </svg>
+
                         {/* Clock Markers */}
                         <svg className={`absolute inset-0 w-full h-full transform -rotate-90 ${isDark ? 'text-zinc-700' : 'text-zinc-300'}`} viewBox="0 0 100 100">
                             <g>
@@ -327,21 +364,21 @@ export default function StudyWithMe() {
                                         y1="5" y2={i % 3 === 0 ? "10" : "8"}
                                     />
                                 ))}
-                                <circle
-                                    cx="50" cy="50" r="45"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeDasharray="0.1 2.51"
-                                    strokeWidth="0.5"
-                                />
                             </g>
                         </svg>
 
-                        {/* Glowing Center */}
-                        <div className={`absolute w-40 h-40 lg:w-48 lg:h-48 rounded-full ${isBreak ? 'bg-green-500/20' : 'bg-cyan-500/20'} flex items-center justify-center`}
-                            style={{ boxShadow: `0 0 40px ${isBreak ? 'rgba(34, 197, 94, 0.2)' : 'rgba(6, 182, 212, 0.2)'}` }}
+                        {/* Glowing Center - opacity based on remaining time */}
+                        <div
+                            className={`absolute w-40 h-40 lg:w-48 lg:h-48 rounded-full ${isBreak ? 'bg-green-500/20' : 'bg-cyan-500/20'} flex items-center justify-center transition-opacity duration-1000`}
+                            style={{
+                                boxShadow: `0 0 40px ${isBreak ? 'rgba(34, 197, 94, 0.2)' : 'rgba(6, 182, 212, 0.2)'}`,
+                                opacity: 0.3 + (getProgressPercent() / 100) * 0.7
+                            }}
                         >
-                            <div className={`w-full h-full rounded-full bg-gradient-to-br ${isBreak ? 'from-green-400 to-green-600' : 'from-cyan-400 to-cyan-600'} opacity-90`}></div>
+                            <div
+                                className={`w-full h-full rounded-full bg-gradient-to-br ${isBreak ? 'from-green-400 to-green-600' : 'from-cyan-400 to-cyan-600'} transition-opacity duration-1000`}
+                                style={{ opacity: 0.4 + (getProgressPercent() / 100) * 0.5 }}
+                            ></div>
                         </div>
 
                         {/* Rotating Hand */}
