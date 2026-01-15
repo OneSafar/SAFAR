@@ -264,9 +264,9 @@ export default function StudyWithMe() {
                             {/* Dynamic Conic Gradient (Time Remaining) */}
                             <div className="absolute w-40 h-40 lg:w-48 lg:h-48 rounded-full flex items-center justify-center transition-all duration-1000 ease-linear"
                                 style={{
-                                    background: `conic-gradient(from 0deg, ${isDark ? '#0e7490' : '#22d3ee'} 0%, ${isDark ? '#06b6d4' : '#06b6d4'} ${progressPercent}%, transparent ${progressPercent}%, transparent 100%)`,
-                                    boxShadow: `0 0 ${progressPercent / 2}px rgba(6, 182, 212, ${progressPercent / 200})`, // Dynamic glow
-                                    transform: 'rotate(-0deg)' // Ensure standard orientation
+                                    background: `conic-gradient(from 0deg, transparent 0%, transparent ${progressPercent}%, ${isDark ? '#06b6d4' : '#06b6d4'} ${progressPercent}%, ${isDark ? '#0e7490' : '#22d3ee'} 100%)`,
+                                    boxShadow: `0 0 20px rgba(6, 182, 212, 0.2)`,
+                                    transform: 'rotate(0deg)'
                                 }}>
                                 <div className={`w-full h-full rounded-full opacity-30`}></div>
                             </div>
@@ -451,17 +451,47 @@ export default function StudyWithMe() {
                         </div>
 
                         {/* Custom Timer & Settings Row */}
-                        <div className={`w-full ${cardBgClass} border ${borderClass} rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group`}>
+                        <div
+                            className={`w-full ${cardBgClass} border ${borderClass} rounded-lg px-4 py-2 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group`}
+                            onClick={() => setShowCustomSettings(!showCustomSettings)}
+                        >
                             <div className="flex items-center gap-2">
-                                {/* Tune icon placeholder */}
                                 <GripHorizontal className="text-[#06b6d4]" size={20} />
                                 <span className={`font-medium text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Custom Timer Settings</span>
                             </div>
                             <div className="flex items-center gap-4">
                                 <span className="text-[10px] font-bold text-gray-400">POMODORO MODE</span>
-                                <ChevronDown className="text-gray-400" size={18} />
+                                <ChevronDown className={`text-gray-400 transition-transform ${showCustomSettings ? 'rotate-180' : ''}`} size={18} />
                             </div>
                         </div>
+
+                        {/* Expandable Custom Settings Panel */}
+                        {showCustomSettings && (
+                            <div className={`w-full ${cardBgClass} border ${borderClass} rounded-lg p-4 flex flex-col gap-4 animate-in slide-in-from-top-2 duration-200`}>
+                                <div className="flex flex-col gap-2">
+                                    <label className={`text-xs font-bold ${mutedTextClass} uppercase`}>Duration (minutes)</label>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="range"
+                                            min="5"
+                                            max="120"
+                                            step="5"
+                                            value={customMinutes}
+                                            onChange={(e) => setCustomMinutes(parseInt(e.target.value))}
+                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#06b6d4]"
+                                        />
+                                        <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} w-16 text-center`}>{customMinutes}m</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={startCustomSession}
+                                    className="w-full bg-[#06b6d4] hover:bg-cyan-600 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Play size={16} fill="currentColor" />
+                                    START CUSTOM SESSION
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Analytics Section */}
