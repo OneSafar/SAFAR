@@ -216,8 +216,8 @@ export default function StudyWithMe() {
                         <button
                             onClick={toggleTimer}
                             className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg ${isBreak
-                                    ? 'bg-green-500 hover:bg-green-400 shadow-green-500/30'
-                                    : 'bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30'
+                                ? 'bg-green-500 hover:bg-green-400 shadow-green-500/30'
+                                : 'bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30'
                                 } text-white`}
                         >
                             {isRunning ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
@@ -255,18 +255,18 @@ export default function StudyWithMe() {
 
     // Session Selection Screen (Dashboard)
     return (
-        <div className={`min-h-screen ${bgClass} ${textClass} transition-colors duration-300 p-4 md:p-8`}>
+        <div className={`min-h-screen ${bgClass} ${textClass} transition-colors duration-300 p-6 md:p-12`}>
             {/* Header */}
-            <header className="w-full max-w-7xl mx-auto flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
+            <header className="w-full max-w-7xl mx-auto flex justify-between items-center mb-10">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className={`p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors`}
+                        className={`p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors`}
                     >
-                        <X className={mutedTextClass} size={24} />
+                        <X className={mutedTextClass} size={28} />
                     </button>
-                    <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center gap-2`}>
-                        Study With Me <span className="text-2xl">📚</span>
+                    <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center gap-3`}>
+                        Study With Me <span className="text-3xl">📚</span>
                     </h1>
                 </div>
                 <button
@@ -278,35 +278,35 @@ export default function StudyWithMe() {
             </header>
 
             {/* Main Grid */}
-            <main className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <main className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Left Column - Session Duration */}
-                <section className="lg:col-span-4 flex flex-col gap-6">
-                    <div className={`${cardBgClass} border ${borderClass} p-5 rounded shadow-sm flex-1 flex flex-col`}>
-                        <div className="mb-5">
-                            <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Session Duration</h2>
-                            <p className={`text-sm ${mutedTextClass}`}>Select your focus interval</p>
+                <section className="lg:col-span-4 flex flex-col gap-8">
+                    <div className={`${cardBgClass} border ${borderClass} p-8 rounded-xl shadow-sm flex-1 flex flex-col`}>
+                        <div className="mb-8">
+                            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Session Duration</h2>
+                            <p className={`text-base ${mutedTextClass} mt-1`}>Select your focus interval</p>
                         </div>
 
                         {/* Preset Grid */}
-                        <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="grid grid-cols-2 gap-4 mb-8">
                             {sessionTypes.slice(0, 4).map((session) => (
                                 <button
                                     key={session.duration}
                                     onClick={() => startSession(session)}
-                                    className={`group relative flex flex-col items-center justify-center py-4 px-2 rounded transition-all duration-200 ${activePreset === session.duration
-                                            ? 'bg-cyan-500 border border-cyan-500 shadow-lg shadow-cyan-500/20'
-                                            : `${inputBgClass} border border-transparent hover:border-cyan-500/50`
+                                    className={`group relative flex flex-col items-center justify-center py-6 px-4 rounded-xl transition-all duration-200 ${activePreset === session.duration
+                                        ? 'bg-cyan-500 border border-cyan-500 shadow-lg shadow-cyan-500/20'
+                                        : `${inputBgClass} border border-transparent hover:border-cyan-500/50`
                                         }`}
                                 >
-                                    <span className={`text-2xl font-bold ${activePreset === session.duration ? 'text-white' : isDark ? 'text-white' : 'text-gray-800'
+                                    <span className={`text-4xl font-bold ${activePreset === session.duration ? 'text-white' : isDark ? 'text-white' : 'text-gray-800'
                                         } group-hover:text-cyan-400 transition-colors`}>
                                         {session.duration}
                                     </span>
-                                    <span className={`text-xs uppercase tracking-wider font-medium ${activePreset === session.duration ? 'text-cyan-100' : mutedTextClass
+                                    <span className={`text-sm uppercase tracking-wider font-medium mt-1 ${activePreset === session.duration ? 'text-cyan-100' : mutedTextClass
                                         }`}>
                                         Minutes
                                     </span>
-                                    <span className={`absolute bottom-1 text-[10px] ${activePreset === session.duration ? 'text-cyan-50 opacity-80' : 'text-gray-400 opacity-0 group-hover:opacity-100'
+                                    <span className={`absolute bottom-2 text-xs ${activePreset === session.duration ? 'text-cyan-50 opacity-80' : 'text-gray-400 opacity-0 group-hover:opacity-100'
                                         } transition-opacity`}>
                                         {session.break}min break
                                     </span>
@@ -315,31 +315,31 @@ export default function StudyWithMe() {
                             {/* 90 min spanning 2 columns */}
                             <button
                                 onClick={() => startSession(sessionTypes[4])}
-                                className={`group relative flex flex-col items-center justify-center py-4 px-2 rounded transition-all duration-200 col-span-2 ${activePreset === 90
-                                        ? 'bg-cyan-500 border border-cyan-500 shadow-lg shadow-cyan-500/20'
-                                        : `${inputBgClass} border border-transparent hover:border-cyan-500/50`
+                                className={`group relative flex flex-col items-center justify-center py-5 px-4 rounded-xl transition-all duration-200 col-span-2 ${activePreset === 90
+                                    ? 'bg-cyan-500 border border-cyan-500 shadow-lg shadow-cyan-500/20'
+                                    : `${inputBgClass} border border-transparent hover:border-cyan-500/50`
                                     }`}
                             >
-                                <div className="flex flex-row items-baseline gap-2">
-                                    <span className={`text-2xl font-bold ${activePreset === 90 ? 'text-white' : isDark ? 'text-white' : 'text-gray-800'
+                                <div className="flex flex-row items-baseline gap-3">
+                                    <span className={`text-4xl font-bold ${activePreset === 90 ? 'text-white' : isDark ? 'text-white' : 'text-gray-800'
                                         } group-hover:text-cyan-400 transition-colors`}>
                                         90
                                     </span>
-                                    <span className={`text-xs uppercase tracking-wider font-medium ${activePreset === 90 ? 'text-cyan-100' : mutedTextClass
+                                    <span className={`text-sm uppercase tracking-wider font-medium ${activePreset === 90 ? 'text-cyan-100' : mutedTextClass
                                         }`}>
                                         Minutes
                                     </span>
                                 </div>
-                                <span className={`text-[10px] mt-1 ${activePreset === 90 ? 'text-cyan-50' : 'text-gray-400'}`}>
+                                <span className={`text-xs mt-1 ${activePreset === 90 ? 'text-cyan-50' : 'text-gray-400'}`}>
                                     15min break
                                 </span>
                             </button>
                         </div>
 
                         {/* Custom Timer */}
-                        <div className={`mt-auto pt-6 border-t ${borderClass}`}>
-                            <label className={`block text-xs font-semibold uppercase ${mutedTextClass} mb-2`}>Custom Timer</label>
-                            <div className="flex gap-2">
+                        <div className={`mt-auto pt-8 border-t ${borderClass}`}>
+                            <label className={`block text-sm font-semibold uppercase ${mutedTextClass} mb-3`}>Custom Timer</label>
+                            <div className="flex gap-3">
                                 <div className="relative flex-1">
                                     <input
                                         type="number"
@@ -347,16 +347,16 @@ export default function StudyWithMe() {
                                         max="180"
                                         value={customMinutes}
                                         onChange={(e) => setCustomMinutes(parseInt(e.target.value) || 0)}
-                                        className={`w-full ${inputBgClass} border ${borderClass} ${isDark ? 'text-white' : 'text-gray-900'} text-sm rounded focus:ring-cyan-500 focus:border-cyan-500 block p-2.5 placeholder-gray-400`}
+                                        className={`w-full ${inputBgClass} border ${borderClass} ${isDark ? 'text-white' : 'text-gray-900'} text-lg rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-4 placeholder-gray-400`}
                                         placeholder="25"
                                     />
-                                    <span className="absolute right-3 top-2.5 text-xs text-gray-400">min</span>
+                                    <span className="absolute right-4 top-4 text-sm text-gray-400">min</span>
                                 </div>
                                 <button
                                     onClick={startCustomSession}
-                                    className="bg-gray-800 hover:bg-gray-700 text-white rounded p-2.5 transition-colors"
+                                    className="bg-gray-800 hover:bg-gray-700 text-white rounded-lg p-4 transition-colors"
                                 >
-                                    <Play size={18} />
+                                    <Play size={24} />
                                 </button>
                             </div>
                         </div>
@@ -364,50 +364,50 @@ export default function StudyWithMe() {
                 </section>
 
                 {/* Right Column - Focus Analytics */}
-                <section className="lg:col-span-8 flex flex-col gap-6">
+                <section className="lg:col-span-8 flex flex-col gap-8">
                     <div className="flex justify-between items-end">
                         <div>
-                            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Focus Analytics</h2>
-                            <p className={`text-sm ${mutedTextClass}`}>Your productivity insights</p>
+                            <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Focus Analytics</h2>
+                            <p className={`text-base ${mutedTextClass} mt-1`}>Your productivity insights</p>
                         </div>
-                        <div className={`${inputBgClass} ${isDark ? 'text-gray-300' : 'text-gray-700'} text-xs font-medium px-3 py-1 rounded cursor-pointer hover:bg-gray-700 transition-colors`}>
+                        <div className={`${inputBgClass} ${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm font-medium px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors`}>
                             This Week
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                         {/* Daily Overview Chart */}
-                        <div className={`md:col-span-8 ${cardBgClass} border ${borderClass} p-6 rounded shadow-sm flex flex-col`}>
-                            <div className="flex justify-between items-start mb-6">
+                        <div className={`md:col-span-8 ${cardBgClass} border ${borderClass} p-8 rounded-xl shadow-sm flex flex-col`}>
+                            <div className="flex justify-between items-start mb-8">
                                 <div>
-                                    <h3 className={`text-sm font-semibold ${mutedTextClass} uppercase tracking-wide`}>Daily Overview</h3>
-                                    <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mt-1`}>
+                                    <h3 className={`text-base font-semibold ${mutedTextClass} uppercase tracking-wide`}>Daily Overview</h3>
+                                    <div className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mt-2`}>
                                         {getTotalStudyTime().hours}h {getTotalStudyTime().mins}m
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 text-[10px] font-semibold tracking-wider">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                                <div className="flex items-center gap-4 text-xs font-semibold tracking-wider">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-3 h-3 rounded-full bg-cyan-500"></span>
                                         <span className={mutedTextClass}>FOCUS</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className={`w-2 h-2 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`w-3 h-3 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`}></span>
                                         <span className={mutedTextClass}>BREAK</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Bar Chart */}
-                            <div className="flex-1 flex items-end justify-between gap-2 mt-4 h-32">
+                            <div className="flex-1 flex items-end justify-between gap-3 mt-4 h-48">
                                 {[30, 45, 65, 25, 10, 50, 35].map((height, i) => (
-                                    <div key={i} className="flex flex-col items-center gap-2 group w-full">
-                                        <div className={`w-full ${inputBgClass} rounded-t-sm relative h-32 flex items-end overflow-hidden group-hover:bg-opacity-80 transition-colors`}>
+                                    <div key={i} className="flex flex-col items-center gap-3 group w-full">
+                                        <div className={`w-full ${inputBgClass} rounded-t relative h-48 flex items-end overflow-hidden group-hover:bg-opacity-80 transition-colors`}>
                                             <div
-                                                className={`w-full bg-cyan-500 rounded-t-sm transition-all ${i === 2 ? 'shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'opacity-40'}`}
+                                                className={`w-full bg-cyan-500 rounded-t transition-all ${i === 2 ? 'shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'opacity-40'}`}
                                                 style={{ height: `${height}%` }}
                                             />
                                         </div>
-                                        <span className={`text-[10px] font-medium ${i === 2 ? 'text-cyan-500 font-bold' : 'text-gray-400'}`}>
+                                        <span className={`text-sm font-medium ${i === 2 ? 'text-cyan-500 font-bold' : 'text-gray-400'}`}>
                                             {12 + i}
                                         </span>
                                     </div>
@@ -416,31 +416,31 @@ export default function StudyWithMe() {
                         </div>
 
                         {/* Stats Cards */}
-                        <div className="md:col-span-4 flex flex-col gap-4">
+                        <div className="md:col-span-4 flex flex-col gap-5">
                             {/* Focus Streak */}
-                            <div className={`${cardBgClass} border ${borderClass} p-4 rounded shadow-sm hover:border-gray-600 transition-colors flex items-center gap-4`}>
-                                <div className={`p-3 rounded ${isDark ? 'bg-indigo-900/20' : 'bg-indigo-50'} text-indigo-500`}>
-                                    <Flame size={24} />
+                            <div className={`${cardBgClass} border ${borderClass} p-5 rounded-xl shadow-sm hover:border-gray-600 transition-colors flex items-center gap-5`}>
+                                <div className={`p-4 rounded-lg ${isDark ? 'bg-indigo-900/20' : 'bg-indigo-50'} text-indigo-500`}>
+                                    <Flame size={28} />
                                 </div>
                                 <div>
-                                    <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Focus Streak</h4>
-                                    <p className={`text-xs ${mutedTextClass} mt-0.5`}>
+                                    <h4 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Focus Streak</h4>
+                                    <p className={`text-sm ${mutedTextClass} mt-1`}>
                                         Current: <span className="text-indigo-500 font-medium">{completedSessions.length} sessions</span>
                                     </p>
                                 </div>
                             </div>
 
                             {/* Daily Goal */}
-                            <div className={`${cardBgClass} border ${borderClass} p-4 rounded shadow-sm hover:border-gray-600 transition-colors flex items-center gap-4`}>
-                                <div className={`p-3 rounded ${isDark ? 'bg-rose-900/20' : 'bg-rose-50'} text-rose-500`}>
-                                    <Target size={24} />
+                            <div className={`${cardBgClass} border ${borderClass} p-5 rounded-xl shadow-sm hover:border-gray-600 transition-colors flex items-center gap-5`}>
+                                <div className={`p-4 rounded-lg ${isDark ? 'bg-rose-900/20' : 'bg-rose-50'} text-rose-500`}>
+                                    <Target size={28} />
                                 </div>
                                 <div className="flex-1">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Daily Goal</h4>
-                                        <span className="text-[10px] text-gray-400">{getTotalStudyTime().total}/240 min</span>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h4 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Daily Goal</h4>
+                                        <span className="text-xs text-gray-400">{getTotalStudyTime().total}/240 min</span>
                                     </div>
-                                    <div className={`w-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'} h-1.5 rounded-full overflow-hidden`}>
+                                    <div className={`w-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'} h-2 rounded-full overflow-hidden`}>
                                         <div
                                             className="bg-rose-500 h-full rounded-full transition-all"
                                             style={{ width: `${Math.min((getTotalStudyTime().total / 240) * 100, 100)}%` }}
@@ -450,33 +450,33 @@ export default function StudyWithMe() {
                             </div>
 
                             {/* Total Minutes */}
-                            <div className={`${cardBgClass} border ${borderClass} p-4 rounded shadow-sm hover:border-gray-600 transition-colors flex items-center gap-4`}>
-                                <div className={`p-3 rounded ${isDark ? 'bg-emerald-900/20' : 'bg-emerald-50'} text-emerald-500`}>
-                                    <BarChart3 size={24} />
+                            <div className={`${cardBgClass} border ${borderClass} p-5 rounded-xl shadow-sm hover:border-gray-600 transition-colors flex items-center gap-5`}>
+                                <div className={`p-4 rounded-lg ${isDark ? 'bg-emerald-900/20' : 'bg-emerald-50'} text-emerald-500`}>
+                                    <BarChart3 size={28} />
                                 </div>
                                 <div>
-                                    <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Total Minutes</h4>
-                                    <p className={`text-xs ${mutedTextClass} mt-0.5`}>
+                                    <h4 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Total Minutes</h4>
+                                    <p className={`text-sm ${mutedTextClass} mt-1`}>
                                         <span className="text-emerald-500 font-medium">{getTotalStudyTime().total} minutes</span> focused
                                     </p>
                                 </div>
                             </div>
 
                             {/* Session Summary */}
-                            <div className={`${cardBgClass} border ${borderClass} p-4 rounded shadow-sm flex-1 flex flex-col justify-center`}>
-                                <h4 className={`text-xs font-bold ${mutedTextClass} uppercase tracking-wide mb-2`}>Session Summary</h4>
+                            <div className={`${cardBgClass} border ${borderClass} p-5 rounded-xl shadow-sm flex-1 flex flex-col justify-center`}>
+                                <h4 className={`text-sm font-bold ${mutedTextClass} uppercase tracking-wide mb-3`}>Session Summary</h4>
                                 {completedSessions.length > 0 ? (
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {completedSessions.slice(-3).map((session, i) => (
-                                            <div key={i} className="flex justify-between text-sm">
+                                            <div key={i} className="flex justify-between text-base">
                                                 <span className={mutedTextClass}>Session {completedSessions.length - 2 + i}</span>
                                                 <span className="text-cyan-500 font-medium">{session.duration} min</span>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className={`flex items-center gap-2 text-sm ${mutedTextClass} italic`}>
-                                        <Info size={18} />
+                                    <div className={`flex items-center gap-3 text-base ${mutedTextClass} italic`}>
+                                        <Info size={22} />
                                         No recent sessions
                                     </div>
                                 )}
@@ -487,9 +487,9 @@ export default function StudyWithMe() {
             </main>
 
             {/* Footer */}
-            <footer className="w-full max-w-7xl mx-auto mt-6 text-center">
-                <p className={`text-xs ${mutedTextClass}`}>
-                    Pro Tip: Use <span className={`font-mono ${inputBgClass} px-1 rounded`}>Space</span> to pause/resume timer.
+            <footer className="w-full max-w-7xl mx-auto mt-10 text-center">
+                <p className={`text-sm ${mutedTextClass}`}>
+                    Pro Tip: Use <span className={`font-mono ${inputBgClass} px-2 py-1 rounded`}>Space</span> to pause/resume timer.
                 </p>
             </footer>
         </div>
