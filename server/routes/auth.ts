@@ -70,7 +70,7 @@ router.post('/signup', async (req: Request, res) => {
 });
 
 // Login
-router.post('/login', async (req: Request, res) => {
+router.post('/login', async (req: any, res) => {
     console.log('🔵 [LOGIN] Request received:', { email: req.body.email });
     const { email, password } = req.body;
 
@@ -79,94 +79,121 @@ router.post('/login', async (req: Request, res) => {
     }
 
     try {
-        const result = await db.execute({
-            sql: 'SELECT * FROM users WHERE email = ?',
+        console.log('🔵 [LOGIN] Pinging database...');
+        await db.execute('SELECT 1');
+        console.log('🟢 [LOGIN] Database ping successful');
+
+        console.log('🔵 [LOGIN] Querying user (manual columns, excluding avatar)...');
+
+        // Safety wrap for DB query to see if it actually returns
+        const queryPromise = db.execute({
+            sql: 'SELECT id, email, password_hash, name, exam_type, preparation_stage, gender FROM users WHERE email = ?',
             args: [email]
         });
+
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('DATABASE_QUERY_TIMEOUT')), 5000)
+        );
+
+        const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+
         const user = result.rows[0] as any;
         console.log('🔵 [LOGIN] User found:', user ? 'Yes' : 'No');
 
+        console.log('🔵 [LOGIN] Verifying password...');
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
             console.log('🔴 [LOGIN] Invalid credentials');
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+        console.log('🟢 [LOGIN] Password verified');
 
-        // Update login streak (once per day only, IST timezone)
-        const streakResult = await db.execute({
-            sql: 'SELECT * FROM streaks WHERE user_id = ?',
-            args: [user.id]
-        });
-        const currentStreak = streakResult.rows[0] as any;
-
-        // Get current date in IST (UTC+5:30)
-        const now = new Date();
-        const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
-        const nowIST = new Date(now.getTime() + istOffset);
-        const todayIST = nowIST.toISOString().split('T')[0]; // YYYY-MM-DD
-
-        if (currentStreak && currentStreak.last_active_date) {
-            const lastActiveDate = new Date(currentStreak.last_active_date);
-            const lastActiveIST = new Date(lastActiveDate.getTime() + istOffset);
-            const lastDateIST = lastActiveIST.toISOString().split('T')[0];
-
-            // First login ever (streak is 0 from signup), set to 1
-            if (currentStreak.login_streak === 0) {
-                await db.execute({
-                    sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
-                    args: [now.toISOString(), user.id]
-                });
-                console.log('🟢 [LOGIN] First login after signup, streak set to 1');
-            } else if (lastDateIST === todayIST) {
-                // Already logged in today, don't increment streak
-                console.log('🟡 [LOGIN] Already logged in today, streak unchanged');
-            } else {
-                // Check if yesterday (to maintain streak) or gap (reset streak)
-                const yesterday = new Date(nowIST);
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayIST = yesterday.toISOString().split('T')[0];
-
-                if (lastDateIST === yesterdayIST) {
-                    // Consecutive day, increment streak
-                    await db.execute({
-                        sql: `UPDATE streaks SET login_streak = login_streak + 1, last_active_date = ? WHERE user_id = ?`,
-                        args: [now.toISOString(), user.id]
-                    });
-                    console.log('🟢 [LOGIN] Streak incremented (consecutive day)');
-                } else {
-                    // Missed days, reset streak to 1
-                    await db.execute({
-                        sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
-                        args: [now.toISOString(), user.id]
-                    });
-                    console.log('🟠 [LOGIN] Streak reset to 1 (missed days)');
-                }
-            }
-        } else {
-            // First login ever, set streak to 1
-            await db.execute({
-                sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
-                args: [now.toISOString(), user.id]
-            });
-            console.log('🟢 [LOGIN] First login, streak set to 1');
-        }
-
+        // Set session immediately
         req.session.userId = user.id;
         console.log('🟢 [LOGIN] Session userId set:', req.session.userId);
+
+        // Update login streak (Best effort - don't block login if this fails)
+        try {
+            console.log('🔵 [LOGIN] Updating streaks...');
+            await updateLoginStreak(user.id);
+            console.log('🟢 [LOGIN] Streaks updated');
+        } catch (streakError) {
+            console.error('🟠 [LOGIN] Streak update failed (non-fatal):', streakError);
+        }
 
         res.json({
             id: user.id,
             name: user.name,
             email: user.email,
-            avatar: user.avatar,
+            avatar: 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png', // Placeholder for test
             examType: user.exam_type,
             preparationStage: user.preparation_stage,
             gender: user.gender
         });
-    } catch (error) {
-        console.error('Login error:', error);
+        console.log('🟢 [LOGIN] Response sent');
+    } catch (error: any) {
+        console.error('🔴 [LOGIN ERROR]:', error.message || error);
+        if (error.message === 'DATABASE_QUERY_TIMEOUT') {
+            return res.status(504).json({ message: 'Database query timed out' });
+        }
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+// Helper for streak updates
+async function updateLoginStreak(userId: string) {
+    const streakResult = await db.execute({
+        sql: 'SELECT * FROM streaks WHERE user_id = ?',
+        args: [userId]
+    });
+    const currentStreak = streakResult.rows[0] as any;
+
+    // Get current date in IST (UTC+5:30)
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
+    const nowIST = new Date(now.getTime() + istOffset);
+    const todayIST = nowIST.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    if (currentStreak && currentStreak.last_active_date) {
+        const lastActiveDate = new Date(currentStreak.last_active_date);
+        const lastActiveIST = new Date(lastActiveDate.getTime() + istOffset);
+        const lastDateIST = lastActiveIST.toISOString().split('T')[0];
+
+        // First login ever (streak is 0 from signup), set to 1
+        if (currentStreak.login_streak === 0) {
+            await db.execute({
+                sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
+                args: [now.toISOString(), userId]
+            });
+        } else if (lastDateIST === todayIST) {
+            // Already logged in today, don't increment streak
+        } else {
+            // Check if yesterday (to maintain streak) or gap (reset streak)
+            const yesterday = new Date(nowIST);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayIST = yesterday.toISOString().split('T')[0];
+
+            if (lastDateIST === yesterdayIST) {
+                // Consecutive day, increment streak
+                await db.execute({
+                    sql: `UPDATE streaks SET login_streak = login_streak + 1, last_active_date = ? WHERE user_id = ?`,
+                    args: [now.toISOString(), userId]
+                });
+            } else {
+                // Missed days, reset streak to 1
+                await db.execute({
+                    sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
+                    args: [now.toISOString(), userId]
+                });
+            }
+        }
+    } else {
+        // First login ever (or missing streak record), set streak to 1
+        await db.execute({
+            sql: `UPDATE streaks SET login_streak = 1, last_active_date = ? WHERE user_id = ?`,
+            args: [now.toISOString(), userId]
+        });
+    }
+}
 
 // Logout
 router.post('/logout', (req: Request, res) => {
