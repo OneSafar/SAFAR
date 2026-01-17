@@ -29,7 +29,7 @@ export default function WelcomeDialog({ onClose, userName }: WelcomeDialogProps)
                 className={`glass-high max-w-md w-full transform transition-all duration-300 shadow-2xl border-2 border-primary/20 ${isVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
                     }`}
             >
-                <CardContent className="p-8 text-center space-y-6">
+                <CardContent className="p-8 text-center space-y-6 font-['Poppins']">
                     {/* Greeting */}
                     <div className="space-y-2">
                         <h2 className="text-2xl font-bold text-primary">Hello{userName ? `, ${userName}` : ""}.</h2>

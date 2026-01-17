@@ -9,6 +9,7 @@ import {
   Lightbulb,
   User,
   Timer,
+  Award,
 } from "lucide-react";
 
 const navItems = [
@@ -19,7 +20,7 @@ const navItems = [
     description: "Overview & summary",
   },
   {
-    label: "Study With Me",
+    label: "Focus Session",
     href: "/study",
     icon: Timer,
     description: "Focus timer sessions",
@@ -47,6 +48,12 @@ const navItems = [
     href: "/streaks",
     icon: Flame,
     description: "Maintain your streaks",
+  },
+  {
+    label: "Perks",
+    href: "/perks",
+    icon: Award,
+    description: "Your rewards & titles",
   },
   {
     label: "Suggestions",

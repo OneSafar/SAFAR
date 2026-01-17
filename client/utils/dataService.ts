@@ -105,4 +105,76 @@ export const dataService = {
         if (!res.ok) throw new Error("Failed to fetch streaks");
         return res.json();
     },
+
+    // --- Perks ---
+    async getPerks(): Promise<{
+        perks: Array<{
+            perk_id: string;
+            acquired_at: string;
+            is_active: number;
+            name: string;
+            type: 'aura' | 'echo' | 'seasonal';
+            category: string;
+            rarity: string | null;
+            tier: number | null;
+            display_priority: number;
+        }>;
+        counts: { aura: number; echo: number; seasonal: number };
+    }> {
+        const res = await fetch(`${API_URL}/perks`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error("Failed to fetch perks");
+        return res.json();
+    },
+
+    async getActiveTitle(): Promise<{ title: string | null; type?: string }> {
+        const res = await fetch(`${API_URL}/perks/active-title`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error("Failed to fetch active title");
+        return res.json();
+    },
+
+    async getAllPerks(): Promise<{
+        perks: Array<{
+            id: string;
+            name: string;
+            description: string | null;
+            type: 'aura' | 'echo' | 'seasonal';
+            category: string;
+            rarity: string | null;
+            tier: number | null;
+            requirement: string;
+            holderCount: number;
+            earned: boolean;
+            active: boolean;
+            progress: number;
+            currentValue: number;
+            targetValue: number;
+        }>;
+    }> {
+        const res = await fetch(`${API_URL}/perks/all`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error("Failed to fetch all perks");
+        return res.json();
+    },
+
+    async selectPerk(perkId: string | null): Promise<{ message: string; selectedPerkId: string | null; title?: string; type?: string }> {
+        const res = await fetch(`${API_URL}/perks/select`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ perkId }),
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error("Failed to select perk");
+        return res.json();
+    },
 };

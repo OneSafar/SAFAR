@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/utils/authService';
-import { X, Sun, Moon, Play, Pause, Flame, Target, BarChart3, Info, GripHorizontal, ChevronDown, Check, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
+import MainLayout from '@/components/MainLayout';
+import { X, Sun, Moon, Play, Pause, Flame, Target, BarChart3, Clock, GripHorizontal, ChevronDown, Check, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
 
 interface Session {
     start: Date;
@@ -556,214 +557,222 @@ export default function StudyWithMe() {
 
     // Dashboard Screen
     return (
-        <div className={`min-h-screen ${bgClass} ${textClass} font-sans transition-colors duration-300 flex items-center justify-center p-6`}>
-            <div className="w-full max-w-7xl mx-auto flex flex-col gap-8">
+        <MainLayout userName={user?.name} userAvatar={user?.avatar}>
+            <div className="flex-1 h-full overflow-y-auto bg-background/95 font-['Plus_Jakarta_Sans'] transition-colors duration-300">
+                {/* Background Gradient */}
+                <div
+                    className="fixed inset-0 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: `
+                            radial-gradient(circle at 15% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%),
+                            radial-gradient(circle at 85% 30%, hsl(var(--primary) / 0.1) 0%, transparent 45%),
+                            radial-gradient(circle at 50% 80%, hsl(var(--secondary) / 0.1) 0%, transparent 40%)
+                        `,
+                        backgroundAttachment: 'fixed'
+                    }}
+                ></div>
 
-                {/* Navbar - Simplified */}
-                {/* Navbar - Simplified */}
-                <div className="flex justify-between items-center px-2">
-                    <div className="flex items-center gap-4">
+                {/* Content Wrapper */}
+                <div className="relative z-10 p-4 md:p-6 lg:p-8">
+                    {/* Header */}
+                    <header className="flex items-center justify-between mb-6 md:mb-8">
+                        <div>
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1">Focus Session</h1>
+                            <p className="text-muted-foreground text-xs sm:text-sm">Track your focus time and boost productivity</p>
+                        </div>
                         <button
-                            onClick={() => navigate('/dashboard')}
-                            className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}
+                            onClick={() => setIsDark(!isDark)}
+                            className="p-2 rounded-lg hover:bg-muted transition-colors"
                         >
-                            <ArrowLeft size={24} className={isDark ? 'text-gray-200' : 'text-gray-700'} />
+                            {isDark ? <Sun className="text-yellow-400" size={20} /> : <Moon className="text-muted-foreground" size={20} />}
                         </button>
-                        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Study With Me
-                        </h1>
-                    </div>
-                    <button
-                        onClick={() => setIsDark(!isDark)}
-                        className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${isDark ? 'text-yellow-400' : 'text-gray-500'}`}
-                    >
-                        {isDark ? <Sun size={28} /> : <Moon size={28} />}
-                    </button>
-                </div>
+                    </header>
 
-                <main className="grid grid-cols-12 gap-4">
-                    {/* Timer Selection Section */}
-                    <div className="col-span-12 flex flex-col gap-3">
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                            {sessionTypes.map((session) => (
-                                <button
-                                    key={session.duration}
-                                    onClick={() => startSession(session)}
-                                    className={`relative p-4 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${activePreset === session.duration
-                                        ? 'bg-[#06b6d4] text-white shadow-[0_0_25px_-5px_rgba(6,182,212,0.5)] hover:shadow-[0_0_30px_-3px_rgba(6,182,212,0.7)] transform -translate-y-[2px]'
-                                        : `${cardBgClass} border ${borderClass} hover:border-[#06b6d4]/50 hover:-translate-y-[2px]`
-                                        }`}
-                                >
-                                    <span className="text-2xl font-bold">{session.label}</span>
-                                    <span className={`text-xs uppercase tracking-wider font-medium ${activePreset === session.duration ? 'opacity-90' : mutedTextClass}`}>
-                                        min focus
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Custom Timer & Settings Row - Simplified */}
-                        <div
-                            onClick={() => setShowCustomSettings(!showCustomSettings)}
-                            className={`w-full ${cardBgClass} border ${borderClass} rounded-xl px-5 py-3 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <GripHorizontal className="text-[#06b6d4]" size={22} />
-                                <span className={`font-medium text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Custom Timer Settings</span>
-                            </div>
-                            <ChevronDown className={`text-gray-400 transition-transform ${showCustomSettings ? 'rotate-180' : ''}`} size={20} />
-                        </div>
-
-                        {/* Custom Timer Expanded Panel */}
-                        {showCustomSettings && (
-                            <div className={`${cardBgClass} border ${borderClass} rounded-lg px-4 py-4 flex flex-col gap-3`}>
-                                <div className="flex items-center gap-4">
-                                    <label className={`text-sm font-medium ${mutedTextClass}`}>Duration (minutes):</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="180"
-                                        value={customMinutes}
-                                        onChange={(e) => setCustomMinutes(Math.max(1, Math.min(180, parseInt(e.target.value) || 1)))}
-                                        className={`w-24 px-3 py-2 rounded-lg border ${borderClass} ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500`}
-                                    />
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            startCustomSession();
-                                        }}
-                                        className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors h-full"
-                                    >
-                                        Start
-                                    </button>
+                    {/* Timer Selection Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6">
+                        {/* Session Duration Selection */}
+                        <div className="lg:col-span-12 glass-high rounded-2xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Clock className="text-primary w-5 h-5" />
+                                    <h3 className="font-semibold text-lg text-foreground">Select Focus Duration</h3>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <label className={`text-sm font-medium ${mutedTextClass}`}>Break (minutes):</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="60"
-                                        value={customBreakMinutes}
-                                        onChange={(e) => setCustomBreakMinutes(Math.max(1, Math.min(60, parseInt(e.target.value) || 1)))}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className={`w-24 px-3 py-2 rounded-lg border ${borderClass} ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500`}
-                                    />
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                    {sessionTypes.map((session) => (
+                                        <button
+                                            key={session.duration}
+                                            onClick={() => startSession(session)}
+                                            className={`relative p-4 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 border ${activePreset === session.duration
+                                                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 border-primary -translate-y-1'
+                                                : 'bg-muted/50 border-border hover:border-primary/50 hover:-translate-y-1 text-foreground'
+                                                }`}
+                                        >
+                                            <span className="text-2xl font-bold">{session.label}</span>
+                                            <span className={`text-xs uppercase tracking-wider font-medium ${activePreset === session.duration ? 'opacity-90' : 'text-muted-foreground'}`}>
+                                                min focus
+                                            </span>
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Analytics Section */}
-                    <div className="col-span-12 flex flex-col gap-6 mt-6">
-                        <div className="flex justify-between items-end px-2">
-                            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} uppercase tracking-wider`}>Performance Analytics</h2>
-                            <button className="text-sm font-bold bg-[#06b6d4]/10 text-[#06b6d4] px-4 py-2 rounded-lg hover:bg-[#06b6d4]/20 transition-colors uppercase">Weekly View</button>
                         </div>
 
-                        <div className="grid grid-cols-12 gap-8">
-                            {/* Weekly Overview Chart - Using API Data */}
-                            <div className={`col-span-12 lg:col-span-8 ${cardBgClass} border ${borderClass} rounded-2xl p-9 flex flex-col min-h-[420px]`}>
-                                <div className="flex justify-between items-start mb-9">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-500 uppercase tracking-tight mb-2">Weekly Overview</h3>
-                                        <p className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {Math.floor(focusStats.totalFocusMinutes / 60)}h {focusStats.totalFocusMinutes % 60}m
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className={`text-sm ${mutedTextClass} mb-1`}>Sessions: {focusStats.completedSessions}/{focusStats.totalSessions}</p>
-                                        <p className={`text-sm ${mutedTextClass}`}>Goals: {focusStats.goalsCompleted}/{focusStats.goalsSet}</p>
+                        {/* Custom Timer Settings */}
+                        <div className="lg:col-span-12 glass-high rounded-2xl overflow-hidden">
+                            <button
+                                onClick={() => setShowCustomSettings(!showCustomSettings)}
+                                className="w-full px-6 py-4 flex justify-between items-center hover:bg-muted/30 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <GripHorizontal className="text-primary" size={20} />
+                                    <span className="font-medium text-sm text-foreground">Custom Timer Settings</span>
+                                </div>
+                                <ChevronDown className={`text-muted-foreground transition-transform ${showCustomSettings ? 'rotate-180' : ''}`} size={20} />
+                            </button>
+
+                            {showCustomSettings && (
+                                <div className="px-6 pb-4 flex flex-col gap-4 border-t border-border pt-4">
+                                    <div className="flex flex-wrap items-center gap-4">
+                                        <label className="text-sm font-medium text-muted-foreground">Duration (minutes):</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="180"
+                                            value={customMinutes}
+                                            onChange={(e) => setCustomMinutes(Math.max(1, Math.min(180, parseInt(e.target.value) || 1)))}
+                                            className="w-24 px-3 py-2 rounded-xl border border-border bg-muted/50 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                        />
+                                        <label className="text-sm font-medium text-muted-foreground">Break (minutes):</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="60"
+                                            value={customBreakMinutes}
+                                            onChange={(e) => setCustomBreakMinutes(Math.max(1, Math.min(60, parseInt(e.target.value) || 1)))}
+                                            className="w-24 px-3 py-2 rounded-xl border border-border bg-muted/50 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                        />
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                startCustomSession();
+                                            }}
+                                            className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
+                                        >
+                                            Start Custom
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="flex items-end justify-between h-full gap-6 px-4">
-                                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                                        const maxMins = Math.max(...focusStats.weeklyData, 60);
-                                        const h = focusStats.weeklyData[i] > 0 ? Math.max(10, (focusStats.weeklyData[i] / maxMins) * 100) : 5;
-                                        const today = new Date().getDay();
-                                        const dayIndex = today === 0 ? 6 : today - 1;
-                                        const isToday = i === dayIndex;
-                                        return (
-                                            <div key={i} className="flex-1 flex flex-col items-center gap-3 group cursor-pointer h-full justify-end">
-                                                <div className={`text-sm font-medium ${mutedTextClass} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                                                    {focusStats.weeklyData[i]}m
+                            )}
+                        </div>
+
+                        {/* Analytics Section */}
+                        <div className="lg:col-span-12 glass-high rounded-2xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+                            <div className="flex items-center justify-between mb-6 relative z-10">
+                                <div className="flex items-center gap-2">
+                                    <BarChart3 className="text-primary w-5 h-5" />
+                                    <h3 className="font-semibold text-lg text-foreground">Performance Analytics</h3>
+                                </div>
+                                <span className="bg-primary/10 text-primary px-3 py-1 rounded-lg text-xs font-bold uppercase">Weekly View</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
+                                {/* Weekly Overview Chart */}
+                                <div className="lg:col-span-8 bg-muted/30 border border-border rounded-xl p-6 min-h-[300px]">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Weekly Overview</p>
+                                            <p className="text-4xl font-bold text-foreground">
+                                                {Math.floor(focusStats.totalFocusMinutes / 60)}h {focusStats.totalFocusMinutes % 60}m
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm text-muted-foreground mb-1">Sessions: {focusStats.completedSessions}/{focusStats.totalSessions}</p>
+                                            <p className="text-sm text-muted-foreground">Goals: {focusStats.goalsCompleted}/{focusStats.goalsSet}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-end justify-between h-40 gap-4">
+                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
+                                            const maxMins = Math.max(...focusStats.weeklyData, 60);
+                                            const h = focusStats.weeklyData[i] > 0 ? Math.max(10, (focusStats.weeklyData[i] / maxMins) * 100) : 5;
+                                            const today = new Date().getDay();
+                                            const dayIndex = today === 0 ? 6 : today - 1;
+                                            const isToday = i === dayIndex;
+                                            return (
+                                                <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer justify-end h-full">
+                                                    <div className="text-xs font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {focusStats.weeklyData[i]}m
+                                                    </div>
+                                                    <div
+                                                        className={`w-full rounded-lg transition-colors ${isToday
+                                                            ? 'bg-primary shadow-lg shadow-primary/30'
+                                                            : focusStats.weeklyData[i] > 0
+                                                                ? 'bg-primary/50'
+                                                                : 'bg-muted'
+                                                            } group-hover:bg-primary/70`}
+                                                        style={{ height: `${h}%`, minHeight: '8px' }}
+                                                    ></div>
+                                                    <span className={`text-sm font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>{day}</span>
                                                 </div>
-                                                <div
-                                                    className={`w-full rounded-xl transition-colors ${isToday
-                                                        ? 'bg-[#06b6d4] shadow-[0_0_18px_rgba(6,182,212,0.5)]'
-                                                        : focusStats.weeklyData[i] > 0
-                                                            ? `bg-[#06b6d4]/60`
-                                                            : `${isDark ? 'bg-gray-800' : 'bg-gray-100'}`
-                                                        } group-hover:bg-[#06b6d4]/80`}
-                                                    style={{ height: `${h}%`, minHeight: '12px' }}
-                                                ></div>
-                                                <span className={`text-base font-bold ${isToday ? 'text-[#06b6d4]' : 'text-gray-400'}`}>{day}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Stats Side Column - Using API Data */}
-                            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-                                {/* Focus Streak */}
-                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-2xl p-6 flex items-center gap-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-                                    <div className={`w-16 h-16 rounded-2xl ${isDark ? 'bg-orange-500/10' : 'bg-orange-100'} flex items-center justify-center text-orange-500`}>
-                                        <Flame size={32} />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-tight">Focus Streak</h4>
-                                        <p className={`text-2xl font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                                            {focusStats.focusStreak} Days
-                                        </p>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
-                                {/* Hours Focused */}
-                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-2xl p-6 flex items-center gap-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-                                    <div className={`w-16 h-16 rounded-2xl ${isDark ? 'bg-pink-500/10' : 'bg-pink-100'} flex items-center justify-center text-pink-500`}>
-                                        <Target size={32} />
+                                {/* Stats Side Column */}
+                                <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4">
+                                    {/* Focus Streak */}
+                                    <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-center gap-4 hover:bg-muted transition-colors">
+                                        <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                                            <Flame size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-muted-foreground uppercase">Focus Streak</p>
+                                            <p className="text-xl font-bold text-foreground">{focusStats.focusStreak} Days</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-tight">Hours Focused</h4>
-                                        <p className={`text-2xl font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                                            {Math.floor(focusStats.totalFocusMinutes / 60)}h {focusStats.totalFocusMinutes % 60}m
-                                        </p>
-                                    </div>
-                                </div>
 
-                                {/* Total Focus */}
-                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-2xl p-6 flex items-center gap-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-                                    <div className={`w-16 h-16 rounded-2xl ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-100'} flex items-center justify-center text-emerald-500`}>
-                                        <Target size={32} />
+                                    {/* Hours Focused */}
+                                    <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-center gap-4 hover:bg-muted transition-colors">
+                                        <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                                            <Target size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-muted-foreground uppercase">Hours Focused</p>
+                                            <p className="text-xl font-bold text-foreground">
+                                                {Math.floor(focusStats.totalFocusMinutes / 60)}h {focusStats.totalFocusMinutes % 60}m
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-tight">Total Focus</h4>
-                                        <p className={`text-2xl font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{focusStats.totalFocusMinutes} mins</p>
-                                    </div>
-                                </div>
 
-                                {/* Total Breaks */}
-                                <div className={`flex-1 ${cardBgClass} border ${borderClass} rounded-2xl p-6 flex items-center gap-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
-                                    <div className={`w-16 h-16 rounded-2xl ${isDark ? 'bg-cyan-500/10' : 'bg-cyan-100'} flex items-center justify-center text-cyan-500`}>
-                                        <BarChart3 size={32} />
+                                    {/* Total Focus */}
+                                    <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-center gap-4 hover:bg-muted transition-colors">
+                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                            <Clock size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-muted-foreground uppercase">Total Focus</p>
+                                            <p className="text-xl font-bold text-foreground">{focusStats.totalFocusMinutes} mins</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-tight">Total Breaks</h4>
-                                        <p className={`text-2xl font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{focusStats.totalBreakMinutes} mins</p>
+
+                                    {/* Total Breaks */}
+                                    <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-center gap-4 hover:bg-muted transition-colors">
+                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                            <BarChart3 size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-muted-foreground uppercase">Total Breaks</p>
+                                            <p className="text-xl font-bold text-foreground">{focusStats.totalBreakMinutes} mins</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </main>
+                </div>
             </div>
-
-            <script dangerouslySetInnerHTML={{
-                __html: `
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.documentElement.classList.add('dark');
-                }
-            `}} />
-        </div>
+        </MainLayout>
     );
 }

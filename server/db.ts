@@ -5,16 +5,16 @@ import { createClient } from '@libsql/client';
 const isProduction = process.env.TURSO_DATABASE_URL ? true : false;
 
 export const db = createClient({
-  url: process.env.TURSO_DATABASE_URL || 'file:./local.db',
-  authToken: process.env.TURSO_AUTH_TOKEN,
+    url: process.env.TURSO_DATABASE_URL || 'file:./local.db',
+    authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
 console.log('📁 Database:', isProduction ? 'Turso Cloud' : 'Local SQLite');
 
 // Initialize tables
 export async function initDatabase() {
-  // Users table
-  await db.execute(`
+    // Users table
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,
             email TEXT UNIQUE NOT NULL,
@@ -24,12 +24,13 @@ export async function initDatabase() {
             exam_type TEXT,
             preparation_stage TEXT,
             gender TEXT,
+            selected_perk_id TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
 
-  // Moods table
-  await db.execute(`
+    // Moods table
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS moods (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -41,8 +42,8 @@ export async function initDatabase() {
         )
     `);
 
-  // Goals table
-  await db.execute(`
+    // Goals table
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS goals (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -55,8 +56,8 @@ export async function initDatabase() {
         )
     `);
 
-  // Journal entries table
-  await db.execute(`
+    // Journal entries table
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS journal (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -66,8 +67,8 @@ export async function initDatabase() {
         )
     `);
 
-  // Streaks table
-  await db.execute(`
+    // Streaks table
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS streaks (
             id TEXT PRIMARY KEY,
             user_id TEXT UNIQUE NOT NULL,
@@ -79,8 +80,8 @@ export async function initDatabase() {
         )
     `);
 
-  // Store session
-  await db.execute(`
+    // Store session
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS sessions (
             sid TEXT PRIMARY KEY NOT NULL,
             sess TEXT NOT NULL,
@@ -88,8 +89,8 @@ export async function initDatabase() {
         )
     `);
 
-  // Login/Activity history
-  await db.execute(`
+    // Login/Activity history
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS login_history (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -98,8 +99,8 @@ export async function initDatabase() {
         )
     `);
 
-  // Focus sessions table for Study With Me analytics
-  await db.execute(`
+    // Focus sessions table for Study With Me analytics
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS focus_sessions (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -112,5 +113,49 @@ export async function initDatabase() {
         )
     `);
 
-  console.log('Database initialized successfully');
+    // Perk definitions table - stores all available perks
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS perk_definitions (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            type TEXT CHECK(type IN ('aura', 'echo', 'seasonal')) NOT NULL,
+            category TEXT CHECK(category IN ('focus', 'goals', 'mood', 'streak', 'special')) NOT NULL,
+            rarity TEXT CHECK(rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            tier INTEGER,
+            color_code TEXT,
+            criteria_json TEXT NOT NULL,
+            is_limited INTEGER DEFAULT 0,
+            available_from TEXT,
+            available_until TEXT,
+            max_recipients INTEGER,
+            display_priority INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // User perks table - tracks which perks each user has earned
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS user_perks (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            perk_id TEXT NOT NULL,
+            acquired_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_active INTEGER DEFAULT 1,
+            lost_at DATETIME,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (perk_id) REFERENCES perk_definitions(id),
+            UNIQUE(user_id, perk_id)
+        )
+    `);
+
+    // Migration: Ensure selected_perk_id column exists on users table (for existing databases)
+    try {
+        await db.execute(`ALTER TABLE users ADD COLUMN selected_perk_id TEXT`);
+        console.log('Added selected_perk_id column to users table');
+    } catch (e) {
+        // Column likely already exists - ignore
+    }
+
+    console.log('Database initialized successfully');
 }

@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import { requireAuth } from '../middleware/auth';
+import { checkPerks } from './perks';
 
 const router = Router();
 
@@ -116,6 +117,14 @@ router.post('/login', async (req: any, res) => {
             console.log('🔵 [LOGIN] Updating streaks...');
             await updateLoginStreak(user.id);
             console.log('🟢 [LOGIN] Streaks updated');
+
+            // Check and award perks based on current stats
+            try {
+                await checkPerks(user.id, 'login');
+                console.log('🟢 [LOGIN] Perks checked');
+            } catch (perkError) {
+                console.error('🟠 [LOGIN] Perk check failed (non-fatal):', perkError);
+            }
         } catch (streakError) {
             console.error('🟠 [LOGIN] Streak update failed (non-fatal):', streakError);
         }

@@ -161,7 +161,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   }
 
   :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
@@ -531,4 +531,237 @@
 .animate-card-hover:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Perk Card Active Border Pulse Animations */
+.perk-card-active-aura {
+  animation: pulse-border-aura 2s ease-in-out infinite;
+}
+
+.perk-card-active-echo {
+  animation: pulse-border-echo 2s ease-in-out infinite;
+}
+
+.perk-card-active-seasonal {
+  animation: pulse-border-seasonal 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border-aura {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(180, 130, 20, 0.6), 0 0 8px rgba(180, 130, 20, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 3px rgba(180, 130, 20, 0.9), 0 0 16px rgba(180, 130, 20, 0.5);
+  }
+}
+
+@keyframes pulse-border-echo {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.6), 0 0 8px rgba(124, 58, 237, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.9), 0 0 16px rgba(124, 58, 237, 0.5);
+  }
+}
+
+@keyframes pulse-border-seasonal {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.6), 0 0 8px rgba(5, 150, 105, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.9), 0 0 16px rgba(5, 150, 105, 0.5);
+  }
+}
+
+/* ========================================
+   PERKS SYSTEM - Golden Aura Text Styling
+   ======================================== */
+
+/* Base perk title styling - contrasting colors for light/dark */
+.perk-title {
+  font-weight: 700;
+  font-style: italic;
+  /* Light mode: Dark amber/bronze for contrast */
+  color: #B8860B;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode: Golden with aura glow */
+.dark .perk-title {
+  color: #FFD700;
+  text-shadow:
+    0 0 10px rgba(255, 215, 0, 0.6),
+    0 0 20px rgba(255, 215, 0, 0.4),
+    0 0 30px rgba(255, 215, 0, 0.3),
+    0 0 40px rgba(255, 215, 0, 0.2);
+  animation: perkGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes perkGlow {
+  0% {
+    text-shadow:
+      0 0 10px rgba(255, 215, 0, 0.6),
+      0 0 20px rgba(255, 215, 0, 0.4),
+      0 0 30px rgba(255, 215, 0, 0.3);
+  }
+
+  100% {
+    text-shadow:
+      0 0 15px rgba(255, 215, 0, 0.8),
+      0 0 25px rgba(255, 215, 0, 0.6),
+      0 0 40px rgba(255, 215, 0, 0.4),
+      0 0 50px rgba(255, 215, 0, 0.2);
+  }
+}
+
+/* Aura title (dynamic) - Light mode: dark amber, Dark mode: golden glow */
+.perk-title-aura {
+  font-weight: 700;
+  font-style: italic;
+  /* Light mode */
+  color: #996515;
+  text-shadow: 0 1px 3px rgba(153, 101, 21, 0.3);
+}
+
+.dark .perk-title-aura {
+  color: #FFD700;
+  text-shadow:
+    0 0 8px rgba(255, 215, 0, 0.7),
+    0 0 16px rgba(255, 215, 0, 0.5),
+    0 0 24px rgba(255, 215, 0, 0.3);
+  animation: auraBreath 3s ease-in-out infinite;
+}
+
+@keyframes auraBreath {
+
+  0%,
+  100% {
+    text-shadow:
+      0 0 8px rgba(255, 215, 0, 0.7),
+      0 0 16px rgba(255, 215, 0, 0.5),
+      0 0 24px rgba(255, 215, 0, 0.3);
+    opacity: 1;
+  }
+
+  50% {
+    text-shadow:
+      0 0 12px rgba(255, 215, 0, 0.9),
+      0 0 24px rgba(255, 215, 0, 0.7),
+      0 0 36px rgba(255, 215, 0, 0.5),
+      0 0 48px rgba(255, 215, 0, 0.3);
+    opacity: 0.95;
+  }
+}
+
+/* Echo badge (permanent) - Light mode: purple, Dark mode: golden glow */
+.perk-title-echo {
+  font-weight: 700;
+  font-style: italic;
+  /* Light mode: deep purple for contrast */
+  color: #7C3AED;
+  text-shadow: 0 1px 2px rgba(124, 58, 237, 0.2);
+}
+
+.dark .perk-title-echo {
+  color: #FFD700;
+  text-shadow:
+    0 0 10px rgba(255, 215, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+/* Seasonal/Limited - Light mode: emerald, Dark mode: golden shimmer */
+.perk-title-seasonal {
+  font-weight: 700;
+  font-style: italic;
+  /* Light mode: emerald gradient */
+  background: linear-gradient(90deg, #059669, #10B981, #059669);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+.dark .perk-title-seasonal {
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.6));
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Rarity-based color variations */
+.perk-rarity-common {
+  color: #9CA3AF;
+  text-shadow: 0 0 8px rgba(156, 163, 175, 0.5);
+}
+
+.perk-rarity-uncommon {
+  color: #10B981;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.perk-rarity-rare {
+  color: #3B82F6;
+  text-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+}
+
+.perk-rarity-epic {
+  color: #8B5CF6;
+  text-shadow: 0 0 15px rgba(139, 92, 246, 0.7);
+}
+
+.perk-rarity-legendary {
+  color: #FFD700;
+  text-shadow:
+    0 0 10px rgba(255, 215, 0, 0.6),
+    0 0 20px rgba(255, 215, 0, 0.4),
+    0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+/* Perk container with subtle aura background */
+.perk-container {
+  position: relative;
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+}
+
+.perk-container::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+  border-radius: 8px;
+  z-index: -1;
+  animation: perkAuraBackground 4s ease-in-out infinite;
+}
+
+@keyframes perkAuraBackground {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }

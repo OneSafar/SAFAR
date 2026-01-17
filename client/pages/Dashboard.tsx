@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
 import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
+import PerkTitle from "@/components/PerkTitle";
 import {
     Heart,
     RotateCw,
@@ -17,7 +18,9 @@ import {
     History,
     Target,
     CheckCircle2,
-    Circle
+    Circle,
+    Award,
+    Sparkles
 } from "lucide-react";
 import youtubeImg from "@/assets/youtube-thumbnail.png";
 import courseImg from "@/assets/course-thumbnail.png";
@@ -47,6 +50,9 @@ export default function Dashboard() {
     const [goals, setGoals] = useState<{ total: number; completed: number }>({ total: 0, completed: 0 });
     const [weeklyMoods, setWeeklyMoods] = useState<{ day: string; intensity: number; mood: string }[]>([]);
     const [allGoals, setAllGoals] = useState<any[]>([]);
+    const [activeTitle, setActiveTitle] = useState<string | null>(null);
+    const [perks, setPerks] = useState<any[]>([]);
+    const [perkCounts, setPerkCounts] = useState<{ aura: number; echo: number; seasonal: number }>({ aura: 0, echo: 0, seasonal: 0 });
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -117,6 +123,17 @@ export default function Dashboard() {
                     const completed = todaysGoals.filter((g: any) => g.completed).length;
                     setGoals({ total, completed });
                 } catch (e) { console.error('Failed to fetch goals', e); }
+                // Fetch active perk title
+                try {
+                    const titleData = await dataService.getActiveTitle();
+                    setActiveTitle(titleData.title);
+                } catch (e) { console.error('Failed to fetch active title', e); }
+                // Fetch all perks
+                try {
+                    const perkData = await dataService.getPerks();
+                    setPerks(perkData.perks || []);
+                    setPerkCounts(perkData.counts || { aura: 0, echo: 0, seasonal: 0 });
+                } catch (e) { console.error('Failed to fetch perks', e); }
             } catch (error) {
                 navigate("/login");
             }
@@ -175,7 +192,10 @@ export default function Dashboard() {
                 <div className="relative z-10 p-4 md:p-6 lg:p-8">
                     <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-4">
                         <div>
-                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1">Welcome Back, {user.name}</h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1">Welcome Back, {user.name}</h1>
+                                {activeTitle && <PerkTitle title={activeTitle} type="aura" size="md" />}
+                            </div>
                             <p className="text-muted-foreground text-xs sm:text-sm">
                                 "{getDailyQuote()}"
                             </p>
@@ -251,8 +271,69 @@ export default function Dashboard() {
                             </div>
                         </div>
 
+                        {/* Your Perks - Uses glass-high for proper theme switching */}
+                        <div className="lg:col-span-4 glass-high rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between min-h-[380px]">
+                            {/* Gold accent glow */}
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/20 dark:bg-yellow-400/10 rounded-full blur-[50px] pointer-events-none"></div>
+
+                            <div className="relative z-10">
+                                {/* Header */}
+                                <div className="flex items-center justify-between mb-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500">
+                                            <Sparkles className="w-5 h-5" />
+                                        </div>
+                                        <h3 className="font-bold text-xl tracking-tight text-foreground font-['Plus_Jakarta_Sans']">Your Perks</h3>
+                                    </div>
+                                    <a href="/perks" className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors">
+                                        View All
+                                    </a>
+                                </div>
+
+                                {/* Current Title Section */}
+                                <div className="mb-10 text-center">
+                                    <p className="text-[11px] uppercase font-semibold tracking-[0.25em] text-foreground/60 mb-4">Current Title</p>
+                                    {activeTitle ? (
+                                        <div className="relative inline-block px-10 py-5 rounded-2xl bg-card border border-yellow-500/30 shadow-lg">
+                                            <span className="text-2xl font-['Playfair_Display'] italic font-bold text-yellow-600 dark:text-yellow-400">
+                                                {activeTitle}
+                                            </span>
+                                            <Sparkles className="absolute -top-3 -right-3 text-yellow-500 w-5 h-5" />
+                                            <Award className="absolute -bottom-2 -left-3 text-yellow-500/40 w-4 h-4" />
+                                        </div>
+                                    ) : (
+                                        <div className="relative inline-block px-8 py-4 rounded-2xl bg-muted border border-border">
+                                            <span className="text-lg text-muted-foreground italic">No title yet</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Aura Progress */}
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center border border-amber-500/30 shadow-sm">
+                                        <Award className="text-amber-500 w-8 h-8" />
+                                    </div>
+                                    <div className="text-center w-48">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-600 dark:text-amber-400 mb-2">Aura Level</div>
+                                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-1.5">
+                                            <div
+                                                className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                                                style={{
+                                                    width: `${Math.min((perkCounts.aura / 6) * 100, 100)}%`,
+                                                    boxShadow: '0 0 12px rgba(245, 158, 11, 0.4)'
+                                                }}
+                                            ></div>
+                                        </div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
+                                            {perkCounts.aura} / 6 Earned
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Today's Goals */}
-                        <div className="lg:col-span-5 glass-high rounded-2xl p-6 flex flex-col relative">
+                        <div className="lg:col-span-4 glass-high rounded-2xl p-6 flex flex-col relative">
                             <div className="flex justify-between items-start mb-6">
                                 <div className="flex items-center gap-2">
                                     <Zap className="text-blue-500 w-5 h-5" />
