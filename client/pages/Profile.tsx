@@ -26,14 +26,64 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Compress and resize image before upload to prevent large payloads
+  const compressImage = (file: File, maxSize: number = 200, quality: number = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Resize to fit within maxSize while maintaining aspect ratio
+          if (width > height) {
+            if (width > maxSize) {
+              height = Math.round((height * maxSize) / width);
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = Math.round((width * maxSize) / height);
+              height = maxSize;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to compressed JPEG
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          console.log(`📸 [PROFILE] Image compressed: ${(compressedDataUrl.length / 1024).toFixed(1)}KB`);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Compress image to ~50KB max (200x200, 70% quality)
+        const compressedImage = await compressImage(file, 200, 0.7);
+        setAvatarPreview(compressedImage);
+        toast.success("Photo ready to save!");
+      } catch (error) {
+        console.error('Image compression error:', error);
+        toast.error("Failed to process image. Please try a different photo.");
+      }
     }
   };
 
