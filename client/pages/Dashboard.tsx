@@ -264,11 +264,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Your Achievements */}
-                        <div className="lg:col-span-4 rounded-2xl p-6 relative overflow-hidden min-h-[280px]"
-                            style={{
-                                background: 'radial-gradient(circle at top right, rgba(251, 191, 36, 0.08), transparent), linear-gradient(135deg, rgba(18, 26, 22, 1) 0%, rgba(10, 15, 13, 1) 100%)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}>
+                        <div className="lg:col-span-4 rounded-2xl p-6 relative overflow-hidden min-h-[280px] bg-white dark:bg-gradient-to-br dark:from-[#121a16] dark:to-[#0a0f0d] border border-gray-200 dark:border-white/10">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none"></div>
                             <div className="flex items-center justify-between mb-8 relative z-10">
                                 <div className="flex items-center gap-3">
@@ -288,10 +284,10 @@ export default function Dashboard() {
                             <div className="relative z-10 text-center">
                                 <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-muted-foreground mb-4">Current Title</p>
                                 {activeTitle ? (
-                                    <div className="relative inline-block px-8 py-4 rounded-2xl bg-white/5 border border-yellow-500/40"
+                                    <div className="relative inline-block px-8 py-4 rounded-2xl bg-yellow-500/10 dark:bg-white/5 border border-yellow-500/40"
                                         style={{ boxShadow: '0 0 25px rgba(251, 191, 36, 0.25)' }}>
                                         <Sparkles className="absolute -top-3 -right-3 text-yellow-500 w-5 h-5" />
-                                        <span className="text-2xl font-serif italic font-bold bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent">
+                                        <span className="text-2xl font-serif italic font-bold bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 dark:from-amber-200 dark:via-yellow-400 dark:to-amber-200 bg-clip-text text-transparent">
                                             {activeTitle}
                                         </span>
                                         <Sparkles className="absolute -bottom-2 -left-3 text-yellow-500/40 w-4 h-4" />
