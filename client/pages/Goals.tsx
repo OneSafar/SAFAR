@@ -12,7 +12,10 @@ import {
     Calendar,
     Target,
     Check,
-    TrendingUp
+    TrendingUp,
+    Trash2,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,6 +34,8 @@ export default function Goals() {
     const [isAdding, setIsAdding] = useState(false);
     const [newGoal, setNewGoal] = useState("");
     const [goalType, setGoalType] = useState("daily");
+    const [victoriesPage, setVictoriesPage] = useState(0);
+    const victoriesPerPage = 3;
 
     useEffect(() => {
         const init = async () => {
@@ -73,6 +78,16 @@ export default function Goals() {
         }
     };
 
+    const handleDeleteGoal = async (goalId: string) => {
+        try {
+            await dataService.deleteGoal(goalId);
+            setGoals(goals.filter(g => g.id !== goalId));
+            toast.success("Goal deleted");
+        } catch (error) {
+            toast.error("Failed to delete goal");
+        }
+    };
+
     // Derived Logic
     const filteredGoals = goals.filter(g =>
         g.text.toLowerCase().includes(searchQuery.toLowerCase())
@@ -83,19 +98,34 @@ export default function Goals() {
     const completedDaily = dailyGoals.filter(g => g.completed).length;
     const completedWeekly = weeklyGoals.filter(g => g.completed).length;
 
-    // Chart Data
+    // Chart Data - use completed_at for completed goals
     const chartData = Array.from({ length: 7 }, (_, i) => {
         const d = new Date();
         d.setDate(d.getDate() - (6 - i));
         const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-        const count = goals.filter(g =>
-            g.completed &&
-            new Date(g.createdAt || Date.now()).toDateString() === d.toDateString()
-        ).length;
+        const count = goals.filter(g => {
+            if (!g.completed) return false;
+            // Use completed_at if available, otherwise fall back to createdAt
+            const completedDate = new Date((g as any).completed_at || g.createdAt || Date.now());
+            return completedDate.toDateString() === d.toDateString();
+        }).length;
         return { day: dayName, goals: count };
     });
 
-    const recentVictories = goals.filter(g => g.completed).slice(0, 3);
+    // Recent Victories - sort by completed_at descending (most recently completed first)
+    const allCompletedGoals = goals
+        .filter(g => g.completed)
+        .sort((a, b) => {
+            const aDate = new Date((a as any).completed_at || a.createdAt || 0);
+            const bDate = new Date((b as any).completed_at || b.createdAt || 0);
+            return bDate.getTime() - aDate.getTime(); // Descending
+        });
+
+    const totalVictoriesPages = Math.ceil(allCompletedGoals.length / victoriesPerPage);
+    const recentVictories = allCompletedGoals.slice(
+        victoriesPage * victoriesPerPage,
+        (victoriesPage + 1) * victoriesPerPage
+    );
 
     return (
         <MainLayout userName={user?.name} userAvatar={user?.avatar}>
@@ -193,15 +223,24 @@ export default function Goals() {
                                             <h3 className={`font-bold text-lg leading-tight line-clamp-2 ${goal.completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}>
                                                 {goal.text}
                                             </h3>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleToggleGoal(goal); }}
-                                                className={`shrink-0 ml-3 rounded-md border-2 w-6 h-6 flex items-center justify-center transition-all ${goal.completed
-                                                    ? 'bg-green-500 border-green-500 text-white'
-                                                    : 'border-gray-300 dark:border-gray-600 hover:border-green-500 text-transparent'
-                                                    }`}
-                                            >
-                                                <Check className="w-3.5 h-3.5" strokeWidth={4} />
-                                            </button>
+                                            <div className="flex items-center gap-2 shrink-0 ml-3">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleToggleGoal(goal); }}
+                                                    className={`rounded-md border-2 w-6 h-6 flex items-center justify-center transition-all ${goal.completed
+                                                        ? 'bg-green-500 border-green-500 text-white'
+                                                        : 'border-gray-300 dark:border-gray-600 hover:border-green-500 text-transparent'
+                                                        }`}
+                                                >
+                                                    <Check className="w-3.5 h-3.5" strokeWidth={4} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteGoal(goal.id); }}
+                                                    className="rounded-md w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                                                    title="Delete goal"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="mb-4">
@@ -316,11 +355,32 @@ export default function Goals() {
 
                             {/* Recent Victories */}
                             <div>
-                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">Recent Victories</h4>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Recent Victories</h4>
+                                    {totalVictoriesPages > 1 && (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setVictoriesPage(p => Math.max(0, p - 1))}
+                                                disabled={victoriesPage === 0}
+                                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ChevronLeft className="w-4 h-4 text-gray-500" />
+                                            </button>
+                                            <span className="text-xs text-gray-400">{victoriesPage + 1}/{totalVictoriesPages}</span>
+                                            <button
+                                                onClick={() => setVictoriesPage(p => Math.min(totalVictoriesPages - 1, p + 1))}
+                                                disabled={victoriesPage >= totalVictoriesPages - 1}
+                                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="space-y-3 pl-2">
                                     {recentVictories.length > 0 ? (
                                         recentVictories.map((g, i) => (
-                                            <div key={i} className="flex items-center gap-3 group cursor-default">
+                                            <div key={g.id || i} className="flex items-center gap-3 group cursor-default">
                                                 <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                                                     <Check className="w-3 h-3 text-emerald-600" strokeWidth={3} />
                                                 </div>
