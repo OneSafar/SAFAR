@@ -16,13 +16,6 @@ const ACHIEVEMENT_DEFINITIONS = [
     { id: 'F003', name: 'Deep Work Disciple', type: 'badge', category: 'focus', tier: 3, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 100 }), display_priority: 30 },
     { id: 'F004', name: 'Concentration Master', type: 'badge', category: 'focus', tier: 4, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 250 }), display_priority: 40 },
     { id: 'F005', name: 'Flow State Legend', type: 'badge', category: 'focus', tier: 5, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 500 }), display_priority: 50 },
-
-    // GOAL BADGES - Based on goals completed
-    { id: 'G001', name: 'Goal Starter', type: 'badge', category: 'goals', tier: 1, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 10 }), display_priority: 10 },
-    { id: 'G002', name: 'Goal Achiever', type: 'badge', category: 'goals', tier: 2, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 50 }), display_priority: 20 },
-    { id: 'G003', name: 'Goal Crusher', type: 'badge', category: 'goals', tier: 3, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 100 }), display_priority: 30 },
-    { id: 'G004', name: 'Vision Architect', type: 'badge', category: 'goals', tier: 4, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 500 }), display_priority: 40 },
-    { id: 'G005', name: 'Dream Weaver', type: 'badge', category: 'goals', tier: 5, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 1000 }), display_priority: 50 },
 ];
 
 // ========================================
@@ -30,12 +23,12 @@ const ACHIEVEMENT_DEFINITIONS = [
 // ========================================
 
 const EMOTIONAL_TITLES = [
-    { id: 'ET001', name: 'Showed Up Tired', description: 'Checked in with low energy but still completed goals', trigger: 'low_mood_with_goals' },
+    { id: 'ET001', name: 'Showed Up Tired', description: 'Checked in with low energy but still focused for over 30 mins', trigger: 'low_mood_focus' },
     { id: 'ET002', name: 'Did It Anyway', description: 'Multiple low mood days with high focus hours', trigger: 'low_mood_high_focus' },
-    { id: 'ET003', name: 'Solid Comeback', description: 'Missed your streak but came back stronger', trigger: 'streak_recovery' },
-    { id: 'ET004', name: 'Survived Bad Week', description: 'Kept working despite a challenging week', trigger: 'bad_week_survived' },
-    { id: 'ET005', name: 'Pushed Through Overwhelm', description: 'Stayed productive during stressful times', trigger: 'overwhelm_pushed' },
-    { id: 'ET006', name: 'A Jolly Week', description: 'Consistently positive mood throughout the week', trigger: 'jolly_week' },
+    { id: 'ET003', name: 'Quiet Consistency', description: 'Focused every day this week', trigger: 'consistent_focus' },
+    { id: 'ET004', name: 'Survived Bad Week', description: 'Kept focusing despite a challenging week', trigger: 'bad_week_focus' },
+    { id: 'ET005', name: 'Pushed Through Overwhelm', description: 'Stayed focused during stressful times', trigger: 'overwhelm_focus' },
+    { id: 'ET006', name: 'Flow Seeker', description: 'Achieved a long deep work session (2+ hours)', trigger: 'long_session' },
 ];
 
 // ========================================
@@ -181,29 +174,46 @@ export async function checkAchievements(userId: string): Promise<{ awarded: stri
 async function evaluateEmotionalMilestone(userId: string): Promise<{ title: string | null, description: string | null }> {
     const weekData = await getWeeklyMoodData(userId);
 
-    // Priority order as per user spec
-    if (weekData.streakRecovered && weekData.weeklyGoals > 0) {
-        return { title: 'Solid Comeback', description: 'You missed your streak but came back stronger!' };
+    // Get max single session duration for "Flow Seeker"
+    const maxSessionResult = await db.execute({
+        sql: `SELECT MAX(duration_minutes) as max_duration FROM focus_sessions 
+              WHERE user_id = ? AND completed = 1 AND completed_at >= datetime('now', '-7 days')`,
+        args: [userId]
+    });
+    const maxSessionMinutes = (maxSessionResult.rows[0] as any).max_duration || 0;
+
+    // Check for "Quiet Consistency" (focused on 5+ distinct days)
+    const distinctDaysResult = await db.execute({
+        sql: `SELECT COUNT(DISTINCT date(completed_at)) as days FROM focus_sessions 
+              WHERE user_id = ? AND completed = 1 AND completed_at >= datetime('now', '-7 days')`,
+        args: [userId]
+    });
+    const focusDays = (distinctDaysResult.rows[0] as any).days || 0;
+
+
+    // Priority order
+    if (weekData.avgMood < 2.5 && weekData.weeklyFocusHours > 5) {
+        return { title: 'Survived Bad Week', description: 'You kept focusing despite a challenging week.' };
     }
 
-    if (weekData.avgMood < 2.5 && weekData.weeklyGoals > 0) {
-        return { title: 'Survived Bad Week', description: 'You kept working despite a challenging week.' };
+    if (maxSessionMinutes >= 120) {
+        return { title: 'Flow Seeker', description: 'You achieved a massive 2+ hour deep work session!' };
     }
 
     if (weekData.lowMoodDays >= 3 && weekData.weeklyFocusHours >= 5) {
         return { title: 'Did It Anyway', description: 'Multiple tough days, but you still focused.' };
     }
 
-    if (weekData.lowMoodDays >= 1 && weekData.weeklyGoals >= 3) {
-        return { title: 'Showed Up Tired', description: 'You checked in tired but still got things done.' };
+    if (focusDays >= 5) {
+        return { title: 'Quiet Consistency', description: 'You showed up and focused for 5+ days this week.' };
     }
 
-    if (weekData.hasStruggleJournal && weekData.weeklyFocusHours >= 3) {
-        return { title: 'Pushed Through Overwhelm', description: 'Your journal shows struggle, but you persisted!' };
+    if (weekData.lowMoodDays >= 1 && weekData.weeklyFocusHours >= 1) {
+        return { title: 'Showed Up Tired', description: 'You checked in tired but still focused for an hour.' };
     }
 
-    if (weekData.avgMood >= 4.0 && weekData.checkIns >= 5) {
-        return { title: 'A Jolly Week', description: 'Consistently positive vibes this week!' };
+    if (weekData.hasStruggleJournal && weekData.weeklyFocusHours >= 2) {
+        return { title: 'Pushed Through Overwhelm', description: 'Your journal shows struggle, but you stayed focused!' };
     }
 
     return { title: null, description: null };
@@ -444,13 +454,15 @@ router.post('/evaluate-week', requireAuth, async (req: any, res) => {
     }
 });
 
+
+
 // Seed achievement definitions (run once on startup)
 export async function seedAchievementDefinitions() {
     // Seed badge definitions
     for (const achievement of ACHIEVEMENT_DEFINITIONS) {
         try {
             await db.execute({
-                sql: `INSERT OR IGNORE INTO achievement_definitions 
+                sql: `INSERT OR REPLACE INTO achievement_definitions 
                       (id, name, type, category, tier, criteria_json, display_priority) 
                       VALUES (?, ?, ?, ?, ?, ?, ?)`,
                 args: [
@@ -472,7 +484,7 @@ export async function seedAchievementDefinitions() {
     for (const title of EMOTIONAL_TITLES) {
         try {
             await db.execute({
-                sql: `INSERT OR IGNORE INTO achievement_definitions 
+                sql: `INSERT OR REPLACE INTO achievement_definitions 
                       (id, name, description, type, category, rarity, tier, criteria_json, display_priority) 
                       VALUES (?, ?, ?, 'title', 'emotional', 'special', NULL, '{}', 60)`,
                 args: [title.id, title.name, title.description]
@@ -480,6 +492,16 @@ export async function seedAchievementDefinitions() {
         } catch (e) {
             // Ignore if already exists
         }
+    }
+
+    // Clean up old goal badges if they exist
+    try {
+        await db.execute({
+            sql: `DELETE FROM achievement_definitions WHERE category = 'goals'`,
+            args: []
+        });
+    } catch (e) {
+        // Ignore error
     }
 
     console.log('✅ Achievement definitions seeded');

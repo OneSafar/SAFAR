@@ -10,7 +10,6 @@ import { journalRoutes } from "./routes/journal";
 import { goalRoutes } from "./routes/goals";
 import { streakRoutes } from "./routes/streaks";
 import { focusSessionRoutes } from "./routes/focus-sessions";
-import { perkRoutes, seedPerkDefinitions } from "./routes/perks";
 import { achievementRoutes, seedAchievementDefinitions } from "./routes/achievements";
 import { initDatabase } from "./db";
 
@@ -20,10 +19,7 @@ export async function createServer() {
   // Initialize DB (async for Turso)
   await initDatabase();
 
-  // Seed perk definitions (legacy)
-  await seedPerkDefinitions();
-
-  // Seed achievement definitions (new system)
+  // Seed achievement definitions
   await seedAchievementDefinitions();
 
   // Middleware
@@ -65,7 +61,6 @@ export async function createServer() {
   app.use("/api/goals", goalRoutes);
   app.use("/api/streaks", streakRoutes);
   app.use("/api/focus-sessions", focusSessionRoutes);
-  app.use("/api/perks", perkRoutes);
   app.use("/api/achievements", achievementRoutes);
 
   app.get("/api/ping", (_req, res) => {

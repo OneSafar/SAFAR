@@ -20,11 +20,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const root = window.document.documentElement;
-        // Dark is default (no class), light mode adds 'light' class
-        if (theme === 'light') {
-            root.classList.add('light');
-        } else {
+        // Standard Tailwind dark mode: add 'dark' class for dark theme
+        if (theme === 'dark') {
+            root.classList.add('dark');
             root.classList.remove('light');
+        } else {
+            root.classList.add('light');
+            root.classList.remove('dark');
         }
         localStorage.setItem('theme', theme);
     }, [theme]);

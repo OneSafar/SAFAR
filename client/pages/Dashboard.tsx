@@ -271,64 +271,52 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Achievements - Uses glass-high for proper theme switching */}
-                        <div className="lg:col-span-4 glass-high rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between min-h-[380px]">
-                            {/* Gold accent glow */}
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/20 dark:bg-yellow-400/10 rounded-full blur-[50px] pointer-events-none"></div>
-
+                        {/* Your Perks */}
+                        <div className="lg:col-span-4 glass-high rounded-2xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400/10 rounded-full blur-2xl pointer-events-none"></div>
+                            <div className="flex items-center gap-2 mb-4 relative z-10">
+                                <Award className="text-yellow-500 w-5 h-5" />
+                                <h3 className="font-semibold text-lg text-foreground">Your Perks</h3>
+                            </div>
                             <div className="relative z-10">
-                                {/* Header */}
-                                <div className="flex items-center justify-between mb-10">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500">
-                                            <Sparkles className="w-5 h-5" />
+                                {perks.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {/* Active Aura Title */}
+                                        {activeTitle && (
+                                            <div className="perk-container p-3 rounded-xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30">
+                                                <p className="text-xs text-muted-foreground mb-1">Active Title</p>
+                                                <PerkTitle title={activeTitle} type="aura" size="md" />
+                                            </div>
+                                        )}
+                                        {/* Perk Counts */}
+                                        <div className="flex gap-2 flex-wrap">
+                                            {perkCounts.aura > 0 && (
+                                                <span className="bg-yellow-500/20 text-yellow-600 px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
+                                                    <Sparkles className="w-3 h-3" /> {perkCounts.aura} Aura
+                                                </span>
+                                            )}
+                                            {perkCounts.echo > 0 && (
+                                                <span className="bg-purple-500/20 text-purple-600 px-2 py-1 rounded-lg text-xs font-bold">
+                                                    {perkCounts.echo} Echo
+                                                </span>
+                                            )}
+                                            {perkCounts.seasonal > 0 && (
+                                                <span className="bg-emerald-500/20 text-emerald-600 px-2 py-1 rounded-lg text-xs font-bold">
+                                                    {perkCounts.seasonal} Seasonal
+                                                </span>
+                                            )}
                                         </div>
-                                        <h3 className="font-bold text-xl tracking-tight text-foreground font-['Poppins']">Achievements</h3>
+                                        {perks.length === 0 && !activeTitle && (
+                                            <p className="text-muted-foreground text-sm">Keep going to earn perks!</p>
+                                        )}
                                     </div>
-                                    <a href="/achievements" className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors">
-                                        View All
-                                    </a>
-                                </div>
-
-                                {/* Current Title Section */}
-                                <div className="mb-10 text-center">
-                                    <p className="text-[11px] uppercase font-semibold tracking-[0.25em] text-foreground/60 mb-4">Current Title</p>
-                                    {activeTitle ? (
-                                        <div className="relative inline-block px-10 py-5 rounded-2xl bg-card border border-yellow-500/30 shadow-lg">
-                                            <span className="text-2xl font-['Playfair_Display'] italic font-bold text-yellow-600 dark:text-yellow-400">
-                                                {activeTitle}
-                                            </span>
-                                            <Sparkles className="absolute -top-3 -right-3 text-yellow-500 w-5 h-5" />
-                                            <Award className="absolute -bottom-2 -left-3 text-yellow-500/40 w-4 h-4" />
-                                        </div>
-                                    ) : (
-                                        <div className="relative inline-block px-8 py-4 rounded-2xl bg-muted border border-border">
-                                            <span className="text-lg text-muted-foreground italic">No title yet</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Aura Progress */}
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center border border-amber-500/30 shadow-sm">
-                                        <Award className="text-amber-500 w-8 h-8" />
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <Sparkles className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                                        <p className="text-muted-foreground text-sm">No perks yet</p>
+                                        <p className="text-muted-foreground text-xs mt-1">Build streaks to unlock!</p>
                                     </div>
-                                    <div className="text-center w-48">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-600 dark:text-amber-400 mb-2">Aura Level</div>
-                                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-1.5">
-                                            <div
-                                                className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                                                style={{
-                                                    width: `${Math.min((perkCounts.aura / 6) * 100, 100)}%`,
-                                                    boxShadow: '0 0 12px rgba(245, 158, 11, 0.4)'
-                                                }}
-                                            ></div>
-                                        </div>
-                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
-                                            {perkCounts.aura} / 6 Earned
-                                        </p>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
 
