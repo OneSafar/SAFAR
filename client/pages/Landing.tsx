@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "@/utils/authService";
 
@@ -7,6 +7,15 @@ export default function Landing() {
   const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'apps' | 'tools' | 'community'>('apps');
+
+  // Timer state
+  const [selectedDuration, setSelectedDuration] = useState(25);
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isBreak, setIsBreak] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const durations = [25, 30, 45, 60, 90];
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -21,6 +30,42 @@ export default function Landing() {
     };
     fetchUser();
   }, []);
+
+  // Timer logic
+  useEffect(() => {
+    if (isRunning && timeLeft > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isRunning) {
+      setIsRunning(false);
+      if (!isBreak) {
+        // Focus session complete, start break
+        setIsBreak(true);
+        setTimeLeft(5 * 60); // 5 min break
+      } else {
+        // Break complete
+        setIsBreak(false);
+        setTimeLeft(selectedDuration * 60);
+      }
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isRunning, timeLeft, selectedDuration, isBreak]);
+
+  const handleDurationSelect = (mins: number) => {
+    setSelectedDuration(mins);
+    setTimeLeft(mins * 60);
+    setIsRunning(false);
+    setIsBreak(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleLogout = async () => {
     try {
@@ -64,11 +109,8 @@ export default function Landing() {
         .gold-glow:hover {
           box-shadow: 0 0 20px rgba(255, 178, 0, 0.4);
         }
-        .sticky-bottom-cta {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          z-index: 100;
+        .timer-btn:hover {
+          box-shadow: 0 0 20px rgba(255, 90, 31, 0.5);
         }
       `}</style>
 
@@ -90,7 +132,7 @@ export default function Landing() {
                 {dropdownOpen && (
                   <div className="absolute top-20 left-0 w-48 bg-white shadow-xl rounded-xl border border-gray-100 p-2">
                     <Link to="/dashboard" className="block p-3 hover:bg-gray-50 rounded-lg text-sm">Nishta</Link>
-                    <Link to="/study" className="block p-3 hover:bg-gray-50 rounded-lg text-sm">Focus Timer</Link>
+                    <a href="#focus-timer" className="block p-3 hover:bg-gray-50 rounded-lg text-sm">Focus Timer</a>
                     <span className="block p-3 text-gray-400 rounded-lg text-sm">Mehfil (Coming Soon)</span>
                   </div>
                 )}
@@ -138,12 +180,12 @@ export default function Landing() {
               >
                 Enter Nishta
               </Link>
-              <Link
-                to="/study"
+              <a
+                href="#focus-timer"
                 className="px-8 py-4 bg-white border-2 border-gray-200 text-gray-900 rounded-xl font-bold text-center hover:border-blue-600 transition-all text-lg"
               >
                 Start Focus Timer
-              </Link>
+              </a>
             </div>
           </div>
           <div className="relative">
@@ -186,6 +228,93 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {/* Focus Timer Section - Embedded Timer */}
+      <section className="py-24 bg-slate-900" id="focus-timer">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-white">Focus Timer</h2>
+            <p className="text-slate-400">Select your focus duration and start your session</p>
+          </div>
+
+          {/* Timer Card */}
+          <div
+            className="p-10 rounded-3xl"
+            style={{
+              background: 'linear-gradient(145deg, #232a36, #2e3645)',
+              boxShadow: '0 15px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
+            }}
+          >
+            {/* Duration Selection */}
+            <div className="mb-8">
+              <p className="text-slate-400 text-sm mb-4 flex items-center gap-2">
+                ⏱️ Select Focus Duration
+              </p>
+              <div className="grid grid-cols-5 gap-3">
+                {durations.map(mins => (
+                  <button
+                    key={mins}
+                    onClick={() => handleDurationSelect(mins)}
+                    className={`p-4 rounded-xl border-2 transition-all ${selectedDuration === mins
+                        ? 'border-orange-500 bg-orange-500/10'
+                        : 'border-slate-600 hover:border-slate-500 bg-slate-800/50'
+                      }`}
+                  >
+                    <div className="text-2xl font-bold text-white">{mins}</div>
+                    <div className="text-xs text-slate-400">MIN FOCUS</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Time Display */}
+            <div className="text-center mb-8">
+              <div className={`text-8xl md:text-9xl font-light tracking-wider ${isBreak ? 'text-green-400' : 'text-white'}`}>
+                {formatTime(timeLeft)}
+              </div>
+              {isBreak && (
+                <p className="text-green-400 mt-2">Break Time! 🧘</p>
+              )}
+            </div>
+
+            {/* Control Button */}
+            <button
+              onClick={() => setIsRunning(!isRunning)}
+              className="block mx-auto px-20 py-5 rounded-full text-xl font-bold text-white timer-btn transition-all active:scale-95"
+              style={{
+                background: isRunning
+                  ? 'linear-gradient(145deg, #dc2626, #b91c1c)'
+                  : 'linear-gradient(145deg, #ff6a2f, #e13c00)',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.6), 0 4px 10px rgba(255,90,31,0.5)'
+              }}
+            >
+              {isRunning ? 'PAUSE' : 'START'}
+            </button>
+
+            {/* Progress Bar */}
+            <div className="mt-10">
+              <div
+                className="h-2 rounded-full"
+                style={{ background: '#11151c', boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.6)' }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-1000"
+                  style={{
+                    width: `${((selectedDuration * 60 - timeLeft) / (selectedDuration * 60)) * 100}%`,
+                    background: isBreak
+                      ? 'linear-gradient(90deg, #22c55e, #86efac)'
+                      : 'linear-gradient(90deg, #ff5a1f, #ffb26b)'
+                  }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-slate-500 mt-6 text-sm">
+            {isRunning ? "Focus time! Stay productive 🚀" : "Ready when you are. Let's focus!"}
+          </p>
+        </div>
+      </section>
 
       {/* Why Choose Section */}
       <section className="py-24 bg-white">
@@ -290,8 +419,8 @@ export default function Landing() {
               </div>
             </Link>
 
-            {/* Focus Timer Card */}
-            <Link to="/study" className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
+            {/* Focus Timer Card - Links to timer section */}
+            <a href="#focus-timer" className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300">
               <div className="h-48 overflow-hidden relative bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
                 <span className="text-8xl group-hover:scale-110 transition-transform duration-500">⏱️</span>
                 <div className="absolute top-4 right-4 bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold">
@@ -301,18 +430,18 @@ export default function Landing() {
               <div className="p-8">
                 <h3 className="text-2xl font-bold mb-2">Focus Timer</h3>
                 <p className="text-gray-600 text-sm mb-6">
-                  Advanced Pomodoro timer with focus sessions, achievements, and productivity stats.
+                  Pomodoro timer with 25, 30, 45, 60, or 90-minute focus sessions and automatic breaks.
                 </p>
                 <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                   <span className="flex items-center gap-1 text-sm font-bold text-gray-600">
                     🔥 Study Sessions
                   </span>
                   <span className="text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Enter →
+                    Start Timer ↑
                   </span>
                 </div>
               </div>
-            </Link>
+            </a>
 
             {/* Mehfil Card */}
             <div className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm opacity-70">
@@ -371,12 +500,12 @@ export default function Landing() {
                 >
                   🧘 Enter Nishta (Wellness)
                 </Link>
-                <Link
-                  to="/study"
+                <a
+                  href="#focus-timer"
                   className="w-full py-5 bg-yellow-400 text-gray-900 font-bold rounded-xl text-lg text-center gold-glow transition-all btn-animate"
                 >
                   ⏱️ Start Focus Timer
-                </Link>
+                </a>
               </div>
             </div>
           </div>
@@ -399,7 +528,7 @@ export default function Landing() {
               <h4 className="text-lg font-bold mb-6">Quick Links</h4>
               <ul className="space-y-4 text-slate-400 text-sm">
                 <li><Link to="/dashboard" className="hover:text-white transition-colors">Nishta Dashboard</Link></li>
-                <li><Link to="/study" className="hover:text-white transition-colors">Focus Timer</Link></li>
+                <li><a href="#focus-timer" className="hover:text-white transition-colors">Focus Timer</a></li>
                 <li><Link to="/goals" className="hover:text-white transition-colors">Goals</Link></li>
                 <li><Link to="/achievements" className="hover:text-white transition-colors">Achievements</Link></li>
               </ul>
