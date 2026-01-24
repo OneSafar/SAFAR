@@ -3,426 +3,161 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '@/utils/authService';
 import { useTheme } from '@/contexts/ThemeContext';
 
-interface Task {
-    id: string;
-    text: string;
-    completed: boolean;
-}
-
 export default function StudyWithMe() {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const [user, setUser] = useState<any>(null);
-
-    // Timer state
-    const [activeMode, setActiveMode] = useState<'work' | 'short' | 'long'>('work');
-    const [customMinutes, setCustomMinutes] = useState(25);
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
+    const [mode, setMode] = useState<'work' | 'short' | 'long'>('work');
+    const [customMins, setCustomMins] = useState(25);
+    const [timeLeft, setTimeLeft] = useState(1500);
     const [isRunning, setIsRunning] = useState(false);
-    const [taskName, setTaskName] = useState('Focus Session');
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Task state
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [newTaskText, setNewTaskText] = useState('');
-    const [showAddTask, setShowAddTask] = useState(false);
-
-    // Preset durations
+    const [tasks, setTasks] = useState<{ id: string, text: string, done: boolean }[]>([]);
+    const [taskText, setTaskText] = useState('');
+    const [showTasks, setShowTasks] = useState(false);
+    const timerRef = useRef<any>(null);
     const presets = [25, 30, 45, 60, 90];
 
-    const modeDurations = {
-        work: customMinutes * 60,
-        short: 5 * 60,
-        long: 15 * 60
-    };
-
     useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const data = await authService.getCurrentUser();
-                if (data?.user) {
-                    setUser(data.user);
-                } else {
-                    navigate('/login');
-                }
-            } catch (e) {
-                navigate('/login');
-            }
-        };
-        checkAuth();
+        authService.getCurrentUser().then(d => d?.user && setUser(d.user)).catch(() => navigate('/login'));
     }, [navigate]);
 
-    // Timer logic
     useEffect(() => {
         if (isRunning && timeLeft > 0) {
-            intervalRef.current = setInterval(() => {
-                setTimeLeft(prev => prev - 1);
-            }, 1000);
-        } else if (timeLeft === 0 && isRunning) {
+            timerRef.current = setInterval(() => setTimeLeft(t => t - 1), 1000);
+        } else if (timeLeft === 0) {
             setIsRunning(false);
-            alert(activeMode === 'work' ? 'Focus session complete! Take a break.' : 'Break over! Ready to focus?');
+            alert('Session complete!');
         }
-        return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-        };
-    }, [isRunning, timeLeft, activeMode]);
+        return () => clearInterval(timerRef.current);
+    }, [isRunning, timeLeft]);
 
-    const handleModeChange = (mode: 'work' | 'short' | 'long') => {
-        setActiveMode(mode);
-        if (mode === 'work') {
-            setTimeLeft(customMinutes * 60);
-        } else if (mode === 'short') {
-            setTimeLeft(5 * 60);
-        } else {
-            setTimeLeft(15 * 60);
-        }
+    const changeMode = (m: 'work' | 'short' | 'long', mins: number) => {
+        setMode(m);
+        setTimeLeft(mins * 60);
         setIsRunning(false);
     };
 
-    const handlePresetSelect = (mins: number) => {
-        setCustomMinutes(mins);
-        if (activeMode === 'work') {
-            setTimeLeft(mins * 60);
-            setIsRunning(false);
-        }
+    const setPreset = (mins: number) => {
+        setCustomMins(mins);
+        if (mode === 'work') { setTimeLeft(mins * 60); setIsRunning(false); }
     };
 
-    const handleCustomTimeChange = (mins: number) => {
-        if (mins >= 1 && mins <= 180) {
-            setCustomMinutes(mins);
-            if (activeMode === 'work') {
-                setTimeLeft(mins * 60);
-                setIsRunning(false);
-            }
-        }
-    };
+    const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+    const total = mode === 'work' ? customMins * 60 : mode === 'short' ? 300 : 900;
+    const pct = Math.min(((total - timeLeft) / total) * 100, 100);
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const totalDuration = activeMode === 'work' ? customMinutes * 60 : modeDurations[activeMode];
-    const progress = ((totalDuration - timeLeft) / totalDuration) * 100;
-
-    // Task functions
     const addTask = () => {
-        if (newTaskText.trim()) {
-            setTasks([...tasks, { id: Date.now().toString(), text: newTaskText.trim(), completed: false }]);
-            setNewTaskText('');
+        if (taskText.trim()) {
+            setTasks([...tasks, { id: Date.now().toString(), text: taskText.trim(), done: false }]);
+            setTaskText('');
         }
-    };
-
-    const toggleTask = (id: string) => {
-        setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-    };
-
-    const deleteTask = (id: string) => {
-        setTasks(tasks.filter(t => t.id !== id));
     };
 
     const isDark = theme === 'dark';
 
     return (
-        <div className={`min-h-screen flex ${isDark ? 'bg-[#2c2c2c] text-white' : 'bg-white text-gray-900'}`}>
+        <div className={`min-h-screen flex ${isDark ? 'bg-[#181920] text-gray-300' : 'bg-gray-50 text-gray-900'}`} style={{ fontFamily: "'Inter', sans-serif" }}>
             {/* Sidebar */}
-            <aside className={`w-64 border-r flex flex-col h-screen sticky top-0 ${isDark ? 'border-white/10 bg-[#2c2c2c]' : 'border-gray-200 bg-white'}`}>
-                <div className="p-6 flex flex-col h-full">
-                    {/* Logo */}
-                    <div className="flex items-center gap-3 mb-10">
-                        <div className="w-10 h-10 rounded-full bg-[#f27f0d] flex items-center justify-center text-white text-xl">
-                            ⏱️
-                        </div>
-                        <div className="flex flex-col">
-                            <h1 className={`text-lg font-bold leading-none ${isDark ? 'text-white' : 'text-gray-900'}`}>Focus Session</h1>
-                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Stay Productive</p>
-                        </div>
-                    </div>
+            <aside className={`w-64 p-8 border-r ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
+                <nav className="flex flex-col gap-5 mt-8">
+                    <button onClick={toggleTheme} className={`text-left text-sm hover:text-[#f25f29] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {isDark ? 'Light Mode' : 'Dark Mode'}
+                    </button>
+                    <button onClick={() => setShowTasks(!showTasks)} className={`text-left text-sm hover:text-[#f25f29] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Add task
+                    </button>
+                    <Link to="/" className={`text-sm hover:text-[#f25f29] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Back to Home
+                    </Link>
+                </nav>
 
-                    {/* Navigation */}
-                    <nav className="flex flex-col gap-2 flex-grow">
-                        {/* Preset Timers */}
-                        <div className={`mb-4 pb-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                            <p className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                Presets
-                            </p>
-                            <div className="grid grid-cols-3 gap-2">
-                                {presets.map(mins => (
-                                    <button
-                                        key={mins}
-                                        onClick={() => handlePresetSelect(mins)}
-                                        className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${customMinutes === mins
-                                                ? 'bg-[#f27f0d] text-white'
-                                                : isDark ? 'bg-[#3a3a3a] text-gray-300 hover:bg-[#4a4a4a]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                            }`}
-                                    >
-                                        {mins}m
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Theme Toggle */}
-                        <button
-                            onClick={toggleTheme}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isDark ? 'text-gray-300 hover:bg-[#3a3a3a]' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <span>{isDark ? '☀️' : '🌙'}</span>
-                            <span className="text-sm font-medium">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
-                        </button>
-
-                        {/* Add Task Toggle */}
-                        <button
-                            onClick={() => setShowAddTask(!showAddTask)}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${showAddTask
-                                    ? (isDark ? 'bg-[#f27f0d]/20 text-[#f27f0d]' : 'bg-orange-100 text-[#f27f0d]')
-                                    : (isDark ? 'text-gray-300 hover:bg-[#3a3a3a]' : 'text-gray-600 hover:bg-gray-100')
-                                }`}
-                        >
-                            <span>➕</span>
-                            <span className="text-sm font-medium">Add Task</span>
-                        </button>
-
-                        {/* Back to Home */}
-                        <Link
-                            to="/"
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isDark ? 'text-gray-300 hover:bg-[#3a3a3a]' : 'text-gray-600 hover:bg-gray-100'}`}
-                        >
-                            <span>🏠</span>
-                            <span className="text-sm font-medium">Back to Home</span>
-                        </Link>
-                    </nav>
-
-                    {/* User info */}
-                    <div className={`mt-auto pt-6 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                        <div className="flex items-center gap-3 px-3 py-2">
-                            <div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                                {user?.avatar ? (
-                                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-sm font-bold">
-                                        {user?.name?.charAt(0) || 'U'}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="flex flex-col overflow-hidden">
-                                <p className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.name || 'User'}</p>
-                            </div>
-                        </div>
+                {/* Presets */}
+                <div className="mt-10">
+                    <p className={`text-xs uppercase mb-3 font-bold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Presets</p>
+                    <div className="flex flex-wrap gap-2">
+                        {presets.map(m => (
+                            <button key={m} onClick={() => setPreset(m)} className={`w-10 h-8 rounded-lg text-xs font-bold ${customMins === m ? 'bg-[#f25f29] text-white' : isDark ? 'bg-[#2b2e36] text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
+                                {m}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center justify-between p-8 relative">
-                {/* Mode Tabs */}
-                <div className="w-full max-w-xl">
-                    <div className={`flex justify-center border-b gap-8 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                        <button
-                            onClick={() => handleModeChange('work')}
-                            className={`flex flex-col items-center justify-center border-b-[3px] pb-3 pt-4 transition-colors ${activeMode === 'work'
-                                    ? 'border-[#f27f0d] text-[#f27f0d]'
-                                    : `border-transparent ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`
-                                }`}
-                        >
-                            <p className="text-sm font-bold tracking-wide">Work</p>
-                        </button>
-                        <button
-                            onClick={() => handleModeChange('short')}
-                            className={`flex flex-col items-center justify-center border-b-[3px] pb-3 pt-4 transition-colors ${activeMode === 'short'
-                                    ? 'border-[#f27f0d] text-[#f27f0d]'
-                                    : `border-transparent ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`
-                                }`}
-                        >
-                            <p className="text-sm font-bold tracking-wide">Short Break</p>
-                        </button>
-                        <button
-                            onClick={() => handleModeChange('long')}
-                            className={`flex flex-col items-center justify-center border-b-[3px] pb-3 pt-4 transition-colors ${activeMode === 'long'
-                                    ? 'border-[#f27f0d] text-[#f27f0d]'
-                                    : `border-transparent ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`
-                                }`}
-                        >
-                            <p className="text-sm font-bold tracking-wide">Long Break</p>
-                        </button>
-                    </div>
-                </div>
-
+            {/* Main */}
+            <main className="flex-1 flex flex-col items-center justify-center p-8">
                 {/* Timer Card */}
-                <div className="flex-grow flex items-center justify-center w-full">
-                    <div className="w-full max-w-md">
-                        <div className={`flex flex-col items-center justify-center rounded-xl p-10 shadow-xl border ${isDark ? 'bg-[#3a3a3a] border-white/5' : 'bg-gray-100 border-gray-200'
-                            }`}>
-                            {/* Custom Time Input (only for Work mode) */}
-                            {activeMode === 'work' && (
-                                <div className="mb-4 flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleCustomTimeChange(customMinutes - 5)}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${isDark ? 'bg-[#2c2c2c] text-white hover:bg-[#4a4a4a]' : 'bg-white text-gray-900 hover:bg-gray-200'}`}
-                                    >
-                                        -
-                                    </button>
-                                    <input
-                                        type="number"
-                                        value={customMinutes}
-                                        onChange={(e) => handleCustomTimeChange(parseInt(e.target.value) || 25)}
-                                        className={`w-20 text-center py-1 rounded-lg font-bold ${isDark ? 'bg-[#2c2c2c] text-white border-white/10' : 'bg-white text-gray-900 border-gray-200'} border`}
-                                        min="1"
-                                        max="180"
-                                    />
-                                    <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>min</span>
-                                    <button
-                                        onClick={() => handleCustomTimeChange(customMinutes + 5)}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${isDark ? 'bg-[#2c2c2c] text-white hover:bg-[#4a4a4a]' : 'bg-white text-gray-900 hover:bg-gray-200'}`}
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Time Display */}
-                            <div className={`w-full h-48 rounded-lg mb-8 relative overflow-hidden flex items-center justify-center ${isDark ? 'bg-[#2c2c2c]' : 'bg-white'
-                                }`}>
-                                <p className={`text-[80px] font-black tracking-tighter z-10 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {formatTime(timeLeft)}
-                                </p>
-                            </div>
-
-                            {/* Session Info */}
-                            <div className="w-full flex flex-col items-center gap-6">
-                                <div className="text-center">
-                                    <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {activeMode === 'work' ? 'Focus Session' : activeMode === 'short' ? 'Short Break' : 'Long Break'}
-                                    </h2>
-                                    <input
-                                        type="text"
-                                        value={taskName}
-                                        onChange={(e) => setTaskName(e.target.value)}
-                                        placeholder="What are you working on?"
-                                        className={`mt-2 text-center bg-transparent border-none outline-none text-sm w-full ${isDark ? 'text-gray-400 placeholder-gray-500' : 'text-gray-500 placeholder-gray-400'
-                                            }`}
-                                    />
-                                </div>
-
-                                {/* Control Button */}
-                                <button
-                                    onClick={() => setIsRunning(!isRunning)}
-                                    className="w-full py-4 px-8 bg-[#f27f0d] hover:bg-[#f27f0d]/90 text-white rounded-xl text-lg font-bold tracking-widest transition-all shadow-lg shadow-[#f27f0d]/20 active:scale-95"
-                                >
-                                    {isRunning ? 'PAUSE' : 'START'}
-                                </button>
-                            </div>
-                        </div>
+                <div className={`w-full max-w-lg rounded-3xl p-10 flex flex-col items-center ${isDark ? 'bg-[#2b2e36]' : 'bg-white shadow-xl'}`} style={{ boxShadow: isDark ? '0 25px 60px rgba(0,0,0,0.5)' : undefined }}>
+                    {/* Tabs */}
+                    <div className={`flex p-1.5 rounded-full mb-10 ${isDark ? 'bg-[#181920]' : 'bg-gray-100'}`}>
+                        <button onClick={() => changeMode('work', customMins)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${mode === 'work' ? 'bg-[#f25f29] text-white shadow' : 'text-gray-500'}`}>Pomodoro</button>
+                        <button onClick={() => changeMode('short', 5)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${mode === 'short' ? 'bg-[#f25f29] text-white shadow' : 'text-gray-500'}`}>Short break</button>
+                        <button onClick={() => changeMode('long', 15)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${mode === 'long' ? 'bg-[#f25f29] text-white shadow' : 'text-gray-500'}`}>Long break</button>
                     </div>
+
+                    {/* Timer Display */}
+                    <div className={`text-[88px] font-black tracking-tight mb-8 ${isDark ? 'text-[#fdf6e3]' : 'text-gray-800'}`}>
+                        {fmt(timeLeft)}
+                    </div>
+
+                    {/* Start Button */}
+                    <button
+                        onClick={() => setIsRunning(!isRunning)}
+                        className="px-16 py-4 rounded-2xl text-xl font-bold text-white transition-all active:translate-y-1"
+                        style={{
+                            background: 'linear-gradient(to bottom, #f25f29, #e04e1b)',
+                            boxShadow: '0 4px 0 #ab3d16'
+                        }}
+                    >
+                        {isRunning ? 'PAUSE' : 'START'}
+                    </button>
                 </div>
 
-                {/* Snail Progress Tracker */}
-                <div className="w-full max-w-3xl mb-8">
-                    <div className={`flex flex-col gap-4 p-6 rounded-2xl border shadow-lg ${isDark ? 'bg-[#3a3a3a] border-white/5' : 'bg-gray-100 border-gray-200'
-                        }`}>
-                        <div className="flex items-center justify-between">
-                            <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {isRunning ? "Focus time! Stay productive 🚀" : "Time to be productive. Let's start!"}
-                            </p>
-                            <span className="text-[#f27f0d] font-bold">{Math.round(progress)}%</span>
-                        </div>
-
-                        {/* Progress Bar with Snail */}
-                        <div className={`relative h-4 w-full rounded-full overflow-visible ${isDark ? 'bg-[#2c2c2c]' : 'bg-white'}`}>
-                            <div
-                                className="absolute left-0 top-0 h-full bg-[#f27f0d]/30 rounded-full transition-all duration-1000"
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                            <div
-                                className="absolute -top-5 transition-all duration-500 flex flex-col items-center"
-                                style={{ left: `${Math.min(progress, 95)}%`, transform: 'translateX(-50%)' }}
-                            >
-                                <span className="text-3xl select-none">🐌</span>
-                            </div>
-                        </div>
-
-                        <div className={`flex justify-between items-center text-[10px] uppercase tracking-widest font-bold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <span>Start</span>
-                            <span className="text-[#f27f0d]/60 italic lowercase font-medium">"Slow and steady wins the race"</span>
-                            <span>Finish</span>
-                        </div>
+                {/* Snail Progress */}
+                <div className="w-full max-w-2xl mt-16 relative">
+                    <p className={`text-center mb-5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {isRunning ? "Time to be productive. Let's start!" : "Ready to focus?"}
+                    </p>
+                    <div className={`h-3 w-full rounded-full overflow-hidden ${isDark ? 'bg-[#2b2e36]' : 'bg-gray-200'}`}>
+                        <div className="h-full rounded-full bg-[#f25f29] transition-all duration-1000" style={{ width: `${pct}%` }}></div>
                     </div>
-                </div>
-
-                {/* Background Decoration */}
-                <div className={`fixed top-0 right-0 p-8 pointer-events-none ${isDark ? 'opacity-5' : 'opacity-5'}`}>
-                    <span className="text-[200px]">⏱️</span>
+                    <div className="absolute bottom-0 transition-all duration-1000" style={{ left: `${pct}%`, transform: 'translateX(-100%) translateY(2px)' }}>
+                        <span className="text-5xl block transform -scale-x-100">🐌</span>
+                    </div>
                 </div>
             </main>
 
-            {/* Add Task Panel */}
-            {showAddTask && (
-                <aside className={`w-80 border-l flex flex-col h-screen sticky top-0 ${isDark ? 'border-white/10 bg-[#2c2c2c]' : 'border-gray-200 bg-white'}`}>
-                    <div className="p-6 flex flex-col h-full">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Tasks</h2>
-                            <button
-                                onClick={() => setShowAddTask(false)}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'hover:bg-[#3a3a3a]' : 'hover:bg-gray-100'}`}
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        {/* Add Task Input */}
-                        <div className="flex gap-2 mb-6">
-                            <input
-                                type="text"
-                                value={newTaskText}
-                                onChange={(e) => setNewTaskText(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                                placeholder="Add a task..."
-                                className={`flex-1 px-3 py-2 rounded-lg text-sm ${isDark ? 'bg-[#3a3a3a] text-white border-white/10 placeholder-gray-500' : 'bg-gray-100 text-gray-900 border-gray-200 placeholder-gray-400'
-                                    } border`}
-                            />
-                            <button
-                                onClick={addTask}
-                                className="px-4 py-2 bg-[#f27f0d] text-white rounded-lg font-bold text-sm hover:bg-[#f27f0d]/90"
-                            >
-                                Add
-                            </button>
-                        </div>
-
-                        {/* Task List */}
-                        <div className="flex-1 overflow-y-auto space-y-2">
-                            {tasks.length === 0 ? (
-                                <p className={`text-sm text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    No tasks yet. Add one above!
-                                </p>
-                            ) : (
-                                tasks.map(task => (
-                                    <div
-                                        key={task.id}
-                                        className={`flex items-center gap-3 p-3 rounded-lg ${isDark ? 'bg-[#3a3a3a]' : 'bg-gray-100'}`}
-                                    >
-                                        <button
-                                            onClick={() => toggleTask(task.id)}
-                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${task.completed
-                                                    ? 'bg-[#f27f0d] border-[#f27f0d] text-white'
-                                                    : isDark ? 'border-gray-500' : 'border-gray-300'
-                                                }`}
-                                        >
-                                            {task.completed && '✓'}
-                                        </button>
-                                        <span className={`flex-1 text-sm ${task.completed ? 'line-through opacity-50' : ''} ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {task.text}
-                                        </span>
-                                        <button
-                                            onClick={() => deleteTask(task.id)}
-                                            className={`text-xs ${isDark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+            {/* Task Panel */}
+            {showTasks && (
+                <aside className={`w-80 border-l p-6 ${isDark ? 'border-white/5 bg-[#1e2028]' : 'border-gray-200 bg-white'}`}>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="font-bold text-lg">Tasks</h2>
+                        <button onClick={() => setShowTasks(false)} className="text-gray-500 hover:text-[#f25f29]">✕</button>
+                    </div>
+                    <div className="flex gap-2 mb-6">
+                        <input
+                            value={taskText}
+                            onChange={e => setTaskText(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && addTask()}
+                            placeholder="Add task..."
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm outline-none ${isDark ? 'bg-[#2b2e36] text-white placeholder-gray-500' : 'bg-gray-100 text-gray-900'}`}
+                        />
+                        <button onClick={addTask} className="px-4 py-2 bg-[#f25f29] text-white rounded-lg font-bold">+</button>
+                    </div>
+                    <div className="space-y-2">
+                        {tasks.map(t => (
+                            <div key={t.id} className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-[#2b2e36]' : 'bg-gray-50'}`}>
+                                <button
+                                    onClick={() => setTasks(tasks.map(x => x.id === t.id ? { ...x, done: !x.done } : x))}
+                                    className={`w-5 h-5 rounded border-2 flex items-center justify-center text-xs ${t.done ? 'bg-[#f25f29] border-[#f25f29] text-white' : 'border-gray-500'}`}
+                                >
+                                    {t.done && '✓'}
+                                </button>
+                                <span className={`flex-1 text-sm ${t.done ? 'line-through opacity-50' : ''}`}>{t.text}</span>
+                                <button onClick={() => setTasks(tasks.filter(x => x.id !== t.id))} className="text-gray-500 hover:text-red-500">×</button>
+                            </div>
+                        ))}
+                        {tasks.length === 0 && <p className="text-center text-gray-500 text-sm py-4">No tasks yet</p>}
                     </div>
                 </aside>
             )}
