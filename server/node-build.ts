@@ -12,13 +12,17 @@ const distPath = path.join(__dirname, "../spa");
 async function startServer() {
   const { app, httpServer } = await createServer();
 
+  // IMPORTANT: Static files and catch-all route must come AFTER API routes
+  // API routes are already registered in createServer()
+
   // Serve static files
   app.use(express.static(distPath));
 
   // Handle React Router - serve index.html for all non-API routes
-  app.get("/{*path}", (req, res) => {
+  // This MUST be the last route registered
+  app.get("*", (req, res, next) => {
     // Don't serve index.html for API routes
-    if (req.path.startsWith("/api/") || req.path.startsWith("/health")) {
+    if (req.path.startsWith("/api/") || req.path.startsWith("/health") || req.path.startsWith("/socket.io")) {
       return res.status(404).json({ error: "API endpoint not found" });
     }
     res.sendFile(path.join(distPath, "index.html"));
