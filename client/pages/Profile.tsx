@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MainLayout from "@/components/MainLayout";
 import { authService } from "@/utils/authService";
 import { User } from "@shared/api";
-import {
-  User as UserIcon,
-  LogOut,
-  Edit,
-  Shield,
-  GraduationCap,
-  ChevronDown
-} from "lucide-react";
 import { toast } from "sonner";
 
 export default function Profile() {
@@ -25,6 +16,7 @@ export default function Profile() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(false);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,6 +30,9 @@ export default function Profile() {
   };
 
   useEffect(() => {
+    // Check if dark mode is enabled
+    setIsDark(document.documentElement.classList.contains('dark'));
+
     const fetchUser = async () => {
       try {
         const data = await authService.getCurrentUser();
@@ -51,7 +46,7 @@ export default function Profile() {
           email: data.user.email || "",
           examType: data.user.examType || "CHSL",
           preparationStage: data.user.preparationStage || "Intermediate",
-          gender: data.user.gender || "male",
+          gender: data.user.gender || "Male",
         });
       } catch (error) {
         navigate("/login");
@@ -59,6 +54,11 @@ export default function Profile() {
     };
     fetchUser();
   }, [navigate]);
+
+  const toggleDarkMode = () => {
+    document.documentElement.classList.toggle('dark');
+    setIsDark(!isDark);
+  };
 
   const handleLogout = async () => {
     try {
@@ -81,15 +81,14 @@ export default function Profile() {
         avatar: avatarPreview || undefined,
       });
       setUser(updatedUser);
-      // Also sync formData with the response to ensure changes persist
       setFormData({
         name: updatedUser.name || "",
         email: updatedUser.email || "",
         examType: updatedUser.examType || "CHSL",
         preparationStage: updatedUser.preparationStage || "Intermediate",
-        gender: updatedUser.gender || "male",
+        gender: updatedUser.gender || "Male",
       });
-      setAvatarPreview(null); // Reset preview after successful save
+      setAvatarPreview(null);
       toast.success("Profile updated successfully!");
     } catch (error) {
       toast.error("Failed to update profile");
@@ -103,269 +102,282 @@ export default function Profile() {
   const profileStrength = 85;
 
   return (
-    <MainLayout userName={user.name} userAvatar={user.avatar} hideSidebar={true}>
-      <div className="flex-1 h-full overflow-y-auto bg-background font-['Plus_Jakarta_Sans'] text-foreground relative transition-colors duration-300">
+    <>
+      <style>{`
+        .bento-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .bento-card:hover {
+          transform: translateY(-2px);
+        }
+        .profile-ring {
+          position: relative;
+        }
+        .profile-ring::before {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          border-radius: 50%;
+          padding: 2px;
+          background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+        }
+      `}</style>
 
-        {/* Swirl Background with Animated Blobs */}
-        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full opacity-30 blur-[90px] animate-[float_25s_infinite_ease-in-out]"
-            style={{
-              background: 'radial-gradient(circle, hsl(var(--secondary)) 0%, transparent 70%)',
-              mixBlendMode: 'screen'
-            }}
-          ></div>
-          <div
-            className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full opacity-30 blur-[90px] animate-[float_25s_infinite_ease-in-out]"
-            style={{
-              background: 'radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)',
-              mixBlendMode: 'screen',
-              animationDelay: '8s'
-            }}
-          ></div>
-        </div>
-
-        {/* Header */}
-        <header className="sticky top-0 z-40 px-8 py-6 flex justify-between items-center bg-background/80 backdrop-blur-md border-b border-border">
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Profile Settings</h1>
-            <p className="text-xs text-muted-foreground font-light mt-1">Manage your sanctuary preferences.</p>
+      <div className="font-sans bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
+        {/* Navbar */}
+        <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+              </div>
+              <span className="text-xl font-bold tracking-tight">Safar</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+              >
+                {isDark ? (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-5">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-5 py-2 rounded-full bg-muted hover:bg-destructive/10 text-muted-foreground hover:text-destructive border border-border hover:border-destructive/30 transition-all text-sm font-medium backdrop-blur-sm group"
-            >
-              <LogOut className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-              <span>Logout</span>
-            </button>
-          </div>
-        </header>
+        </nav>
 
         {/* Main Content */}
-        <div className="relative z-10 p-6 md:p-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-20">
+        <main className="max-w-7xl mx-auto px-6 py-10">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your sanctuary preferences and personal details.</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
 
-          {/* Profile Card - Left Side */}
-          <section className="lg:col-span-4 lg:sticky lg:top-32">
-            <div className="glass-high rounded-[2rem] rounded-tl-[1rem] rounded-br-[4rem] p-8 flex flex-col items-center text-center relative overflow-hidden group hover:border-primary/20 transition-all duration-500 shadow-lg">
-
-              {/* Glow Effect */}
-              <div className="absolute top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-gradient-to-tr from-secondary/20 to-primary/20 rounded-full blur-[50px] pointer-events-none"></div>
-
-              {/* Profile Picture */}
-              <div className="relative z-10 w-36 h-36 rounded-full p-[2px] bg-gradient-to-r from-secondary to-primary mb-6 shadow-2xl">
-                <div className="w-full h-full rounded-full overflow-hidden border-[3px] border-card bg-muted relative">
-                  <img
-                    alt="Profile Picture"
-                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                    src={avatarPreview || user.avatar || "https://via.placeholder.com/150"}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Profile Card - Left Side */}
+            <div className="lg:col-span-4 space-y-8">
+              <div className="bento-card bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm text-center relative overflow-hidden">
+                {/* Profile Picture */}
+                <div className="relative inline-block mb-6">
+                  <div className="profile-ring">
+                    <img
+                      alt={`${user.name} profile picture`}
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-900"
+                      src={avatarPreview || user.avatar || "https://via.placeholder.com/150"}
+                    />
+                  </div>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
                   />
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute bottom-1 right-1 w-9 h-9 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform border-2 border-white dark:border-slate-900 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </label>
                 </div>
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="avatar-upload"
-                  className="absolute bottom-2 right-2 bg-primary text-primary-foreground p-2.5 rounded-full hover:scale-110 transition-all shadow-lg border-2 border-card cursor-pointer"
-                >
-                  <Edit className="w-4 h-4" />
-                </label>
-              </div>
 
-              {/* User Info */}
-              <div className="relative z-10 w-full">
-                <h2 className="text-2xl font-bold text-foreground mb-1 tracking-tight">{user.name}</h2>
-                <p className="text-sm text-primary font-medium mb-5 tracking-wide">{user.email}</p>
-                <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground bg-muted px-4 py-1.5 rounded-full w-fit mx-auto border border-border">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(var(--primary))]"></span>
+                <h2 className="text-2xl font-bold">{user.name}</h2>
+                <p className="text-slate-500 dark:text-slate-400 mb-4">{user.email}</p>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-8">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   Online
                 </div>
-              </div>
 
-              {/* Profile Strength */}
-              <div className="mt-10 w-full border-t border-border pt-6 relative z-10">
-                <div className="flex justify-between items-center text-sm mb-3">
-                  <span className="text-muted-foreground font-light">Profile Strength</span>
-                  <span className="font-bold text-secondary">{profileStrength}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary to-secondary rounded-full relative"
-                    style={{ width: `${profileStrength}%` }}
-                  >
-                    <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                {/* Profile Strength */}
+                <div className="text-left space-y-3 pt-6 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Profile Strength</span>
+                    <span className="text-emerald-500 font-bold">{profileStrength}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                      style={{ width: `${profileStrength}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
             </div>
-          </section>
 
-          {/* Forms Section - Right Side */}
-          <section className="lg:col-span-8 flex flex-col gap-8 relative">
-
-            {/* Decorative Line */}
-            <div className="absolute left-8 top-10 bottom-10 w-[1px] bg-gradient-to-b from-secondary via-primary to-transparent opacity-40 hidden md:block"></div>
-
-            {/* Personal Information */}
-            <div className="glass-high rounded-3xl p-8 ml-0 md:ml-6 relative overflow-hidden group shadow-lg">
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none group-hover:bg-primary/10 transition-colors duration-700"></div>
-
-              <div className="flex items-center gap-4 mb-8 relative z-10 border-b border-border pb-4">
-                <div className="p-2 rounded-lg bg-muted text-primary">
-                  <UserIcon className="w-6 h-6" />
+            {/* Forms Section - Right Side */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Personal Information */}
+              <div className="bento-card bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-lg">Personal Information</h3>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground tracking-wide">Personal Information</h3>
-              </div>
-
-              <form className="space-y-8 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-                  <div className="group/input">
-                    <label className="block text-[11px] font-bold text-primary/70 mb-2 tracking-widest uppercase transition-colors group-focus-within/input:text-primary">
-                      Full Name
-                    </label>
-                    <input
-                      className="w-full bg-transparent border-b border-border pb-3 text-foreground placeholder-muted-foreground focus:outline-none focus:border-b-2 focus:border-primary transition-all"
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="group/input opacity-70">
-                    <label className="block text-[11px] font-bold text-muted-foreground mb-2 tracking-widest uppercase">
-                      Email Address
-                    </label>
-                    <input
-                      className="w-full bg-transparent border-b border-dashed border-border pb-3 text-muted-foreground cursor-not-allowed focus:outline-none"
-                      disabled
-                      type="email"
-                      value={formData.email}
-                    />
-                    <p className="text-[10px] text-muted-foreground mt-2 font-light italic">* Contact support to update email</p>
-                  </div>
-                  <div className="group/input">
-                    <label className="block text-[11px] font-bold text-primary/70 mb-2 tracking-widest uppercase transition-colors group-focus-within/input:text-primary">
-                      Gender
-                    </label>
-                    <div className="relative">
-                      <select
-                        className="w-full bg-transparent border-b border-border pb-3 text-foreground appearance-none cursor-pointer focus:outline-none focus:border-b-2 focus:border-primary transition-all"
-                        value={formData.gender || "male"}
-                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      >
-                        <option className="bg-card text-foreground" value="male">Male</option>
-                        <option className="bg-card text-foreground" value="female">Female</option>
-                        <option className="bg-card text-foreground" value="other">Other</option>
-                      </select>
-                      <ChevronDown className="absolute right-0 top-3 pointer-events-none text-muted-foreground group-hover/input:text-foreground transition-colors w-5 h-5" />
+                <div className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[11px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">Full Name</label>
+                      <input
+                        className="w-full bg-transparent border-0 border-b border-slate-200 dark:border-slate-600 px-0 pb-2 focus:ring-0 focus:border-emerald-500 transition-colors font-medium text-slate-900 dark:text-white"
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">Email Address</label>
+                      <div className="flex flex-col">
+                        <input
+                          className="w-full bg-transparent border-0 border-b border-slate-200 dark:border-slate-600 px-0 pb-2 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                          disabled
+                          type="email"
+                          value={formData.email}
+                        />
+                        <span className="text-[10px] text-slate-400 mt-2 italic">* Contact support to update email</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">Gender</label>
+                      <div className="relative">
+                        <select
+                          className="w-full bg-transparent border-0 border-b border-slate-200 dark:border-slate-600 px-0 pb-2 focus:ring-0 focus:border-emerald-500 transition-colors font-medium appearance-none text-slate-900 dark:text-white"
+                          value={formData.gender}
+                          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                        >
+                          <option value="Male" className="bg-white dark:bg-slate-800">Male</option>
+                          <option value="Female" className="bg-white dark:bg-slate-800">Female</option>
+                          <option value="Other" className="bg-white dark:bg-slate-800">Other</option>
+                        </select>
+                        <svg className="absolute right-0 bottom-2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </form>
-            </div>
-
-            {/* Exam Focus */}
-            <div className="glass-high rounded-3xl p-8 ml-0 md:ml-6 relative overflow-hidden group shadow-lg">
-              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-secondary/5 rounded-full blur-3xl pointer-events-none group-hover:bg-secondary/10 transition-colors duration-700"></div>
-
-              <div className="flex items-center gap-4 mb-8 relative z-10 border-b border-border pb-4">
-                <div className="p-2 rounded-lg bg-muted text-secondary">
-                  <GraduationCap className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground tracking-wide">Exam Focus</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 relative z-10">
-                <div className="group/input">
-                  <label className="block text-[11px] font-bold text-primary/70 mb-2 tracking-widest uppercase transition-colors group-focus-within/input:text-primary">
-                    Target Exam
-                  </label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-transparent border-b border-border pb-3 text-foreground appearance-none cursor-pointer focus:outline-none focus:border-b-2 focus:border-primary transition-all"
-                      value={formData.examType}
-                      onChange={(e) => setFormData({ ...formData, examType: e.target.value })}
-                    >
-                      <option className="bg-card text-foreground">CHSL</option>
-                      <option className="bg-card text-foreground">CGL</option>
-                      <option className="bg-card text-foreground">MTS</option>
-                      <option className="bg-card text-foreground">12th Boards</option>
-                      <option className="bg-card text-foreground">NTPC</option>
-                      <option className="bg-card text-foreground">JEE</option>
-                      <option className="bg-card text-foreground">Other</option>
-                    </select>
-                    <ChevronDown className="absolute right-0 top-3 pointer-events-none text-muted-foreground group-hover/input:text-foreground transition-colors w-5 h-5" />
+              {/* Exam Focus */}
+              <div className="bento-card bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 flex items-center justify-center">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-lg">Exam Focus</h3>
+                </div>
+                <div className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[11px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">Target Exam</label>
+                      <div className="relative">
+                        <select
+                          className="w-full bg-transparent border-0 border-b border-slate-200 dark:border-slate-600 px-0 pb-2 focus:ring-0 focus:border-emerald-500 transition-colors font-medium appearance-none text-slate-900 dark:text-white"
+                          value={formData.examType}
+                          onChange={(e) => setFormData({ ...formData, examType: e.target.value })}
+                        >
+                          <option value="CHSL" className="bg-white dark:bg-slate-800">CHSL</option>
+                          <option value="CGL" className="bg-white dark:bg-slate-800">CGL</option>
+                          <option value="MTS" className="bg-white dark:bg-slate-800">MTS</option>
+                          <option value="12th Boards" className="bg-white dark:bg-slate-800">12th Boards</option>
+                          <option value="NTPC" className="bg-white dark:bg-slate-800">NTPC</option>
+                          <option value="JEE" className="bg-white dark:bg-slate-800">JEE</option>
+                          <option value="Other" className="bg-white dark:bg-slate-800">Other</option>
+                        </select>
+                        <svg className="absolute right-0 bottom-2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">Preparation Stage</label>
+                      <div className="relative">
+                        <select
+                          className="w-full bg-transparent border-0 border-b border-slate-200 dark:border-slate-600 px-0 pb-2 focus:ring-0 focus:border-emerald-500 transition-colors font-medium appearance-none text-slate-900 dark:text-white"
+                          value={formData.preparationStage}
+                          onChange={(e) => setFormData({ ...formData, preparationStage: e.target.value })}
+                        >
+                          <option value="Beginner" className="bg-white dark:bg-slate-800">Beginner</option>
+                          <option value="Intermediate" className="bg-white dark:bg-slate-800">Intermediate</option>
+                          <option value="Advanced" className="bg-white dark:bg-slate-800">Advanced</option>
+                        </select>
+                        <svg className="absolute right-0 bottom-2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="group/input">
-                  <label className="block text-[11px] font-bold text-primary/70 mb-2 tracking-widest uppercase transition-colors group-focus-within/input:text-primary">
-                    Preparation Stage
-                  </label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-transparent border-b border-border pb-3 text-foreground appearance-none cursor-pointer focus:outline-none focus:border-b-2 focus:border-primary transition-all"
-                      value={formData.preparationStage}
-                      onChange={(e) => setFormData({ ...formData, preparationStage: e.target.value })}
-                    >
-                      <option className="bg-card text-foreground">Beginner</option>
-                      <option className="bg-card text-foreground">Intermediate</option>
-                      <option className="bg-card text-foreground">Advanced</option>
-                    </select>
-                    <ChevronDown className="absolute right-0 top-3 pointer-events-none text-muted-foreground group-hover/input:text-foreground transition-colors w-5 h-5" />
+              </div>
+
+              {/* Account Status */}
+              <div className="bento-card bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Account Status</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Your account is verified and secured.</p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Account Status */}
-            <div className="glass-high rounded-2xl p-6 ml-0 md:ml-6 flex justify-between items-center group hover:bg-glass-bg transition-colors border-l-4 border-l-primary/50 shadow-lg">
-              <div className="flex items-center gap-4">
-                <Shield className="text-muted-foreground group-hover:text-primary transition-colors duration-300 w-6 h-6" />
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">Account Status</h3>
-                  <p className="text-xs text-muted-foreground font-light mt-0.5">Your account is verified and secured.</p>
-                </div>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-bold border border-primary/30 uppercase tracking-wider">
-                Verified
-              </span>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="ml-0 md:ml-6 pt-6 flex justify-end gap-5">
-              <button className="px-6 py-3 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                Discard
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="relative overflow-hidden group px-10 py-3 rounded-full bg-secondary text-secondary-foreground shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
-              >
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></div>
-                <span className="relative z-10 font-bold tracking-wide text-sm">
-                  {isSaving ? "Saving..." : "Save Changes"}
+                <span className="px-4 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                  Verified
                 </span>
-              </button>
-            </div>
-          </section>
-        </div>
+              </div>
 
-        <style>{`
-          @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -40px) scale(1.05); }
-            66% { transform: translate(-20px, 20px) scale(0.95); }
-            100% { transform: translate(0, 0) scale(1); }
-          }
-          @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-          }
-        `}</style>
+              {/* Save Button */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="mt-16 flex justify-center">
+            <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+          </div>
+        </main>
       </div>
-    </MainLayout>
+    </>
   );
 }
