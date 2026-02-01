@@ -43,7 +43,7 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
     <nav className="h-16 bg-white/80 dark:bg-[#0B0F19]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 sticky top-0 z-40 shadow-sm">
       <div className="h-full px-6 flex items-center justify-between">
         {/* Left side - Logo and Portal Name (clickable to home) */}
-        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link to="/landing" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           {/* Logo with teal gradient background like Landing page */}
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#6EE7B7] to-teal-600 flex items-center justify-center text-black font-serif text-xl font-bold shadow-lg shadow-[#6EE7B7]/20 overflow-hidden">
             <img

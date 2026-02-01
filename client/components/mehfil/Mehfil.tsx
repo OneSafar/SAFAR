@@ -157,7 +157,7 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
 
             {/* Floating Navbar */}
             <nav className="fixed top-4 left-4 right-4 h-16 glass-2-0 rounded-2xl z-50 px-6 flex items-center justify-between border border-white/40 dark:border-white/10 shadow-lg shadow-black/5">
-                <Link to="/" className="flex items-center gap-3 group cursor-pointer text-inherit no-underline">
+                <Link to="/landing" className="flex items-center gap-3 group cursor-pointer text-inherit no-underline">
                     <div className="relative flex items-center justify-center">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-500 transform transition-transform group-hover:rotate-6 shadow-lg shadow-teal-500/30 flex items-center justify-center text-white font-black text-lg">
                             M
@@ -181,7 +181,7 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Link to="/" className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Home">
+                    <Link to="/landing" className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Home">
                         <Home className="w-5 h-5" />
                     </Link>
                     <button className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors relative">

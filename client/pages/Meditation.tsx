@@ -137,7 +137,7 @@ export default function Meditation() {
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4">
                 <button
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate("/landing")}
                     className="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                 >
                     <ArrowLeft className="w-6 h-6 text-slate-700 dark:text-slate-300" />

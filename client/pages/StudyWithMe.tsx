@@ -227,7 +227,7 @@ export default function StudyWithMe() {
                         {/* Logo */}
                         <div
                             className={`flex items-center gap-3 mb-8 cursor-pointer ${isSidebarCollapsed ? 'justify-center' : ''}`}
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate("/landing")}
                         >
                             <div
                                 className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg"
@@ -273,7 +273,7 @@ export default function StudyWithMe() {
                             </button>
 
                             <button
-                                onClick={() => navigate("/")}
+                                onClick={() => navigate("/landing")}
                                 className={`flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted/50 transition-all group text-muted-foreground hover:text-foreground ${isSidebarCollapsed ? 'justify-center' : ''}`}
                                 title="Back to Home"
                             >
