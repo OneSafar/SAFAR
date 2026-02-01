@@ -103,7 +103,7 @@ export default function Profile() {
   const profileStrength = 85;
 
   return (
-    <MainLayout userName={user.name} userAvatar={user.avatar}>
+    <MainLayout userName={user.name} userAvatar={user.avatar} hideSidebar={true}>
       <div className="flex-1 h-full overflow-y-auto bg-background font-['Plus_Jakarta_Sans'] text-foreground relative transition-colors duration-300">
 
         {/* Swirl Background with Animated Blobs */}

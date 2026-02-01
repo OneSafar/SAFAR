@@ -27,6 +27,7 @@ import StudyWithMe from "./pages/StudyWithMe";
 import Achievements from "./pages/Achievements";
 import Landing from "./pages/Landing";
 import Mehfil from "./pages/Mehfil";
+import Meditation from "./pages/Meditation";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,52 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+
+          {/* Nishtha - Wellness App with 5 sections */}
+          <Route path="/nishtha">
+            <Route index element={<Navigate to="/nishtha/check-in" replace />} />
+            <Route
+              path="check-in"
+              element={
+                <ProtectedRoute>
+                  <CheckIn />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="journal"
+              element={
+                <ProtectedRoute>
+                  <Journal />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="goals"
+              element={
+                <ProtectedRoute>
+                  <Goals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="streaks"
+              element={
+                <ProtectedRoute>
+                  <Streaks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="suggestions"
+              element={
+                <ProtectedRoute>
+                  <Suggestions />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
           <Route
             path="/study"
             element={
@@ -102,51 +149,10 @@ const App = () => (
             }
           />
           <Route
-            path="/check-in"
-            element={
-              <ProtectedRoute>
-                <CheckIn />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/journal"
-            element={
-              <ProtectedRoute>
-                <Journal />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/goals"
-            element={
-              <ProtectedRoute>
-                <Goals />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/streaks"
-            element={
-              <ProtectedRoute>
-                <Streaks />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/achievements"
             element={
               <ProtectedRoute>
                 <Achievements />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/suggestions"
-            element={
-              <ProtectedRoute>
-                <Suggestions />
               </ProtectedRoute>
             }
           />
@@ -163,6 +169,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Mehfil />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/meditation"
+            element={
+              <ProtectedRoute>
+                <Meditation />
               </ProtectedRoute>
             }
           />

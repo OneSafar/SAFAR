@@ -14,7 +14,7 @@ router.post('/', requireAuth, async (req: Request, res) => {
         await db.execute({
             sql: `INSERT INTO focus_sessions (id, user_id, duration_minutes, break_minutes, completed, completed_at)
                   VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-            args: [id, req.session.userId, durationMinutes, breakMinutes || 0, completed ? 1 : 0]
+            args: [id, req.session.userId, durationMinutes, breakMinutes || 0, completed ? true : false]
         });
 
         res.json({ success: true, id });
@@ -35,7 +35,7 @@ router.get('/stats', requireAuth, async (req: Request, res) => {
                     COALESCE(SUM(duration_minutes), 0) as total_focus_minutes,
                     COALESCE(SUM(break_minutes), 0) as total_break_minutes,
                     COUNT(*) as total_sessions,
-                    SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed_sessions
+                    SUM(CASE WHEN completed = TRUE THEN 1 ELSE 0 END) as completed_sessions
                   FROM focus_sessions WHERE user_id = ?`,
             args: [userId]
         });
@@ -44,13 +44,13 @@ router.get('/stats', requireAuth, async (req: Request, res) => {
         // Weekly data (last 7 days)
         const weeklyResult = await db.execute({
             sql: `SELECT 
-                    strftime('%w', completed_at) as day_of_week,
+                    EXTRACT(DOW FROM completed_at) as day_of_week,
                     COALESCE(SUM(duration_minutes), 0) as minutes
                   FROM focus_sessions 
                   WHERE user_id = ? 
-                    AND completed_at >= datetime('now', '-7 days')
-                    AND completed = 1
-                  GROUP BY strftime('%w', completed_at)`,
+                    AND completed_at >= NOW() - INTERVAL '7 days'
+                    AND completed = TRUE
+                  GROUP BY EXTRACT(DOW FROM completed_at)`,
             args: [userId]
         });
 
@@ -65,9 +65,9 @@ router.get('/stats', requireAuth, async (req: Request, res) => {
 
         // Calculate focus streak (consecutive days with completed sessions)
         const streakResult = await db.execute({
-            sql: `SELECT DISTINCT date(completed_at) as session_date 
+            sql: `SELECT DISTINCT DATE(completed_at) as session_date 
                   FROM focus_sessions 
-                  WHERE user_id = ? AND completed = 1
+                  WHERE user_id = ? AND completed = TRUE
                   ORDER BY session_date DESC`,
             args: [userId]
         });
@@ -97,7 +97,7 @@ router.get('/stats', requireAuth, async (req: Request, res) => {
         const goalsResult = await db.execute({
             sql: `SELECT 
                     COUNT(*) as total_goals,
-                    SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed_goals
+                    SUM(CASE WHEN completed = TRUE THEN 1 ELSE 0 END) as completed_goals
                   FROM goals WHERE user_id = ?`,
             args: [userId]
         });

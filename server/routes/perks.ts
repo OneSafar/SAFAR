@@ -51,8 +51,8 @@ const PERK_DEFINITIONS = [
 async function getSincereGoalsCount(userId: string): Promise<number> {
     const result = await db.execute({
         sql: `SELECT COUNT(*) as count FROM goals 
-              WHERE user_id = ? AND completed = 1 
-              AND (julianday(completed_at) - julianday(created_at)) * 24 * 60 >= 5`,
+              WHERE user_id = ? AND completed = TRUE 
+              AND EXTRACT(EPOCH FROM (completed_at - created_at)) / 60 >= 5`,
         args: [userId]
     });
     return (result.rows[0] as any).count || 0;
@@ -82,7 +82,7 @@ async function getUserStats(userId: string) {
 
     // Total focus hours (completed sessions only)
     const focusResult = await db.execute({
-        sql: 'SELECT COALESCE(SUM(duration_minutes), 0) as total FROM focus_sessions WHERE user_id = ? AND completed = 1',
+        sql: 'SELECT COALESCE(SUM(duration_minutes), 0) as total FROM focus_sessions WHERE user_id = ? AND completed = TRUE',
         args: [userId]
     });
     const totalFocusHours = ((focusResult.rows[0] as any).total || 0) / 60;
@@ -90,8 +90,8 @@ async function getUserStats(userId: string) {
     // Focus sessions in last 7 days
     const focus7dResult = await db.execute({
         sql: `SELECT COUNT(*) as count FROM focus_sessions 
-              WHERE user_id = ? AND completed = 1 
-              AND completed_at >= datetime('now', '-7 days')`,
+              WHERE user_id = ? AND completed = TRUE 
+              AND completed_at >= NOW() - INTERVAL '7 days'`,
         args: [userId]
     });
     const focusSessions7d = (focus7dResult.rows[0] as any).count || 0;
@@ -182,7 +182,7 @@ export async function checkPerks(userId: string, trigger?: string): Promise<{ aw
         if (qualifies && !hasPerk) {
             // Award new perk
             await db.execute({
-                sql: `INSERT OR IGNORE INTO user_perks (id, user_id, perk_id, is_active) VALUES (?, ?, ?, 1)`,
+                sql: `INSERT INTO user_perks (id, user_id, perk_id, is_active) VALUES (?, ?, ?, TRUE) ON CONFLICT DO NOTHING`,
                 args: [uuidv4(), userId, perk.id]
             });
             awarded.push(perk.name);
@@ -384,14 +384,14 @@ router.get('/all', requireAuth, async (req: any, res) => {
         const streak = streaks.rows[0] as any || { login_streak: 0, check_in_streak: 0, goal_completion_streak: 0 };
 
         const focusSessions = await db.execute({
-            sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total FROM focus_sessions WHERE user_id = ? AND completed = 1`,
+            sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total FROM focus_sessions WHERE user_id = ? AND completed = TRUE`,
             args: [userId]
         });
         const totalFocusMinutes = (focusSessions.rows[0] as any)?.total || 0;
 
         const goals = await db.execute({
-            sql: `SELECT COUNT(*) as count FROM goals WHERE user_id = ? AND completed = 1 
-                  AND (julianday(completed_at) - julianday(created_at)) * 24 * 60 >= 5`,
+            sql: `SELECT COUNT(*) as count FROM goals WHERE user_id = ? AND completed = TRUE 
+                  AND EXTRACT(EPOCH FROM (completed_at - created_at)) / 60 >= 5`,
             args: [userId]
         });
         const sincereGoals = (goals.rows[0] as any)?.count || 0;
@@ -491,9 +491,9 @@ export async function seedPerkDefinitions() {
     for (const perk of PERK_DEFINITIONS) {
         try {
             await db.execute({
-                sql: `INSERT OR IGNORE INTO perk_definitions 
+                sql: `INSERT INTO perk_definitions 
                       (id, name, type, category, rarity, tier, criteria_json, display_priority, is_limited) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING`,
                 args: [
                     perk.id,
                     perk.name,

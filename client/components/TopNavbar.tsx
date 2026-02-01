@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -9,9 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authService } from "@/utils/authService";
-import { LogOut, Settings, Sun, Moon } from "lucide-react";
+import { LogOut, Settings, Sun, Moon, Home } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-// 1. IMPORT THE IMAGE (Using the exact name from your screenshot)
 import safarLogo from "@/assets/safar-logo.png.jpeg";
 
 interface TopNavbarProps {
@@ -41,47 +40,48 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
   };
 
   return (
-    <nav className="h-16 glass border-b border-border sticky top-0 z-40">
+    <nav className="h-16 bg-white/80 dark:bg-[#0B0F19]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 sticky top-0 z-40 shadow-sm">
       <div className="h-full px-6 flex items-center justify-between">
-        {/* Left side - Logo and Portal Name */}
-        <div className="flex items-center gap-3">
-
-          {/* 2. LOGO IMAGE (Replaces the 🎯 emoji) */}
-          <img
-            src={safarLogo}
-            alt="Safar Logo"
-            className="w-10 h-10 rounded-full object-cover"
-          />
+        {/* Left side - Logo and Portal Name (clickable to home) */}
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          {/* Logo with teal gradient background like Landing page */}
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#6EE7B7] to-teal-600 flex items-center justify-center text-black font-serif text-xl font-bold shadow-lg shadow-[#6EE7B7]/20 overflow-hidden">
+            <img
+              src={safarLogo}
+              alt="Safar Logo"
+              className="w-full h-full object-cover"
+            />
+          </div>
 
           <div className="hidden sm:block">
-            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              NISHTHA
+            <h1 className="text-xl font-serif font-bold text-slate-900 dark:text-white tracking-tight">
+              Safar
             </h1>
           </div>
-        </div>
+        </Link>
 
         {/* Right side - Theme Toggle and User Avatar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Theme Toggle Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="rounded-full h-10 w-10"
+            className="rounded-full h-10 w-10 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20"
           >
             {theme === 'dark' ? (
-              <Sun className="h-5 w-5 text-yellow-500" />
+              <Sun className="h-5 w-5 text-[#6EE7B7]" />
             ) : (
-              <Moon className="h-5 w-5 text-slate-700" />
+              <Moon className="h-5 w-5 text-slate-600" />
             )}
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="rounded-full h-10 w-10 p-0 hover:bg-muted">
-                <Avatar className="h-10 w-10">
+              <Button variant="ghost" className="rounded-full h-10 w-10 p-0 hover:bg-slate-100 dark:hover:bg-white/10">
+                <Avatar className="h-10 w-10 border-2 border-[#6EE7B7]/30">
                   <AvatarImage src={userAvatar} alt={userName} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-[#6EE7B7] to-teal-600 text-black font-bold">
                     {userName
                       .split(" ")
                       .map((n) => n[0])
@@ -91,18 +91,18 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium text-foreground">{userName}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">SSC Aspirant</p>
+            <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-[#0B0F19] border-slate-200 dark:border-white/10 rounded-xl shadow-xl">
+              <div className="px-3 py-2">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Student</p>
               </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleProfile} className="cursor-pointer gap-2">
+              <DropdownMenuSeparator className="bg-slate-200 dark:bg-white/10" />
+              <DropdownMenuItem onClick={handleProfile} className="cursor-pointer gap-2 text-slate-700 dark:text-slate-300 hover:text-[#6EE7B7] dark:hover:text-[#6EE7B7]">
                 <Settings className="w-4 h-4" />
                 <span>Profile Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer gap-2 text-destructive">
+              <DropdownMenuSeparator className="bg-slate-200 dark:bg-white/10" />
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer gap-2 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300">
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
               </DropdownMenuItem>

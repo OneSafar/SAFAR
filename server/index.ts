@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import session from "express-session";
 import cookieParser from "cookie-parser";
+import { createServer as createHttpServer } from "http";
+import { Server } from "socket.io";
 import { handleDemo } from "./routes/demo";
 import { authRoutes } from "./routes/auth";
 import { moodRoutes } from "./routes/moods";
@@ -12,6 +14,7 @@ import { streakRoutes } from "./routes/streaks";
 import { focusSessionRoutes } from "./routes/focus-sessions";
 import { achievementRoutes, seedAchievementDefinitions } from "./routes/achievements";
 import { initDatabase } from "./db";
+import { setupMehfilSocket } from "./routes/mehfil-socket";
 
 export async function createServer() {
   const app = express();
@@ -70,5 +73,18 @@ export async function createServer() {
 
   app.get("/api/demo", handleDemo);
 
-  return app;
+  // Create HTTP server and Socket.IO
+  const httpServer = createHttpServer(app);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: true,
+      credentials: true,
+    },
+  });
+
+  // Setup Mehfil Socket.IO handlers
+  setupMehfilSocket(io);
+
+  return { app, httpServer, io };
 }
+

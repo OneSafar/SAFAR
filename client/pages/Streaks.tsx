@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MainLayout from "@/components/MainLayout";
+import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
 import {
@@ -31,6 +31,7 @@ export default function Streaks() {
   const [moodsData, setMoodsData] = useState<any[]>([]);
   const [journalData, setJournalData] = useState<any[]>([]);
   const [loginData, setLoginData] = useState<any[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,11 +140,11 @@ export default function Streaks() {
   if (!user) return null;
 
   // Generate CURRENT MONTH calendar data based on goal activity
-  const generateCalendar = () => {
+  const generateCalendar = (targetDate = currentDate) => {
     const days = [];
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
+    const today = new Date(); // Actual today for future checks
+    const currentMonth = targetDate.getMonth();
+    const currentYear = targetDate.getFullYear();
 
     // Get first and last day of current month
     const firstDay = new Date(currentYear, currentMonth, 1);
@@ -180,7 +181,7 @@ export default function Streaks() {
 
     // Add empty slots for days before the first day of month (to align with weekday)
     const firstDayWeekday = firstDay.getDay(); // 0 = Sunday
-    const startPadding = firstDayWeekday === 0 ? 6 : firstDayWeekday - 1; // Adjust for Monday start
+    const startPadding = firstDayWeekday; // Sunday = 0, no adjustment needed for Sunday-start
     for (let i = 0; i < startPadding; i++) {
       days.push({ date: null, level: -1, dateStr: '', isToday: false }); // Empty slot
     }
@@ -238,7 +239,7 @@ export default function Streaks() {
   const currentMonthName = new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 
   return (
-    <MainLayout userName={user.name} userAvatar={user.avatar}>
+    <NishthaLayout userName={user.name} userAvatar={user.avatar}>
       <div className="flex-1 h-full overflow-y-auto bg-background font-['Inter'] text-foreground p-6 md:p-8 transition-colors duration-300">
         <div className="max-w-[1800px] mx-auto space-y-8">
 
@@ -307,52 +308,87 @@ export default function Streaks() {
               </div>
             </div>
 
-            {/* Activity Calendar - Current Month */}
-            <div id="calendar-view" className="md:col-span-2 rounded-[1.5rem] glass-high p-6 md:p-8 shadow-sm hover:-translate-y-1 transition-transform duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="font-['Outfit'] font-semibold text-lg text-foreground flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-orange-500" />
-                    {currentMonthName}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">Your activity this month</p>
+            {/* Activity Calendar - Redesigned Style */}
+            <div id="calendar-view" className="md:col-span-2 rounded-[1.5rem] bg-white dark:bg-[#1e1e1e] text-slate-900 dark:text-white p-5 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-gray-800 font-sans transition-colors duration-300">
+
+              {/* Header Navigation - Compact */}
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => setCurrentDate(new Date())}
+                  className="flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white transition-colors text-xs font-medium px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800"
+                >
+                  <ArrowRight className="w-3 h-3 rotate-180" />
+                  Today
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const newDate = new Date(currentDate);
+                      newDate.setMonth(newDate.getMonth() - 1);
+                      setCurrentDate(newDate);
+                    }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <ArrowRight className="w-4 h-4 rotate-180" />
+                  </button>
+                  <span className="text-base font-bold bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent min-w-[100px] text-center">
+                    {currentDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newDate = new Date(currentDate);
+                      newDate.setMonth(newDate.getMonth() + 1);
+                      setCurrentDate(newDate);
+                    }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex gap-4 text-xs font-medium">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary to-secondary"></div>
-                    <span className="text-foreground">Active</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm bg-muted"></div>
-                    <span className="text-muted-foreground">Inactive</span>
-                  </div>
-                </div>
+
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg">
+                  {currentDate.getFullYear()}
+                </span>
               </div>
 
-              <div className="w-full">
-                <div className="grid grid-cols-7 gap-2 mb-3 text-center">
-                  {weekDays.map(d => <span key={d} className="text-xs font-medium text-muted-foreground">{d}</span>)}
-                </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {calendarDays.map((day, idx) => (
-                    <div
-                      key={idx}
-                      title={day.date ? day.date.toDateString() : ''}
-                      className={`aspect-square rounded-md flex items-center justify-center text-xs font-medium transition-all
-                        ${day.level === -1
-                          ? "bg-transparent"
-                          : day.level > 0
-                            ? "bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg"
-                            : "bg-muted text-muted-foreground"
-                        }
-                        ${day.isToday ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-background" : ""}
-                      `}
-                    >
-                      {day.date ? day.date.getDate() : ''}
-                    </div>
-                  ))}
-                </div>
+              {/* Day Labels */}
+              <div className="grid grid-cols-7 gap-3 text-center mb-3">
+                {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                  <span key={i} className="text-xs font-bold text-slate-400 dark:text-gray-500">{d}</span>
+                ))}
               </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-3">
+                {generateCalendar().map((day, idx) => {
+                  const isActive = day.level > 0;
+                  const isEmpty = day.date === null;
+
+                  if (isEmpty) return <div key={idx} className="w-9 h-9" />;
+
+                  return (
+                    <div key={idx} className="flex items-center justify-center">
+                      {isActive ? (
+                        <div className="w-9 h-9 rounded-full border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shadow-sm">
+                          <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-gray-700 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-slate-200 dark:text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+
+
             </div>
 
             {/* Goal Consistency Graph - Full Width */}
@@ -429,6 +465,6 @@ export default function Streaks() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </NishthaLayout>
   );
 }

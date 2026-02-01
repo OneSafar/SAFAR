@@ -1,5 +1,5 @@
 /** @import must precede all other statements */
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@200..800&family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@200..800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -898,4 +898,136 @@
     opacity: 0.8;
     transform: scale(1.05);
   }
+}
+
+/* Scrollbar Hide Utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
+}
+
+/* Custom utilities from Redesign Request */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-nav {
+  background: rgba(11, 15, 25, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgba(110, 231, 183, 0.4);
+}
+
+.button-glow {
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+/* Low-contrast scrollbar for blending with background */
+.scrollbar-blend {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+.scrollbar-blend::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-blend::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-blend::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.dark .scrollbar-blend::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+/* Skeuomorphic UI Elements */
+.skeuo-outer-rim {
+  background: conic-gradient(from 180deg, #1a1a1a, #000000, #1a1a1a);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.skeuo-plate {
+  background: radial-gradient(circle at 30% 30%, #f3f4f6, #d1d5db 60%, #9ca3af);
+  box-shadow:
+    inset 0 2px 5px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.2),
+    0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.skeuo-ring {
+  background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 50%, #e5e7eb 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.metal-gradient {
+  fill: url(#metalGradient);
+  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.knob-metal {
+  background: radial-gradient(circle at 40% 40%, #ffffff, #d1d5db 40%, #6b7280 90%);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 1);
+}
+
+.knob-ring {
+  background: conic-gradient(#d1d5db, #f3f4f6, #9ca3af, #d1d5db);
+}
+
+/* Focus Timer Skeuomorphic Elements */
+.timer-bg {
+    background: #080808;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+}
+.hourglass-shadow {
+    filter: drop-shadow(-25px 25px 20px rgba(0,0,0,0.8));
+}
+.sand-top-shape {
+    clip-path: path('M10,0 H90 Q90,30 50,65 Q10,30 10,0 Z');
+}
+.sand-bottom-shape {
+    clip-path: path('M50,15 Q80,50 90,70 H10 Q20,50 50,15 Z');
+}
+.glass-bulb {
+    background: #1a1a1a;
+    border: 6px solid #262626;
+}
+.focus-title {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 0.05em;
 }

@@ -10,7 +10,7 @@ const distPath = path.join(__dirname, "../spa");
 
 // Start server with async initialization
 async function startServer() {
-  const app = await createServer();
+  const { app, httpServer } = await createServer();
 
   // Serve static files
   app.use(express.static(distPath));
@@ -24,10 +24,12 @@ async function startServer() {
     res.sendFile(path.join(distPath, "index.html"));
   });
 
-  app.listen(port, () => {
+  // Use httpServer.listen for Socket.IO support
+  httpServer.listen(port, () => {
     console.log(`🚀 Nistha server running on port ${port}`);
     console.log(`📱 Frontend: http://localhost:${port}`);
     console.log(`🔧 API: http://localhost:${port}/api`);
+    console.log(`🔌 Mehfil Socket.IO: ws://localhost:${port}`);
   });
 }
 

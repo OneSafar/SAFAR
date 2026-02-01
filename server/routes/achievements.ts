@@ -38,14 +38,14 @@ const EMOTIONAL_TITLES = [
 async function getUserStats(userId: string) {
     // Total focus hours (completed sessions only)
     const focusResult = await db.execute({
-        sql: 'SELECT COALESCE(SUM(duration_minutes), 0) as total FROM focus_sessions WHERE user_id = ? AND completed = 1',
+        sql: 'SELECT COALESCE(SUM(duration_minutes), 0) as total FROM focus_sessions WHERE user_id = ? AND completed = TRUE',
         args: [userId]
     });
     const totalFocusHours = ((focusResult.rows[0] as any).total || 0) / 60;
 
     // Total goals completed
     const goalsResult = await db.execute({
-        sql: 'SELECT COUNT(*) as count FROM goals WHERE user_id = ? AND completed = 1',
+        sql: 'SELECT COUNT(*) as count FROM goals WHERE user_id = ? AND completed = TRUE',
         args: [userId]
     });
     const goalsCompleted = (goalsResult.rows[0] as any).count || 0;
@@ -77,7 +77,7 @@ async function getWeeklyMoodData(userId: string) {
     // Get focus hours this week
     const focusResult = await db.execute({
         sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total FROM focus_sessions 
-              WHERE user_id = ? AND completed = 1 AND completed_at >= datetime('now', '-7 days')`,
+              WHERE user_id = ? AND completed = TRUE AND completed_at >= NOW() - INTERVAL '7 days'`,
         args: [userId]
     });
     const weeklyFocusHours = ((focusResult.rows[0] as any).total || 0) / 60;
@@ -85,7 +85,7 @@ async function getWeeklyMoodData(userId: string) {
     // Get goals completed this week
     const goalsResult = await db.execute({
         sql: `SELECT COUNT(*) as count FROM goals 
-              WHERE user_id = ? AND completed = 1 AND completed_at >= datetime('now', '-7 days')`,
+              WHERE user_id = ? AND completed = TRUE AND completed_at >= NOW() - INTERVAL '7 days'`,
         args: [userId]
     });
     const weeklyGoals = (goalsResult.rows[0] as any).count || 0;
@@ -159,7 +159,7 @@ export async function checkAchievements(userId: string): Promise<{ awarded: stri
         if (qualifies && !hasAchievement) {
             // Award new achievement
             await db.execute({
-                sql: `INSERT OR IGNORE INTO user_achievements (id, user_id, achievement_id, is_active) VALUES (?, ?, ?, 1)`,
+                sql: `INSERT INTO user_achievements (id, user_id, achievement_id, is_active) VALUES (?, ?, ?, TRUE) ON CONFLICT DO NOTHING`,
                 args: [uuidv4(), userId, achievement.id]
             });
             awarded.push(achievement.name);
@@ -177,15 +177,15 @@ async function evaluateEmotionalMilestone(userId: string): Promise<{ title: stri
     // Get max single session duration for "Flow Seeker"
     const maxSessionResult = await db.execute({
         sql: `SELECT MAX(duration_minutes) as max_duration FROM focus_sessions 
-              WHERE user_id = ? AND completed = 1 AND completed_at >= datetime('now', '-7 days')`,
+              WHERE user_id = ? AND completed = TRUE AND completed_at >= NOW() - INTERVAL '7 days'`,
         args: [userId]
     });
     const maxSessionMinutes = (maxSessionResult.rows[0] as any).max_duration || 0;
 
     // Check for "Quiet Consistency" (focused on 5+ distinct days)
     const distinctDaysResult = await db.execute({
-        sql: `SELECT COUNT(DISTINCT date(completed_at)) as days FROM focus_sessions 
-              WHERE user_id = ? AND completed = 1 AND completed_at >= datetime('now', '-7 days')`,
+        sql: `SELECT COUNT(DISTINCT DATE(completed_at)) as days FROM focus_sessions 
+              WHERE user_id = ? AND completed = TRUE AND completed_at >= NOW() - INTERVAL '7 days'`,
         args: [userId]
     });
     const focusDays = (distinctDaysResult.rows[0] as any).days || 0;
@@ -439,8 +439,8 @@ router.post('/evaluate-week', requireAuth, async (req: any, res) => {
             const titleDef = EMOTIONAL_TITLES.find(t => t.name === milestone.title);
             if (titleDef) {
                 await db.execute({
-                    sql: `INSERT OR REPLACE INTO user_achievements (id, user_id, achievement_id, is_active, acquired_at) 
-                          VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)`,
+                    sql: `INSERT INTO user_achievements (id, user_id, achievement_id, is_active, acquired_at) 
+                          VALUES (?, ?, ?, TRUE, CURRENT_TIMESTAMP) ON CONFLICT (user_id, achievement_id) DO UPDATE SET is_active = TRUE, acquired_at = CURRENT_TIMESTAMP`,
                     args: [uuidv4(), userId, titleDef.id]
                 });
                 console.log(`🎭 [EMOTIONAL] Awarded "${milestone.title}" to user ${userId}`);
@@ -462,9 +462,12 @@ export async function seedAchievementDefinitions() {
     for (const achievement of ACHIEVEMENT_DEFINITIONS) {
         try {
             await db.execute({
-                sql: `INSERT OR REPLACE INTO achievement_definitions 
+                sql: `INSERT INTO achievement_definitions 
                       (id, name, type, category, tier, criteria_json, display_priority) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                      VALUES (?, ?, ?, ?, ?, ?, ?) 
+                      ON CONFLICT (id) DO UPDATE SET 
+                      name = EXCLUDED.name, type = EXCLUDED.type, category = EXCLUDED.category,
+                      tier = EXCLUDED.tier, criteria_json = EXCLUDED.criteria_json, display_priority = EXCLUDED.display_priority`,
                 args: [
                     achievement.id,
                     achievement.name,
@@ -484,9 +487,10 @@ export async function seedAchievementDefinitions() {
     for (const title of EMOTIONAL_TITLES) {
         try {
             await db.execute({
-                sql: `INSERT OR REPLACE INTO achievement_definitions 
+                sql: `INSERT INTO achievement_definitions 
                       (id, name, description, type, category, rarity, tier, criteria_json, display_priority) 
-                      VALUES (?, ?, ?, 'title', 'emotional', 'special', NULL, '{}', 60)`,
+                      VALUES (?, ?, ?, 'title', 'emotional', 'special', NULL, '{}', 60)
+                      ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description`,
                 args: [title.id, title.name, title.description]
             });
         } catch (e) {

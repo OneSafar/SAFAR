@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import MainLayout from "@/components/MainLayout";
+import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
 import { toast } from "sonner";
@@ -240,46 +240,60 @@ export default function Journal() {
     }).length;
   };
 
+  // Calculate progress percentage
+  const weeklyProgress = Math.round((getWeeklyCount() / 7) * 100);
+  const progressOffset = 251.2 - (251.2 * weeklyProgress) / 100;
+
   if (!user) return null;
 
   return (
-    <MainLayout userName={user.name} userAvatar={user.avatar}>
-      <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden bg-background font-['Poppins'] text-foreground transition-colors duration-300">
+    <NishthaLayout userName={user.name} userAvatar={user.avatar}>
+      <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden bg-slate-50 dark:bg-[#0a0a0f] font-sans text-slate-800 dark:text-slate-200 transition-colors duration-500">
+
+        {/* Ambient Glow Effects */}
+        <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+        <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-violet-500/10 dark:bg-violet-500/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 translate-y-1/3" />
 
         {/* Main Content Area */}
-        <div className="flex flex-col xl:flex-row h-full overflow-auto">
+        <div className="relative z-10 flex flex-col xl:flex-row h-full overflow-auto">
 
           {/* Editor Section - Main Area */}
-          <div className="flex-1 min-w-0 p-6 lg:p-8 overflow-y-auto">
-            <div className="max-w-2xl mx-auto">
+          <section className="flex-[2] min-w-0 p-6 lg:p-10 overflow-y-auto relative">
+            {/* Writing glow effect */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(16,185,129,0.06),transparent_60%)] dark:bg-[radial-gradient(circle_at_50%_10%,rgba(16,185,129,0.08),transparent_60%)] pointer-events-none" />
+
+            <div className="max-w-3xl mx-auto relative">
 
               {/* Header */}
-              <div className="mb-10">
-                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight font-['Outfit']">
+              <header className="mb-10">
+                <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight font-serif">
                   {dateString}
                 </h1>
-                <p className="text-lg text-primary/70 font-medium">Reflection</p>
-              </div>
+                <p className="text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase text-sm flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Reflection Mode
+                </p>
+              </header>
 
               {/* Editor Card */}
-              <div className="bg-card rounded-3xl shadow-xl shadow-primary/5 border border-border overflow-hidden">
+              <div className="bg-white dark:bg-[#1E1E1E] rounded-3xl shadow-xl dark:shadow-2xl dark:shadow-black/50 border border-slate-200/50 dark:border-white/5 overflow-hidden transition-all duration-300 hover:shadow-emerald-500/5">
 
                 {/* Toolbar */}
-                <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/30">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
                   <div className="flex items-center gap-4">
                     {/* Mood Dropdown */}
                     <div className="relative">
                       <button
                         onClick={() => setShowMoodDropdown(!showMoodDropdown)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold border border-primary/20 hover:bg-primary/20 transition-colors"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
                       >
                         <span>{moodOptions.find(m => m.label === selectedMood)?.emoji || "😌"}</span>
-                        Feeling {selectedMood}
-                        <ChevronDown className={`w-3 h-3 transition-transform ${showMoodDropdown ? 'rotate-180' : ''}`} />
+                        <span>Feeling {selectedMood}</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${showMoodDropdown ? 'rotate-180' : ''}`} />
                       </button>
 
                       {showMoodDropdown && (
-                        <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-50 py-2 min-w-[180px] max-h-[250px] overflow-y-auto">
+                        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 py-2 min-w-[180px] max-h-[250px] overflow-y-auto">
                           {moodOptions.map((mood) => (
                             <button
                               key={mood.label}
@@ -287,7 +301,7 @@ export default function Journal() {
                                 setSelectedMood(mood.label);
                                 setShowMoodDropdown(false);
                               }}
-                              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-muted transition-colors ${selectedMood === mood.label ? 'bg-primary/10 text-primary font-bold' : 'text-foreground'
+                              className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors ${selectedMood === mood.label ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium' : 'text-slate-700 dark:text-slate-300'
                                 }`}
                             >
                               <span>{mood.emoji}</span>
@@ -297,32 +311,32 @@ export default function Journal() {
                         </div>
                       )}
                     </div>
-                    <div className="h-4 w-px bg-border"></div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={formatBold} className={`p-1.5 rounded-lg transition-all ${isBold ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                    <div className="h-4 w-px bg-slate-300 dark:bg-white/10 mx-2" />
+                    <div className="flex items-center gap-1 text-slate-700 dark:text-slate-400">
+                      <button onClick={formatBold} className={`p-1.5 rounded-lg transition-all ${isBold ? 'bg-emerald-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-white/10'}`}>
                         <Bold className="w-5 h-5" />
                       </button>
-                      <button onClick={formatItalic} className={`p-1.5 rounded-lg transition-all ${isItalic ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                      <button onClick={formatItalic} className={`p-1.5 rounded-lg transition-all ${isItalic ? 'bg-emerald-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-white/10'}`}>
                         <Italic className="w-5 h-5" />
                       </button>
-                      <button onClick={formatBulletList} className={`p-1.5 rounded-lg transition-all ${isList ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                      <button onClick={formatBulletList} className={`p-1.5 rounded-lg transition-all ${isList ? 'bg-emerald-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-white/10'}`}>
                         <List className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    Auto-saved
+                  <div className="flex items-center gap-2 text-xs font-mono text-emerald-600 dark:text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    AUTO-SAVED
                   </div>
                 </div>
 
                 {/* Editor Area */}
-                <div className="p-8 min-h-[750px]">
+                <div className="p-8 lg:p-12 min-h-[500px]">
                   {/* Title Input with Label */}
-                  <div className="mb-6">
-                    <label className="text-xs font-bold text-primary uppercase tracking-wider mb-2 block">Title (required)</label>
+                  <div className="mb-8">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-500 mb-2 uppercase tracking-wider">Title (required)</label>
                     <input
-                      className="w-full text-2xl md:text-3xl font-bold bg-transparent border-b border-border focus:border-primary text-foreground placeholder:text-muted-foreground/40 pb-2 outline-none font-['Outfit'] transition-colors"
+                      className="w-full text-2xl md:text-3xl font-serif bg-transparent border-b-2 border-slate-200 dark:border-white/10 focus:border-emerald-500 dark:focus:border-emerald-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 pb-3 outline-none transition-colors"
                       placeholder="Give your entry a short title..."
                       type="text"
                       value={title}
@@ -332,24 +346,27 @@ export default function Journal() {
 
                   {/* Body Editor with Label */}
                   <div>
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Your Thoughts (required)</label>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-500 mb-4 uppercase tracking-wider">Your Thoughts (required)</label>
                     <div
                       ref={editorRef}
                       contentEditable
-                      className="w-full min-h-[350px] bg-transparent border-none focus:ring-0 text-lg leading-relaxed text-foreground/80 placeholder:text-muted-foreground/40 resize-none outline-none"
-                      data-placeholder="Write the details of your thoughts here... What happened? How do you feel? What are you thinking about?"
+                      className="w-full min-h-[300px] bg-transparent border-none focus:ring-0 text-lg leading-relaxed text-slate-900 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-700 resize-none outline-none"
+                      data-placeholder="Start writing here..."
                       onSelect={checkFormattingState}
                       onKeyUp={checkFormattingState}
                     ></div>
                   </div>
                 </div>
 
+                {/* Gradient line */}
+                <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-30" />
+
                 {/* Save Button */}
-                <div className="px-8 py-6 flex justify-end border-t border-border">
+                <div className="px-8 py-6 flex justify-end">
                   <button
                     onClick={handleAddEntry}
                     disabled={isSubmitting}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 px-8 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3 px-8 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <CheckCircle className="w-5 h-5" />
                     {isSubmitting ? "Saving..." : "Save Entry"}
@@ -357,53 +374,54 @@ export default function Journal() {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Right Sidebar - Daily Inspiration & History */}
-          <aside className="w-full xl:w-[700px] xl:flex-shrink-0 p-4 md:p-6 xl:border-l border-border bg-muted/20 overflow-y-auto order-first xl:order-none">
+          <aside className="w-full xl:w-[400px] xl:flex-shrink-0 border-t xl:border-t-0 xl:border-l border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-[#151515]/90 backdrop-blur-sm p-6 overflow-y-auto space-y-6">
 
-            {/* Daily Inspiration */}
-            <div className="bg-card p-8 rounded-3xl shadow-sm border border-border relative overflow-hidden group mb-8">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full group-hover:scale-110 transition-transform"></div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3 text-primary">
-                  <Sun className="w-6 h-6" />
-                  <span className="text-base font-bold uppercase tracking-wider">Daily Inspiration</span>
+            {/* Daily Inspiration Card */}
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 relative overflow-hidden group shadow-lg shadow-slate-200/50 dark:shadow-black/20 hover:shadow-xl hover:shadow-violet-500/5 dark:hover:shadow-violet-500/10 transition-all duration-300">
+              {/* Decorative glow */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/20 dark:bg-violet-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-violet-500/30 transition-colors duration-500" />
+
+              <div className="flex justify-between items-start mb-6 relative z-10">
+                <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-medium text-xs tracking-wider uppercase">
+                  <Sun className="w-4 h-4" />
+                  Daily Inspiration
                 </div>
-                {/* Prompt counter */}
-                <span className="text-sm text-muted-foreground font-medium">
+                <span className="text-xs text-slate-500 font-mono bg-slate-100 dark:bg-white/5 px-2 py-1 rounded">
                   {currentPromptIndex + 1} / {dailyQuestions.length}
                 </span>
               </div>
 
               {/* Navigation and Question */}
-              <div className="flex items-center gap-4 mb-6">
+              <div className="text-center py-4 relative z-10">
                 <button
                   onClick={prevPrompt}
-                  className="p-2 rounded-full bg-muted hover:bg-primary/20 transition-colors text-muted-foreground hover:text-primary"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <p className="flex-1 text-xl font-serif italic text-foreground leading-snug text-center">
+                <blockquote className="font-serif text-xl italic text-slate-800 dark:text-slate-100 leading-snug px-8">
                   "{getDailyQuestion()}"
-                </p>
+                </blockquote>
                 <button
                   onClick={nextPrompt}
-                  className="p-2 rounded-full bg-muted hover:bg-primary/20 transition-colors text-muted-foreground hover:text-primary"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Indicator dots */}
-              <div className="flex justify-center gap-2 mb-6">
+              <div className="flex justify-center gap-1.5 mt-6 mb-6">
                 {dailyQuestions.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentPromptIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-all ${idx === currentPromptIndex
-                        ? 'bg-primary w-6'
-                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                    className={`h-1 rounded-full transition-all ${idx === currentPromptIndex
+                      ? 'bg-violet-500 w-6'
+                      : 'bg-slate-300 dark:bg-slate-700 w-1.5 hover:bg-slate-400 dark:hover:bg-slate-600'
                       }`}
                   />
                 ))}
@@ -412,9 +430,10 @@ export default function Journal() {
               {!showPromptAnswer ? (
                 <button
                   onClick={() => setShowPromptAnswer(true)}
-                  className="flex items-center gap-2 text-primary text-lg font-bold hover:gap-3 transition-all"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
                 >
-                  Answer this prompt <ArrowRight className="w-5 h-5" />
+                  <span>Answer this prompt</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -422,7 +441,7 @@ export default function Journal() {
                     value={promptAnswer}
                     onChange={(e) => setPromptAnswer(e.target.value)}
                     placeholder="Write your thoughts here..."
-                    className="w-full h-24 p-3 text-sm bg-background border border-border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full h-24 p-3 text-sm bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/50 text-slate-700 dark:text-slate-300"
                   />
                   <div className="flex gap-2">
                     <button
@@ -441,7 +460,7 @@ export default function Journal() {
                           }
                         }
                       }}
-                      className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors"
+                      className="flex-1 bg-violet-500 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-violet-600 transition-colors"
                     >
                       Save Answer
                     </button>
@@ -450,7 +469,7 @@ export default function Journal() {
                         setShowPromptAnswer(false);
                         setPromptAnswer("");
                       }}
-                      className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-white/10 rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
@@ -459,79 +478,81 @@ export default function Journal() {
               )}
             </div>
 
-            {/* History / Journal Entries */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <History className="w-7 h-7 text-primary" />
-                  <h3 className="font-bold text-foreground text-xl">History</h3>
-                </div>
-                <button
-                  onClick={() => setShowHistoryModal(true)}
-                  className="text-sm font-bold text-primary uppercase tracking-wider hover:underline"
-                >View all</button>
+            {/* This Week Progress Card */}
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-lg shadow-slate-200/50 dark:shadow-black/20">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">This Week</h3>
+                <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-500/20">
+                  {getWeeklyCount()}/7 entries
+                </span>
               </div>
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                {journalEntries.length === 0 ? (
-                  <div className="p-6 rounded-2xl bg-card border border-border text-center text-muted-foreground text-lg">
-                    No entries yet
+
+              {/* Progress Ring */}
+              <div className="flex items-center justify-center py-4">
+                <div className="relative w-28 h-28">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      className="text-slate-200 dark:text-slate-800 stroke-current"
+                      cx="50" cy="50" r="40"
+                      fill="transparent" strokeWidth="8"
+                    />
+                    <circle
+                      className="text-emerald-500 stroke-current transition-all duration-500"
+                      cx="50" cy="50" r="40"
+                      fill="transparent" strokeWidth="8"
+                      strokeDasharray="251.2"
+                      strokeDashoffset={progressOffset}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">{weeklyProgress}%</span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500">Complete</span>
                   </div>
-                ) : (
-                  journalEntries.slice(0, 10).map((entry: any, idx: number) => (
-                    <div
-                      key={entry.id || idx}
-                      className="p-5 rounded-2xl bg-card border border-border hover:border-primary/50 cursor-pointer transition-all group"
-                    >
-                      <p className="text-sm font-bold text-primary mb-2">
-                        {formatDate(entry.timestamp || entry.createdAt || entry.created_at)}
-                      </p>
-                      <p className="text-base text-foreground font-medium truncate">
-                        {getTitle(entry.content)}
-                      </p>
-                    </div>
-                  ))
-                )}
+                </div>
               </div>
-            </div>
-          </aside>
 
-          {/* Sidebar - This Week & Calendar */}
-          <aside className="w-full xl:w-[400px] xl:border-l border-border bg-glass-low p-4 md:p-8 overflow-y-auto custom-scrollbar order-last">
-
-            {/* This Week */}
-            <div className="bg-card p-8 rounded-3xl border border-border mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <h4 className="text-lg font-bold text-foreground">This Week</h4>
-                <span className="text-sm font-bold text-rose-500">{getWeeklyCount()}/7 entries</span>
-              </div>
-              <div className="flex justify-between items-end h-20 gap-2">
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
+              {/* Day indicators */}
+              <div className="grid grid-cols-7 gap-1 mt-4">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
                   const now = new Date();
                   const todayStr = now.toLocaleDateString('en-CA');
                   const dayOfWeek = now.getDay();
-                  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                  const monday = new Date(now);
-                  monday.setDate(now.getDate() - daysFromMonday);
-                  const targetDay = new Date(monday);
-                  targetDay.setDate(monday.getDate() + i);
+                  const sunday = new Date(now);
+                  sunday.setDate(now.getDate() - dayOfWeek);
+                  const targetDay = new Date(sunday);
+                  targetDay.setDate(sunday.getDate() + i);
                   const targetDayStr = targetDay.toLocaleDateString('en-CA');
                   const hasEntry = journalEntries.some((e: any) => toISTDateStr(e.timestamp || e.createdAt || e.created_at) === targetDayStr);
                   const isToday = targetDayStr === todayStr;
                   return (
-                    <div key={i} className={`w-full rounded-t-lg transition-all ${hasEntry ? 'bg-primary h-[90%]' : 'bg-muted h-[40%]'} ${isToday ? 'ring-2 ring-primary ring-offset-2' : ''}`}></div>
+                    <div key={i} className="flex flex-col items-center gap-1 group cursor-pointer">
+                      <div className={`w-1.5 h-6 rounded-full transition-all ${hasEntry ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-200 dark:bg-slate-700'} ${isToday && !hasEntry ? 'ring-2 ring-emerald-500/50' : ''}`} />
+                      <span className={`text-[10px] font-medium ${hasEntry ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>{day}</span>
+                    </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* Calendar */}
-            <div className="bg-card p-8 rounded-3xl border border-border">
-              <h4 className="text-lg font-bold text-foreground mb-6">{currentMonthName}</h4>
-              <div className="grid grid-cols-7 gap-2 text-center">
+            {/* Calendar Card */}
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-lg shadow-slate-200/50 dark:shadow-black/20">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{currentMonthName}</h3>
+                <div className="flex gap-1">
+                  <button className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded transition-colors">
+                    <ChevronLeft className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded transition-colors">
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-7 gap-y-3 gap-x-1 text-center text-sm">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, idx) => (
-                  <div key={idx} className={`text-sm font-bold p-2 ${idx === 0 ? 'text-primary' : 'text-muted-foreground'}`}>{d}</div>
+                  <div key={idx} className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">{d}</div>
                 ))}
-                {Array.from({ length: firstDayOfMonth }, (_, i) => <div key={`empty-${i}`} className="p-2"></div>)}
+                {Array.from({ length: firstDayOfMonth }, (_, i) => <div key={`empty-${i}`} className="p-1.5" />)}
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const dayNum = i + 1;
                   const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
@@ -540,156 +561,199 @@ export default function Journal() {
                   const isToday = dayNum === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
                   const isFuture = dayNum > now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
                   return (
-                    <div
+                    <button
                       key={i}
-                      className={`p-2 text-base rounded-lg transition-colors ${isToday
-                        ? 'bg-primary text-primary-foreground font-bold'
+                      className={`w-7 h-7 rounded-full flex items-center justify-center mx-auto text-xs font-medium transition-all ${isToday
+                        ? 'bg-emerald-500 text-white font-bold shadow-[0_0_10px_rgba(16,185,129,0.4)] ring-2 ring-emerald-500/30'
                         : hasEntry
-                          ? 'bg-primary/20 text-primary font-bold'
+                          ? 'relative text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
                           : isFuture
-                            ? 'text-muted-foreground/40'
-                            : 'text-foreground'
+                            ? 'text-slate-300 dark:text-slate-600'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
                         }`}
                     >
                       {dayNum}
-                    </div>
+                      {hasEntry && !isToday && (
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-violet-500 rounded-full" />
+                      )}
+                    </button>
                   );
                 })}
               </div>
             </div>
-          </aside>
-        </div>
-      </div >
 
-      {/* History Modal */}
-      {
-        showHistoryModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-card w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-border overflow-hidden flex flex-col m-4">
-
-              {/* Modal Header */}
-              <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <History className="w-6 h-6 text-primary" />
-                  <h2 className="text-xl font-bold text-foreground font-['Outfit']">All Journal Entries</h2>
-                  <span className="text-sm text-muted-foreground">({journalEntries.length} entries)</span>
-                </div>
+            {/* History Section */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center px-1">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+                  <History className="w-5 h-5 text-slate-400" />
+                  History
+                </h3>
                 <button
-                  onClick={() => setShowHistoryModal(false)}
-                  className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowHistoryModal(true)}
+                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors uppercase tracking-wider"
                 >
-                  <X className="w-6 h-6" />
+                  View all
                 </button>
               </div>
-
-              {/* Modal Content */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                 {journalEntries.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-12">
-                    <History className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                    <p className="text-lg">No journal entries yet</p>
-                    <p className="text-sm">Start writing to see your entries here</p>
+                  <div className="p-6 rounded-xl bg-white dark:bg-[#1A1A1A] border border-slate-200/50 dark:border-white/5 text-center text-slate-400">
+                    No entries yet
                   </div>
                 ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {journalEntries.map((entry: any, idx: number) => (
-                      <div
-                        key={entry.id || idx}
-                        className="p-5 rounded-2xl bg-background border border-border hover:border-primary/50 transition-all group"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="text-base font-bold text-foreground mb-1">
-                              {getTitle(entry.content)}
-                            </h4>
-                            <p className="text-xs font-bold text-primary uppercase tracking-wider">
-                              {formatDate(entry.timestamp || entry.createdAt || entry.created_at)}
-                            </p>
-                          </div>
-                          <button
-                            onClick={async () => {
-                              if (confirm('Delete this entry?')) {
-                                try {
-                                  await dataService.deleteJournalEntry(entry.id);
-                                  const entries = await dataService.getJournalEntries();
-                                  setJournalEntries(entries || []);
-                                  toast.success('Entry deleted');
-                                } catch (err) {
-                                  toast.error('Failed to delete');
-                                }
-                              }
-                            }}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
-                            title="Delete entry"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                  journalEntries.slice(0, 5).map((entry: any, idx: number) => (
+                    <div
+                      key={entry.id || idx}
+                      className="bg-white dark:bg-[#1A1A1A] rounded-xl p-4 border border-slate-200/50 dark:border-white/5 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition-all cursor-pointer group shadow-sm hover:shadow-md"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                            {formatDate(entry.timestamp || entry.createdAt || entry.created_at)}
+                          </p>
+                          <p className="text-slate-700 dark:text-slate-300 font-serif text-sm truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                            {getTitle(entry.content)}
+                          </p>
                         </div>
-                        {(() => {
-                          const body = getBody(entry.content);
-                          const entryId = entry.id || idx.toString();
-                          const isExpanded = expandedEntries.has(entryId);
-                          const isLong = body.length > 100;
-
-                          if (!body) {
-                            return <span className="text-sm text-muted-foreground italic">No content</span>;
-                          }
-
-                          return (
-                            <div className="text-sm text-foreground/80 leading-relaxed">
-                              {isExpanded || !isLong ? (
-                                <>
-                                  <p>{body}</p>
-                                  {isLong && (
-                                    <button
-                                      onClick={() => {
-                                        const newSet = new Set(expandedEntries);
-                                        newSet.delete(entryId);
-                                        setExpandedEntries(newSet);
-                                      }}
-                                      className="text-primary text-xs font-bold mt-2 hover:underline"
-                                    >
-                                      Show less
-                                    </button>
-                                  )}
-                                </>
-                              ) : (
-                                <>
-                                  <p>{body.substring(0, 100)}
-                                    <button
-                                      onClick={() => {
-                                        const newSet = new Set(expandedEntries);
-                                        newSet.add(entryId);
-                                        setExpandedEntries(newSet);
-                                      }}
-                                      className="text-primary font-bold hover:underline ml-1"
-                                    >
-                                      ...</button>
-                                  </p>
-                                </>
-                              )}
-                            </div>
-                          );
-                        })()}
+                        <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors flex-shrink-0 ml-2" />
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))
                 )}
               </div>
+            </div>
+          </aside>
+        </div>
+      </div>
 
-              {/* Modal Footer */}
-              <div className="px-8 py-4 border-t border-border flex justify-end">
-                <button
-                  onClick={() => setShowHistoryModal(false)}
-                  className="px-6 py-2 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-colors"
-                >
-                  Close
-                </button>
+      {/* History Modal */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#1A1A1A] w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col m-4">
+
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-slate-200 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-white/[0.02]">
+              <div className="flex items-center gap-3">
+                <History className="w-6 h-6 text-emerald-500" />
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white font-serif">All Journal Entries</h2>
+                <span className="text-sm text-slate-500">({journalEntries.length} entries)</span>
               </div>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-[#121212]">
+              {journalEntries.length === 0 ? (
+                <div className="text-center text-slate-400 py-12">
+                  <History className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <p className="text-lg">No journal entries yet</p>
+                  <p className="text-sm">Start writing to see your entries here</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {journalEntries.map((entry: any, idx: number) => (
+                    <div
+                      key={entry.id || idx}
+                      className="p-5 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/5 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition-all group shadow-sm"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1 font-serif">
+                            {getTitle(entry.content)}
+                          </h4>
+                          <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                            {formatDate(entry.timestamp || entry.createdAt || entry.created_at)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (confirm('Delete this entry?')) {
+                              try {
+                                await dataService.deleteJournalEntry(entry.id);
+                                const entries = await dataService.getJournalEntries();
+                                setJournalEntries(entries || []);
+                                toast.success('Entry deleted');
+                              } catch (err) {
+                                toast.error('Failed to delete');
+                              }
+                            }
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 transition-all"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {(() => {
+                        const body = getBody(entry.content);
+                        const entryId = entry.id || idx.toString();
+                        const isExpanded = expandedEntries.has(entryId);
+                        const isLong = body.length > 100;
+
+                        if (!body) {
+                          return <span className="text-sm text-slate-400 italic">No content</span>;
+                        }
+
+                        return (
+                          <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            {isExpanded || !isLong ? (
+                              <>
+                                <p>{body}</p>
+                                {isLong && (
+                                  <button
+                                    onClick={() => {
+                                      const newSet = new Set(expandedEntries);
+                                      newSet.delete(entryId);
+                                      setExpandedEntries(newSet);
+                                    }}
+                                    className="text-emerald-600 dark:text-emerald-400 text-xs font-bold mt-2 hover:underline"
+                                  >
+                                    Show less
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <p>{body.substring(0, 100)}
+                                  <button
+                                    onClick={() => {
+                                      const newSet = new Set(expandedEntries);
+                                      newSet.add(entryId);
+                                      setExpandedEntries(newSet);
+                                    }}
+                                    className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline ml-1"
+                                  >
+                                    ...</button>
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-8 py-4 border-t border-slate-200 dark:border-white/5 flex justify-end bg-white dark:bg-[#1A1A1A]">
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="px-6 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
-        )
-      }
-    </MainLayout >
+        </div>
+      )}
+    </NishthaLayout>
   );
 }

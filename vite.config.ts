@@ -1,3 +1,7 @@
+// Load environment variables BEFORE importing server
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { defineConfig, Plugin, searchForWorkspaceRoot } from "vite"; // 1. Add searchForWorkspaceRoot here
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -33,7 +37,11 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve",
     async configureServer(server) {
-      const app = await createServer();
+      const { app, io, httpServer } = await createServer();
+
+      // Attach Socket.IO to Vite's HTTP server
+      io.attach(server.httpServer!);
+
       server.middlewares.use(app);
     },
   };

@@ -7,7 +7,7 @@ import MessageCard from './MessageCard';
 import Composer from './Composer';
 import LeftSidebar from './LeftSidebar';
 import RightSidebar from './RightSidebar';
-import { Contrast, Search, Bell, Settings, LogOut } from 'lucide-react';
+import { Contrast, Search, Bell, Settings, LogOut, Home } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -87,6 +87,8 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
             setTopics(topicList);
             if (topicList.length > 0 && !currentTopicId) {
                 setCurrentTopic(topicList[0].id);
+                // Load messages for first topic
+                newSocket.emit('topic:select', topicList[0].id);
             }
         });
 
@@ -113,28 +115,22 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
         };
     }, [backendUrl, setTopics, setMessages, setCurrentTopic, addMessage, updateRelatableCount, currentTopicId]);
 
+    // Emit topic:select when currentTopicId changes to load messages from database
+    useEffect(() => {
+        if (socket && currentTopicId) {
+            socket.emit('topic:select', currentTopicId);
+        }
+    }, [socket, currentTopicId]);
+
     const handleSendMessage = (text: string, imageUrl?: string) => {
-        const newMessage = {
-            id: Date.now().toString(),
-            topicId: currentTopicId || '1',
-            author: user?.name || 'You',
-            text,
-            imageUrl,
-            relatableCount: 0,
-            flagCount: 0,
-            createdAt: new Date().toISOString()
-        };
-
-        // Optimistically add message immediately
-        addMessage(newMessage);
-
-        // Emit if socket is available
+        // Emit to server - the message will be added when server broadcasts 'message:new'
         if (socket && currentTopicId) {
             socket.emit('message:create', {
                 topicId: currentTopicId,
                 text,
                 imageUrl,
                 sessionId,
+                author: user?.name || 'Anonymous',
             });
         }
     };
@@ -144,68 +140,103 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
         socket.emit('poll:vote', { messageId, sessionId, option });
     };
 
-    const currentMessages = messages.filter((m) => m.topicId === currentTopicId);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const currentMessages = messages
+        .filter((m) => m.topicId === currentTopicId)
+        .filter((m) => m.text.toLowerCase().includes(searchTerm.toLowerCase()) || m.author.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 text-foreground selection:bg-teal-200/50 overflow-x-hidden font-sans">
             {/* Gradient Blobs Background */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-                <div className="gradient-blob bg-teal-200 w-[700px] h-[700px] -top-48 -left-24"></div>
-                <div className="gradient-blob bg-indigo-100 w-[600px] h-[600px] top-1/2 -right-24"></div>
-                <div className="gradient-blob bg-mint w-[400px] h-[400px] bottom-0 left-1/4 opacity-50"></div>
+            <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 bg-[#f8fafc] dark:bg-slate-950">
+                <div className="gradient-blob bg-teal-400/30 dark:bg-teal-500/20 w-[800px] h-[800px] -top-64 -left-32"></div>
+                <div className="gradient-blob bg-indigo-300/30 dark:bg-indigo-500/20 w-[600px] h-[600px] top-1/2 -right-32"></div>
+                <div className="gradient-blob bg-sky-300/30 dark:bg-sky-500/20 w-[500px] h-[500px] bottom-0 left-1/3 opacity-40"></div>
             </div>
 
-            {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 h-16 glass-2-0 border-b z-50 px-6 flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-8 group cursor-pointer text-inherit no-underline">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-teal-500/20">M</div>
-                        <span className="text-lg font-bold tracking-tight">Mehfil</span>
+            {/* Floating Navbar */}
+            <nav className="fixed top-4 left-4 right-4 h-16 glass-2-0 rounded-2xl z-50 px-6 flex items-center justify-between border border-white/40 dark:border-white/10 shadow-lg shadow-black/5">
+                <Link to="/" className="flex items-center gap-3 group cursor-pointer text-inherit no-underline">
+                    <div className="relative flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-500 transform transition-transform group-hover:rotate-6 shadow-lg shadow-teal-500/30 flex items-center justify-center text-white font-black text-lg">
+                            M
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
+                        </div>
                     </div>
+                    <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">Mehfil</span>
                 </Link>
 
                 <div className="relative hidden md:block">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <input
-                        className="bg-white/40 dark:bg-black/20 border-0 rounded-full py-2 pl-10 pr-4 text-sm w-80 focus:ring-2 focus:ring-teal-500/20 transition-all focus:outline-none placeholder:text-muted-foreground"
-                        placeholder="Search discussions..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm w-96 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 transition-all focus:outline-none placeholder:text-slate-400 text-slate-900 dark:text-slate-100"
+                        placeholder="Search discussions, topics, and pools..."
                         type="text"
                     />
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                    <Link to="/" className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Home">
+                        <Home className="w-5 h-5" />
+                    </Link>
+                    <button className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors relative">
+                        <Bell className="w-5 h-5" />
+                        <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-950"></span>
+                    </button>
+
                     <button
                         onClick={toggleTheme}
-                        className="p-2 rounded-full glass-button text-muted-foreground hover:text-foreground"
+                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
                     >
                         <Contrast className="w-5 h-5" />
                     </button>
 
-                    <div className="flex items-center gap-3 pl-4 border-l border-white/40">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-xs font-bold leading-none">{user?.name || 'Guest'}</p>
-                            <p className="text-[10px] text-muted-foreground font-medium mt-1">Beta Member</p>
-                        </div>
-                        <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
-                            {user?.avatar ? (
-                                <img alt="avatar" className="w-full h-full object-cover" src={user.avatar} />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-primary text-primary-foreground font-bold text-sm">
-                                    {user?.name?.[0]?.toUpperCase() || 'G'}
-                                </div>
-                            )}
-                        </div>
+                    <div className="flex items-center gap-3 pl-2 ml-2 border-l border-slate-200 dark:border-slate-800">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-3 group outline-none">
+                                    <div className="text-right hidden sm:block">
+                                        <p className="text-sm font-bold leading-none text-slate-900 dark:text-slate-100 group-hover:text-teal-600 transition-colors">
+                                            {user?.name || 'Guest User'}
+                                        </p>
+                                        <p className="text-[10px] text-slate-500 font-semibold mt-0.5 tracking-wide uppercase">Beta Member</p>
+                                    </div>
+                                    <Avatar className="w-10 h-10 border-2 border-white dark:border-slate-700 shadow-sm cursor-pointer transition-transform group-hover:scale-105">
+                                        <AvatarImage src={user?.avatar} />
+                                        <AvatarFallback className="bg-teal-100 text-teal-700 font-bold">
+                                            {user?.name?.[0]?.toUpperCase() || 'G'}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 mt-2 rounded-2xl border-slate-200 dark:border-slate-800 p-2 shadow-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl">
+                                <DropdownMenuItem onClick={handleProfile} className="rounded-xl cursor-pointer py-2.5 focus:bg-slate-100 dark:focus:bg-slate-800 text-slate-700 dark:text-slate-200">
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    <span>Profile Settings</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-800 my-1" />
+                                <DropdownMenuItem onClick={handleLogout} className="rounded-xl cursor-pointer py-2.5 focus:bg-rose-50 dark:focus:bg-rose-950/30 text-rose-600 dark:text-rose-400">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Log out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </nav>
 
             {/* Main Content Layout */}
-            <div className="max-w-[1440px] mx-auto pt-20 px-6 pb-12 flex gap-6 justify-center">
+            <div className="w-full px-6 lg:px-8 xl:px-12 pt-28 pb-12 flex gap-8 min-h-screen">
                 {/* Left Sidebar */}
                 <LeftSidebar />
 
                 {/* Main Feed */}
-                <main className="flex-grow max-w-2xl w-full">
+                <main className="flex-1 max-w-6xl scrollbar-blend">
                     <Composer onSendMessage={handleSendMessage} />
 
                     <div className="space-y-6">

@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Heart,
   Send,
+  BarChart3
 } from "lucide-react";
 
 interface MessageCardProps {
@@ -102,72 +103,76 @@ const MessageCard: React.FC<MessageCardProps> = ({
   };
 
   return (
-    <article className="rounded-3xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <article className="rounded-3xl p-6 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-300 mb-6">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div
-            className={`w-10 h-10 rounded-full ${getAvatarColor(message.author)} flex items-center justify-center text-white text-xs font-bold shadow-md`}
+            className={`w-11 h-11 rounded-2xl ${getAvatarColor(message.author)} flex items-center justify-center text-white text-sm font-bold shadow-md shadow-opacity-20`}
           >
             {getInitials(message.author)}
           </div>
           <div>
-            <h3 className="text-sm font-bold text-foreground">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-0.5">
               {message.author}
             </h3>
-            <p className="text-[10px] text-muted-foreground font-medium">
-              Postgraduate • {formatTime(message.createdAt)}
-            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide">Beta</span>
+              <span className="text-[10px] text-slate-400 font-medium">• {formatTime(message.createdAt)}</span>
+            </div>
           </div>
         </div>
-        <button className="text-muted-foreground hover:text-foreground transition-colors">
+        <button className="p-2 -mr-2 text-slate-300 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
           <MoreHorizontal className="w-5 h-5" />
         </button>
       </div>
 
       {/* Message Text */}
-      <p className="text-sm text-foreground leading-relaxed mb-6 font-normal">
+      <p className="text-[15px] text-slate-700 dark:text-slate-300 leading-relaxed mb-5 font-normal">
         {message.text}
       </p>
 
       {/* Image (if present) */}
       {message.imageUrl && (
-        <img
-          src={message.imageUrl}
-          alt="Message attachment"
-          className="rounded-2xl mb-6 max-w-full max-h-64 object-cover shadow-md"
-        />
+        <div className="rounded-2xl overflow-hidden mb-6 shadow-sm border border-slate-100 dark:border-slate-800">
+          <img
+            src={message.imageUrl}
+            alt="Message attachment"
+            className="w-full max-h-[400px] object-cover hover:scale-105 transition-transform duration-700"
+          />
+        </div>
       )}
 
       {/* Poll/Relate Section */}
-      <div className="bg-muted/40 rounded-2xl p-4 border border-white/20">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <span className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5">
-            <span className="text-sm">📊</span>
-            Relate Check
+      <div className="bg-slate-50/50 dark:bg-slate-950/30 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/50">
+        <div className="flex items-center justify-between mb-4 px-1">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <BarChart3 className="w-3 h-3" />
+            Relatability Check
           </span>
+          <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 px-2 py-1 rounded-full">{message.relatableCount} Votes</span>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {/* Option 1 */}
           <div
-            className="relative h-12 group cursor-pointer rounded-xl overflow-hidden"
+            className="relative h-11 group cursor-pointer rounded-xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 hover:ring-teal-400 transition-all"
             onClick={() => handleVote(1)}
           >
             {/* Background bar */}
             <div
-              className="absolute inset-0 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-xl transition-all"
+              className="absolute inset-0 bg-gradient-to-r from-teal-400 to-teal-500 opacity-90 transition-all duration-700 ease-out"
               style={{ width: `${pollOptions[0].percentage}%` }}
             />
             {/* Content layer */}
             <div className="relative h-full flex items-center justify-between px-4 z-10">
-              <span className="text-xs font-bold text-white drop-shadow-md flex items-center gap-2">
+              <span className={`text-xs font-bold transition-colors ${selectedOption === 1 || pollOptions[0].percentage > 50 ? 'text-white' : 'text-slate-600 dark:text-slate-300'} flex items-center gap-2`}>
                 {selectedOption === 1 && (
-                  <CheckCircle className="w-4 h-4 text-white" />
+                  <CheckCircle className="w-4 h-4 text-white animate-in zoom-in" />
                 )}
                 {pollOptions[0].text}
               </span>
-              <span className="text-xs font-black text-foreground dark:text-white drop-shadow-md ml-4">
+              <span className={`text-xs font-black transition-colors ${pollOptions[0].percentage > 80 ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                 {pollOptions[0].percentage}%
               </span>
             </div>
@@ -175,23 +180,23 @@ const MessageCard: React.FC<MessageCardProps> = ({
 
           {/* Option 2 */}
           <div
-            className="relative h-12 group cursor-pointer bg-white/30 dark:bg-black/20 rounded-xl overflow-hidden"
+            className="relative h-11 group cursor-pointer rounded-xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 hover:ring-slate-400 transition-all bg-white dark:bg-slate-900"
             onClick={() => handleVote(2)}
           >
             {/* Background bar */}
             <div
-              className="absolute inset-0 bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 rounded-xl transition-all"
+              className="absolute inset-0 bg-slate-200 dark:bg-slate-800 transition-all duration-700 ease-out"
               style={{ width: `${pollOptions[1].percentage}%` }}
             />
             {/* Content layer */}
             <div className="relative h-full flex items-center justify-between px-4 z-10">
-              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
                 {selectedOption === 2 && (
-                  <CheckCircle className="w-4 h-4 text-primary" />
+                  <CheckCircle className="w-4 h-4 text-slate-600 dark:text-slate-300 animate-in zoom-in" />
                 )}
                 {pollOptions[1].text}
               </span>
-              <span className="text-xs font-black text-foreground dark:text-white drop-shadow-md ml-4">
+              <span className="text-xs font-black text-slate-900 dark:text-white">
                 {pollOptions[1].percentage}%
               </span>
             </div>
@@ -200,15 +205,15 @@ const MessageCard: React.FC<MessageCardProps> = ({
       </div>
 
       {/* Footer Actions */}
-      <div className="mt-6 flex items-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+      <div className="mt-6 flex items-center gap-2">
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors"
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${showComments ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
         >
           <MessageCircle className="w-4 h-4" />
           {comments.length > 0 ? `${comments.length} Comments` : 'Comment'}
         </button>
-        <button className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors ml-auto">
+        <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all ml-auto">
           <Share2 className="w-4 h-4" />
           Share
         </button>
@@ -217,21 +222,27 @@ const MessageCard: React.FC<MessageCardProps> = ({
       {/* Comments Section */}
       {showComments && (
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-top-2">
-          <div className="space-y-3 mb-4 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
             {comments.map((comment) => (
-              <div key={comment.id} className="flex gap-2 text-xs">
-                <div className="font-bold text-primary shrink-0">{comment.author}</div>
-                <div className="text-muted-foreground">{comment.text}</div>
+              <div key={comment.id} className="group flex gap-3 text-xs p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-[10px] font-bold text-teal-700 dark:text-teal-400 shrink-0">
+                  {getInitials(comment.author)}
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900 dark:text-slate-100 mb-0.5">{comment.author}</div>
+                  <div className="text-slate-600 dark:text-slate-400 leading-relaxed">{comment.text}</div>
+                </div>
               </div>
             ))}
             {comments.length === 0 && (
-              <div className="text-center text-[10px] text-muted-foreground italic py-2">
-                No comments yet. Be the first to say something!
+              <div className="text-center py-6">
+                <p className="text-sm text-slate-400">No comments yet</p>
+                <p className="text-[10px] text-slate-300 uppercase tracking-widest font-bold mt-1">Be the first to share</p>
               </div>
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 p-1 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
             <input
               type="text"
               value={newComment}
@@ -241,15 +252,15 @@ const MessageCard: React.FC<MessageCardProps> = ({
                   handleAddComment();
                 }
               }}
-              placeholder="Write a comment..."
-              className="flex-1 bg-muted/50 border-0 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-primary/50 focus:outline-none"
+              placeholder="Type a comment..."
+              className="flex-1 bg-transparent border-0 rounded-xl px-4 py-2.5 text-xs font-medium focus:outline-none placeholder:text-slate-400 text-slate-700 dark:text-slate-200"
             />
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim()}
-              className="p-2 bg-primary text-primary-foreground rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+              className="p-2.5 bg-teal-500 hover:bg-teal-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-teal-500/20"
             >
-              <Send className="w-3 h-3" />
+              <Send className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

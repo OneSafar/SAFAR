@@ -21,7 +21,8 @@ import {
     Circle,
     Award,
     Sparkles,
-    Medal
+    Medal,
+    Home
 } from "lucide-react";
 import youtubeImg from "@/assets/youtube-thumbnail.png";
 import courseImg from "@/assets/course-thumbnail.png";
@@ -180,7 +181,7 @@ export default function Dashboard() {
     };
 
     return (
-        <MainLayout userName={user.name} userAvatar={user.avatar}>
+        <MainLayout userName={user.name} userAvatar={user.avatar} hideSidebar={true}>
             <div className="flex-1 h-full overflow-y-auto bg-background/95 font-['Plus_Jakarta_Sans'] transition-colors duration-300">
                 {/* Background Gradient */}
                 <div
@@ -200,6 +201,13 @@ export default function Dashboard() {
                     <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-4">
                         <div>
                             <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
+                                    title="Back to Home"
+                                >
+                                    <Home className="w-5 h-5 text-primary" />
+                                </button>
                                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1">Welcome Back, {user.name}</h1>
                                 {activeTitle && <PerkTitle title={activeTitle} type="aura" size="md" />}
                             </div>
@@ -607,78 +615,6 @@ export default function Dashboard() {
                             )}
                         </div>
 
-                        {/* External Sources Section */}
-                        <div className="lg:col-span-12 glass-high rounded-2xl p-6 relative">
-                            <div className="flex items-center gap-2 mb-6">
-                                <ExternalLink className="text-primary w-5 h-5" />
-                                <h3 className="font-semibold text-lg text-foreground">External Sources</h3>
-                            </div>
-                            <p className="text-muted-foreground text-sm mb-6">Helpful resources for your well-being journey</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* YouTube Channel */}
-                                <div className="bg-muted/50 border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group">
-                                    <a
-                                        href="https://youtube.com/@safarparmar?si=Mvs6U5JaSGojIzSM"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block"
-                                    >
-                                        <div className="relative aspect-video bg-gradient-to-br from-red-900/20 to-red-600/20 flex items-center justify-center overflow-hidden">
-                                            <img
-                                                src={youtubeImg}
-                                                alt="Safar Parmar YouTube Channel"
-                                                className="w-full h-full object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-all flex items-center justify-center">
-                                                <Play className="w-16 h-16 text-white/90 group-hover:text-white group-hover:scale-110 transition-all drop-shadow-lg" />
-                                            </div>
-                                            <div className="absolute bottom-4 left-4 right-4 z-10">
-                                                <p className="text-white font-semibold text-sm drop-shadow-lg">Safar Parmar</p>
-                                                <p className="text-white/90 text-xs drop-shadow-lg">YouTube Channel</p>
-                                            </div>
-                                        </div>
-                                        <div className="p-4">
-                                            <p className="text-foreground text-sm">Visit channel for wellness and motivation content</p>
-                                            <div className="flex items-center gap-2 mt-2 text-primary text-xs">
-                                                <span>Watch on YouTube</span>
-                                                <ExternalLink className="w-3 h-3" />
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-
-                                {/* Course Link */}
-                                <div className="bg-muted/50 border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group">
-                                    <a
-                                        href="https://parmaracademy.in/courses/75"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block"
-                                    >
-                                        <div className="relative aspect-video bg-gradient-to-br from-pink-900/20 to-pink-600/20 flex items-center justify-center overflow-hidden">
-                                            <img
-                                                src={courseImg}
-                                                alt="Parmar Academy Course"
-                                                className="w-full h-full object-contain bg-white p-4 group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                                            <div className="absolute bottom-4 left-4 right-4 z-10">
-                                                <p className="text-white font-semibold text-sm drop-shadow-lg">Parmar Academy</p>
-                                                <p className="text-white/90 text-xs drop-shadow-lg">Professional Course</p>
-                                            </div>
-                                        </div>
-                                        <div className="p-4">
-                                            <p className="text-foreground text-sm">Explore comprehensive learning resources</p>
-                                            <div className="flex items-center gap-2 mt-2 text-primary text-xs">
-                                                <span>View Course</span>
-                                                <ExternalLink className="w-3 h-3" />
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
 
                     </div>
                 </div>

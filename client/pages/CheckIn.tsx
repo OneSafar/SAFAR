@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import MainLayout from "@/components/MainLayout";
+import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
 import { toast } from "sonner";
@@ -98,7 +98,7 @@ export default function CheckIn() {
       const finalNote = note + (selectedTags.length > 0 ? `\n\nTags: ${selectedTags.join(", ")}` : "");
       await dataService.addMood(selectedMood, intensity, finalNote);
       toast.success("Check-in saved successfully!");
-      navigate("/dashboard");
+      navigate("/nishtha/check-in");
     } catch (error) {
       console.error(error);
       toast.error("Failed to save check-in");
@@ -110,7 +110,7 @@ export default function CheckIn() {
   if (!user) return null;
 
   return (
-    <MainLayout userName={user.name} userAvatar={user.avatar}>
+    <NishthaLayout userName={user.name} userAvatar={user.avatar}>
       <div className="flex-1 overflow-y-auto w-full h-full bg-background font-['Plus_Jakarta_Sans'] p-4 md:p-8 lg:p-10 relative selection:bg-primary/30 selection:text-primary transition-colors duration-300">
 
         {/* Deep Space Ambient Glows */}
@@ -193,8 +193,7 @@ export default function CheckIn() {
               </h3>
               <p className="text-xs text-muted-foreground mb-6 uppercase tracking-wider font-semibold">Scale of Feeling</p>
               <div className="flex items-end justify-center gap-1 mb-2">
-                <span className={`text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b ${intensity > 3 ? 'from-red-400 to-red-600' : intensity > 2 ? 'from-yellow-400 to-yellow-600' : 'from-primary to-primary/60'
-                  }`}>
+                <span className={`text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b ${intensity > 3 ? 'from-red-400 to-red-600' : intensity > 2 ? 'from-yellow-400 to-yellow-600' : 'from-primary to-primary/60'}`}>
                   {intensity}
                 </span>
                 <span className="text-2xl font-medium text-muted-foreground mb-2">/5</span>
@@ -235,7 +234,7 @@ export default function CheckIn() {
                 {selectedMood
                   ? `What's making you feel ${selectedMood}? Share your thoughts below.`
                   : 'Select a mood above, then share what led to this feeling.'}
-              </p>
+              </p >
               <div className="relative">
                 <textarea
                   className="w-full h-40 bg-muted/50 border border-border rounded-2xl p-6 text-foreground placeholder-muted-foreground focus:bg-muted focus:border-primary/30 focus:ring-1 focus:ring-primary/30 resize-none transition-all outline-none leading-relaxed"
@@ -249,7 +248,7 @@ export default function CheckIn() {
                   {note.length} chars
                 </div>
               </div>
-            </div>
+            </div >
 
             <div className="flex flex-col justify-between md:w-80 border-l border-border md:pl-8 pt-8 md:pt-0 z-10">
               <div>
@@ -282,12 +281,12 @@ export default function CheckIn() {
                 <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
               </button>
             </div>
-          </div>
+          </div >
 
-        </div>
+        </div >
 
         {/* Mood History Section */}
-        <div className="glass-high rounded-[2rem] p-8 mt-8 shadow-2xl">
+        < div className="glass-high rounded-[2rem] p-8 mt-8 shadow-2xl" >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <History className="w-6 h-6 text-primary" />
@@ -296,43 +295,45 @@ export default function CheckIn() {
             <span className="text-sm text-muted-foreground">{moodHistory.length} check-ins</span>
           </div>
 
-          {moodHistory.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg">No mood check-ins yet</p>
-              <p className="text-sm">Your check-in history will appear here</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto pr-2">
-              {moodHistory.slice(0, 12).map((m: any, idx: number) => {
-                const date = m.timestamp ? new Date(m.timestamp.replace(' ', 'T') + (m.timestamp.includes('Z') ? '' : 'Z')) : new Date();
-                const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                return (
-                  <div
-                    key={m.id || idx}
-                    className="p-5 rounded-2xl bg-muted/30 border border-border hover:border-primary/30 transition-all"
-                  >
-                    <div className="flex items-start gap-4">
-                      <span className="text-3xl">{getMoodEmoji(m.mood)}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-foreground capitalize">{m.mood}</span>
-                          <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">{m.intensity}/5</span>
+          {
+            moodHistory.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Clock className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <p className="text-lg">No mood check-ins yet</p>
+                <p className="text-sm">Your check-in history will appear here</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto pr-2">
+                {moodHistory.slice(0, 12).map((m: any, idx: number) => {
+                  const date = m.timestamp ? new Date(m.timestamp.replace(' ', 'T') + (m.timestamp.includes('Z') ? '' : 'Z')) : new Date();
+                  const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                  return (
+                    <div
+                      key={m.id || idx}
+                      className="p-5 rounded-2xl bg-muted/30 border border-border hover:border-primary/30 transition-all"
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="text-3xl">{getMoodEmoji(m.mood)}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-foreground capitalize">{m.mood}</span>
+                            <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">{m.intensity}/5</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">{dateStr}</p>
+                          {m.notes && (
+                            <p className="text-sm text-foreground/70 line-clamp-2">{m.notes}</p>
+                          )}
                         </div>
-                        <p className="text-xs text-muted-foreground mb-2">{dateStr}</p>
-                        {m.notes && (
-                          <p className="text-sm text-foreground/70 line-clamp-2">{m.notes}</p>
-                        )}
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  );
+                })}
+              </div>
+            )
+          }
+        </div >
 
-      </div>
-    </MainLayout>
+      </div >
+    </NishthaLayout >
   );
 }

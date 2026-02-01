@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import MainLayout from "@/components/MainLayout";
+import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
 import { Goal } from "@shared/api";
@@ -128,7 +128,7 @@ export default function Goals() {
     );
 
     return (
-        <MainLayout userName={user?.name} userAvatar={user?.avatar}>
+        <NishthaLayout userName={user?.name} userAvatar={user?.avatar}>
             <div className="flex-1 h-full overflow-y-auto bg-background/95 font-['Plus_Jakarta_Sans']">
 
                 {/* Background - matching Achievements page */}
@@ -253,22 +253,7 @@ export default function Goals() {
                                             </span>
                                         </div>
 
-                                        <div className="mt-auto">
-                                            <div className="flex justify-between items-end mb-2">
-                                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                    Due {new Date(new Date().setDate(new Date().getDate() + 7)).toLocaleDateString()}
-                                                </span>
-                                                <span className={`text-sm font-bold ${goal.completed ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-200'}`}>
-                                                    {goal.completed ? '100%' : '25%'}
-                                                </span>
-                                            </div>
-                                            <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ${goal.completed ? 'bg-green-500 w-full' : 'bg-red-500 w-[25%]'
-                                                        }`}
-                                                ></div>
-                                            </div>
-                                        </div>
+
                                     </div>
                                 ))}
                             </div>
@@ -399,6 +384,6 @@ export default function Goals() {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </NishthaLayout>
     );
 }

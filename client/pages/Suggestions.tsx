@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MainLayout from "@/components/MainLayout";
+import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
 import {
   Lightbulb,
@@ -40,19 +40,19 @@ export default function Suggestions() {
 
   if (loading || !user) {
     return (
-      <MainLayout>
+      <NishthaLayout>
         <div className="flex items-center justify-center h-full bg-background transition-colors duration-300">
           <div className="animate-pulse flex flex-col items-center gap-4">
             <div className="h-12 w-12 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
             <p className="text-primary font-['Poppins'] tracking-wider text-sm">LOADING INSIGHTS...</p>
           </div>
         </div>
-      </MainLayout>
+      </NishthaLayout>
     );
   }
 
   return (
-    <MainLayout userName={user?.name} userAvatar={user?.avatar}>
+    <NishthaLayout userName={user?.name} userAvatar={user?.avatar}>
       {/* Midnight Insight Theme Wrapper */}
       <div className="flex-1 overflow-y-auto bg-background font-sans min-h-full transition-colors duration-300 relative scroll-smooth selection:bg-primary selection:text-primary-foreground">
 
@@ -262,6 +262,6 @@ export default function Suggestions() {
 
         </div>
       </div>
-    </MainLayout>
+    </NishthaLayout>
   );
 }
