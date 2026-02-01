@@ -32,7 +32,7 @@ export default function Login() {
       sessionStorage.setItem("showWelcome", "true");
       // Redirect after a brief delay to ensure state is saved
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        window.location.href = "/landing";
       }, 100);
     } catch (err: any) {
       setError(err.message || "Invalid credentials");
