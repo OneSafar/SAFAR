@@ -20,7 +20,8 @@ async function startServer() {
 
   // Handle React Router - serve index.html for all non-API routes
   // This MUST be the last route registered
-  app.get("*", (req, res, next) => {
+  // Express 5 requires named param or regex, not bare *
+  app.get("/{*splat}", (req, res, next) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith("/api/") || req.path.startsWith("/health") || req.path.startsWith("/socket.io")) {
       return res.status(404).json({ error: "API endpoint not found" });
