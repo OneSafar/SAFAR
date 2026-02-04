@@ -71,7 +71,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ user, setIsAuthModalOpen }) =
                     <img
                         src="/safar-logo.png.jpeg"
                         alt="Safar Logo"
-                        className="w-12 h-12 md:w-[90px] md:h-[90px] rounded-full border-2 border-black dark:border-white object-cover shadow-lg shadow-brand-accent/20 transition-all"
+                        className="w-12 h-12 md:w-[90px] md:h-[90px] rounded-full object-cover shadow-lg shadow-brand-accent/20 transition-all"
                     />
                     <span className="text-2xl md:text-[40px] font-serif font-bold text-black dark:text-white tracking-tight">SAFAR</span>
                 </div>
@@ -89,10 +89,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ user, setIsAuthModalOpen }) =
 
                     {/* Conditional: Sign In Button vs Profile Avatar */}
                     {user ? (
-                        <Link to="/profile" className="flex items-center justify-center p-1 md:p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 backdrop-blur-xl shadow-2xl transition-all cursor-pointer group hover:scale-105 active:scale-95">
+                        <Link to="/profile" className="flex items-center justify-center p-1 md:p-2 rounded-2xl md:rounded-3xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 backdrop-blur-xl shadow-2xl transition-all cursor-pointer group hover:scale-105 active:scale-95">
                             <img
                                 alt="User Avatar"
-                                className="w-12 h-12 md:w-20 md:h-20 rounded-full object-cover shadow-md"
+                                className="w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl object-cover shadow-md"
                                 src={user?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuDpC23e9Ij3Kzg310AyhS08hUZzUO5wS83FP5YrPuwjRF6AdxBcC0qMEWdFAJiBHiiKEpJHNEbk9vqBSUUAUjgF2APRS9xFACSDScYRjzU5e2Jdzerz_s7hmwhryXd5GYbqUBly6WOzSLclpR9PSy-7IzNLc4H3bsD04CkD_UDuiADxphkdk_S6XJUWlkbEJLC8p79msm7_L_2qzmoVs8sriSKSPq99rcz8ANuarcX1JwGcgGg6NcLBVgUPi59TaljhiM80PD-94ds"}
                             />
                         </Link>

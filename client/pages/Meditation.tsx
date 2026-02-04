@@ -26,6 +26,12 @@ interface Session {
     longDescription: string;
     type: "breathing" | "guided" | "silent";
     steps: string[];
+    cycle?: {
+        inhale: number;
+        holdIn: number;
+        exhale: number;
+        holdOut: number;
+    };
 }
 
 const sessions: Session[] = [
@@ -42,7 +48,8 @@ const sessions: Session[] = [
             "Inhale slowly through your nose; feel your belly rise.",
             "Exhale slowly through your mouth; feel your belly lower.",
             "Keep the hand on your chest as still as possible."
-        ]
+        ],
+        cycle: { inhale: 4, holdIn: 0, exhale: 6, holdOut: 0 }
     },
     {
         id: "2",
@@ -57,7 +64,8 @@ const sessions: Session[] = [
             "Pucker your lips as if you're about to whistle.",
             "Exhale slowly and gently through your lips for 4 counts.",
             "Do not force the air out; repeat until calm."
-        ]
+        ],
+        cycle: { inhale: 2, holdIn: 0, exhale: 4, holdOut: 0 }
     },
     {
         id: "3",
@@ -72,7 +80,8 @@ const sessions: Session[] = [
             "Hold your breath for 4 seconds.",
             "Exhale through your mouth for 4 seconds.",
             "Hold your empty breath for 4 seconds. Repeat."
-        ]
+        ],
+        cycle: { inhale: 4, holdIn: 4, exhale: 4, holdOut: 4 }
     },
     {
         id: "4",
@@ -87,7 +96,8 @@ const sessions: Session[] = [
             "Hold your breath for 7 seconds.",
             "Exhale completely through mouth for 8 seconds.",
             "Repeat this cycle four times."
-        ]
+        ],
+        cycle: { inhale: 4, holdIn: 7, exhale: 8, holdOut: 0 }
     },
 ];
 
@@ -98,12 +108,12 @@ export default function Meditation() {
     const [selectedSession, setSelectedSession] = useState<Session>(sessions[0]);
     const [isActive, setIsActive] = useState(false);
     const [timeLeft, setTimeLeft] = useState(selectedSession.duration * 60);
-    const [breathPhase, setBreathPhase] = useState<"inhale" | "hold" | "exhale">("inhale");
+    const [breathPhase, setBreathPhase] = useState<"inhale" | "hold" | "exhale" | "hold-empty">("inhale");
     const [isMuted, setIsMuted] = useState(false);
-    const [showInstructions, setShowInstructions] = useState(false); // New state for modal
+    const [showInstructions, setShowInstructions] = useState(false);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const breathIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const breathTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -123,6 +133,7 @@ export default function Meditation() {
         // When session changes, reset but don't close instructions if user clicked a card
         setTimeLeft(selectedSession.duration * 60);
         setIsActive(false);
+        setBreathPhase("inhale");
     }, [selectedSession]);
 
     useEffect(() => {
@@ -139,22 +150,55 @@ export default function Meditation() {
         };
     }, [isActive, timeLeft]);
 
-    // Breathing animation cycle based on technique
+    // Dynamic Breathing Animation Cycle
     useEffect(() => {
-        if (isActive && selectedSession.type === "breathing") {
-            // Default cycle (Box Breathing style as fallback or base)
-            // Adjust timing could be dynamic but keeping simple 4-4-4 for visual
-            const cycle = () => {
+        if (isActive && selectedSession.type === "breathing" && selectedSession.cycle) {
+            const { inhale, holdIn, exhale, holdOut } = selectedSession.cycle;
+
+            const runCycle = () => {
+                // Inhale Phase
                 setBreathPhase("inhale");
-                setTimeout(() => setBreathPhase("hold"), 4000);
-                setTimeout(() => setBreathPhase("exhale"), 8000);
+
+                breathTimeoutRef.current = setTimeout(() => {
+                    // Hold In Phase (if duration > 0)
+                    if (holdIn > 0) {
+                        setBreathPhase("hold");
+                        breathTimeoutRef.current = setTimeout(() => {
+                            // Exhale Phase
+                            startExhale();
+                        }, holdIn * 1000);
+                    } else {
+                        // Skip Hold In, straight to Exhale
+                        startExhale();
+                    }
+                }, inhale * 1000);
             };
-            cycle();
-            breathIntervalRef.current = setInterval(cycle, 12000);
+
+            const startExhale = () => {
+                const { exhale, holdOut } = selectedSession.cycle!;
+                setBreathPhase("exhale");
+
+                breathTimeoutRef.current = setTimeout(() => {
+                    // Hold Out Phase (if duration > 0)
+                    if (holdOut > 0) {
+                        setBreathPhase("hold-empty");
+                        breathTimeoutRef.current = setTimeout(() => {
+                            // Loop back to Inhale
+                            runCycle();
+                        }, holdOut * 1000);
+                    } else {
+                        // Loop back to Inhale
+                        runCycle();
+                    }
+                }, exhale * 1000);
+            };
+
+            // Start the first cycle
+            runCycle();
         }
 
         return () => {
-            if (breathIntervalRef.current) clearInterval(breathIntervalRef.current);
+            if (breathTimeoutRef.current) clearTimeout(breathTimeoutRef.current);
         };
     }, [isActive, selectedSession]);
 
@@ -199,12 +243,12 @@ export default function Meditation() {
                 <div className="w-10" /> {/* Spacer */}
             </header>
 
-            <main className="max-w-5xl mx-auto px-6 py-8">
+            <main className="max-w-5xl mx-auto px-8 py-10">
 
                 {/* Active Session Area */}
                 <div className="flex flex-col items-center mb-16">
                     {/* Visual & Timer */}
-                    <div className="relative group mb-8">
+                    <div className="relative group mb-24">
                         {/* Animated ripple circles */}
                         <div
                             className={`absolute inset-0 rounded-full border-2 border-emerald-400/30 transition-all duration-1000 ${isActive ? "animate-ping" : ""
@@ -219,7 +263,7 @@ export default function Meditation() {
 
                         {/* Main circle with meditating figure */}
                         <div
-                            className={`w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden border-4 transition-all duration-500 ${isActive
+                            className={`w-44 h-44 md:w-52 md:h-52 rounded-full overflow-hidden border-4 transition-all duration-500 ${isActive
                                 ? "border-emerald-400 shadow-[0_0_60px_rgba(52,211,153,0.3)]"
                                 : "border-slate-200 dark:border-slate-700"
                                 } bg-slate-100 dark:bg-slate-800`}
@@ -234,16 +278,16 @@ export default function Meditation() {
 
                         {/* Breathing indicator */}
                         {isActive && (
-                            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-40 text-center">
                                 <span
                                     className={`text-lg font-bold uppercase tracking-widest transition-all duration-500 ${breathPhase === "inhale"
                                         ? "text-emerald-500"
-                                        : breathPhase === "hold"
-                                            ? "text-amber-500"
-                                            : "text-blue-500"
+                                        : breathPhase === "exhale"
+                                            ? "text-blue-500"
+                                            : "text-amber-500"
                                         }`}
                                 >
-                                    {breathPhase}
+                                    {breathPhase.replace("-", " ")}
                                 </span>
                             </div>
                         )}

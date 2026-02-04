@@ -117,7 +117,7 @@ export default function Profile() {
           content: '';
           position: absolute;
           inset: -4px;
-          border-radius: 50%;
+          border-radius: 1.5rem;
           padding: 2px;
           background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -194,7 +194,7 @@ export default function Profile() {
                   <div className="profile-ring">
                     <img
                       alt={`${user.name} profile picture`}
-                      className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-900"
+                      className="w-26 h-26 rounded-3xl object-cover border-4 border-white dark:border-slate-900"
                       src={avatarPreview || user.avatar || "https://via.placeholder.com/150"}
                     />
                   </div>
