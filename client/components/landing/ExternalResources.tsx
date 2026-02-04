@@ -53,7 +53,7 @@ const ExternalResources = () => {
 
                     {/* Course Link */}
                     <a
-                        href="https://parmaracademy.in/courses/75"
+                        href="https://www.parmaracademy.in/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group bg-white dark:bg-[#1E293B] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
