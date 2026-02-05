@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 import { authService } from "@/utils/authService";
-import { Moon, Sun, Plus, Home, Settings, Play, Pause, RotateCcw, Leaf, Sparkles, LogOut, ArrowRight, BarChart2, Clock, Zap, Target, Flame, Calendar, Palette, ChevronLeft, ChevronRight, Trees, Waves, Sunset, MoonStar, Sparkle } from "lucide-react";
+import { Moon, Sun, Plus, Home, Settings, Play, Pause, RotateCcw, Leaf, Sparkles, LogOut, ArrowRight, BarChart2, Clock, Zap, Target, Flame, Calendar, Palette, ChevronLeft, ChevronRight, Trees, Waves, Sunset, MoonStar, Sparkle, Volume2, VolumeX } from "lucide-react";
 import TasksSidebar from "./TasksSidebar";
 import FocusAnalytics from "./FocusAnalytics";
 import { focusService } from "@/utils/focusService";
@@ -30,7 +30,7 @@ interface FocusTheme {
 const focusThemes: FocusTheme[] = [
     { id: "autumn", name: "Autumn", video: "/themes/forest.mp4", audio: "/audio/autumn.mp3", accent: "#cd6b25ff", accentRgb: "34, 197, 94", icon: <Trees className="w-4 h-4" /> },
     { id: "beach", name: "Beach", video: "/themes/ocean.mp4", audio: "/audio/beach.mp3", accent: "#1b8ec3ff", accentRgb: "14, 165, 233", icon: <Waves className="w-4 h-4" /> },
-    { id: "nostalgia", name: "Nostalgia", video: "/themes/sunset.mp4", audio: "/audio/nostalgia.mp3", accent: "#1cbc31ff", accentRgb: "249, 115, 22", icon: <Sunset className="w-4 h-4" /> },
+    { id: "nostalgia", name: "Nostalgia", video: "/themes/nostalgia.mp4", audio: "/audio/nostalgia.mp3", accent: "#1cbc31ff", accentRgb: "249, 115, 22", icon: <Sunset className="w-4 h-4" /> },
     { id: "waterfall", name: "Waterfall", video: "/themes/night.mp4", audio: "/audio/waterfall.mp3", accent: "#2e7144ff", accentRgb: "139, 92, 246", icon: <MoonStar className="w-4 h-4" /> },
     { id: "aurora", name: "Aurora", video: "/themes/aurora.mp4", audio: "/audio/aurora.mp3", accent: "#1c527cff", accentRgb: "236, 72, 153", icon: <Sparkle className="w-4 h-4" /> },
 ];
@@ -55,6 +55,7 @@ export default function StudyWithMe() {
     const [currentTheme, setCurrentTheme] = useState<FocusTheme>(focusThemes[0]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showThemeSelector, setShowThemeSelector] = useState(false);
+    const [isAudioMuted, setIsAudioMuted] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -121,7 +122,7 @@ export default function StudyWithMe() {
             }
         };
 
-        if (isRunning) {
+        if (isRunning && !isAudioMuted) {
             audio.volume = 0; // Start at 0 for fade-in
             audio.play().catch(e => console.log('Audio play failed:', e));
             audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -133,13 +134,13 @@ export default function StudyWithMe() {
         return () => {
             audio.removeEventListener('timeupdate', handleTimeUpdate);
         };
-    }, [isRunning]);
+    }, [isRunning, isAudioMuted]);
 
     // Reload audio when theme changes
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.load();
-            if (isRunning) {
+            if (isRunning && !isAudioMuted) {
                 audioRef.current.volume = 0;
                 audioRef.current.play().catch(e => console.log('Audio play failed:', e));
             }
@@ -518,6 +519,14 @@ export default function StudyWithMe() {
                                 style={{ '--hover-color': currentTheme.accent } as React.CSSProperties}
                             >
                                 <RotateCcw className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setIsAudioMuted(!isAudioMuted)}
+                                className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:opacity-80 transition-all"
+                                style={{ '--hover-color': currentTheme.accent } as React.CSSProperties}
+                                title={isAudioMuted ? "Unmute audio" : "Mute audio"}
+                            >
+                                {isAudioMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                             </button>
                             <button
                                 onClick={toggleTimer}
