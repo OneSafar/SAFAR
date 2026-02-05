@@ -95,15 +95,44 @@ export default function StudyWithMe() {
         fetchUser();
     }, []);
 
-    // Audio playback control
+    // Audio playback control with fade effects
     useEffect(() => {
-        if (audioRef.current) {
-            if (isRunning) {
-                audioRef.current.play().catch(e => console.log('Audio play failed:', e));
-            } else {
-                audioRef.current.pause();
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const fadeInDuration = 3; // 3 seconds
+        const fadeOutDuration = 3; // 3 seconds
+        const audioDuration = 120; // 2 minutes in seconds
+
+        const handleTimeUpdate = () => {
+            const currentTime = audio.currentTime;
+
+            // Fade in during first 3 seconds
+            if (currentTime < fadeInDuration) {
+                audio.volume = currentTime / fadeInDuration;
             }
+            // Fade out during last 3 seconds
+            else if (currentTime > audioDuration - fadeOutDuration) {
+                audio.volume = (audioDuration - currentTime) / fadeOutDuration;
+            }
+            // Full volume in between
+            else {
+                audio.volume = 1;
+            }
+        };
+
+        if (isRunning) {
+            audio.volume = 0; // Start at 0 for fade-in
+            audio.play().catch(e => console.log('Audio play failed:', e));
+            audio.addEventListener('timeupdate', handleTimeUpdate);
+        } else {
+            audio.pause();
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
         }
+
+        return () => {
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+        };
     }, [isRunning]);
 
     // Reload audio when theme changes
@@ -111,6 +140,7 @@ export default function StudyWithMe() {
         if (audioRef.current) {
             audioRef.current.load();
             if (isRunning) {
+                audioRef.current.volume = 0;
                 audioRef.current.play().catch(e => console.log('Audio play failed:', e));
             }
         }
