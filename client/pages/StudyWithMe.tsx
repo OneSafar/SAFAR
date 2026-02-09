@@ -20,18 +20,18 @@ import { Button } from "@/components/ui/button";
 interface FocusTheme {
     id: string;
     name: string;
-    video: string;
     accent: string;
     accentRgb: string;
+    gradient: string;
     icon: React.ReactNode;
 }
 
 const focusThemes: FocusTheme[] = [
-    { id: "autumn", name: "Autumn", video: "/themes/forest.mp4", accent: "#cd6b25ff", accentRgb: "34, 197, 94", icon: <Trees className="w-4 h-4" /> },
-    { id: "beach", name: "Beach", video: "/themes/ocean.mp4", accent: "#1b8ec3ff", accentRgb: "14, 165, 233", icon: <Waves className="w-4 h-4" /> },
-    { id: "nostalgia", name: "Nostalgia", video: "/themes/nostalgia.mp4", accent: "#1cbc31ff", accentRgb: "249, 115, 22", icon: <Sunset className="w-4 h-4" /> },
-    { id: "waterfall", name: "Waterfall", video: "/themes/night.mp4", accent: "#2e7144ff", accentRgb: "139, 92, 246", icon: <MoonStar className="w-4 h-4" /> },
-    { id: "aurora", name: "Aurora", video: "/themes/aurora.mp4", accent: "#1c527cff", accentRgb: "236, 72, 153", icon: <Sparkle className="w-4 h-4" /> },
+    { id: "autumn", name: "Autumn", accent: "#cd6b25ff", accentRgb: "205, 107, 37", gradient: "linear-gradient(135deg, #2d5016 0%, #4a7c2e 50%, #cd6b25 100%)", icon: <Trees className="w-4 h-4" /> },
+    { id: "beach", name: "Beach", accent: "#1b8ec3ff", accentRgb: "27, 142, 195", gradient: "linear-gradient(135deg, #0a4d68 0%, #1b8ec3 50%, #88d4f5 100%)", icon: <Waves className="w-4 h-4" /> },
+    { id: "nostalgia", name: "Nostalgia", accent: "#1cbc31ff", accentRgb: "28, 188, 49", gradient: "linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%)", icon: <Sunset className="w-4 h-4" /> },
+    { id: "waterfall", name: "Waterfall", accent: "#2e7144ff", accentRgb: "46, 113, 68", gradient: "linear-gradient(135deg, #1e3a5f 0%, #2e7144 50%, #4ade80 100%)", icon: <MoonStar className="w-4 h-4" /> },
+    { id: "aurora", name: "Aurora", accent: "#1c527cff", accentRgb: "28, 82, 124", gradient: "linear-gradient(135deg, #1c527c 0%, #7c3aed 50%, #ec4899 100%)", icon: <Sparkle className="w-4 h-4" /> },
 ];
 
 export default function StudyWithMe() {
@@ -54,7 +54,6 @@ export default function StudyWithMe() {
     const [currentTheme, setCurrentTheme] = useState<FocusTheme>(focusThemes[0]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showThemeSelector, setShowThemeSelector] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
 
     // Reset log ref when timer starts
     useEffect(() => {
@@ -191,12 +190,6 @@ export default function StudyWithMe() {
     const handleThemeChange = (newTheme: FocusTheme) => {
         setCurrentTheme(newTheme);
         setShowThemeSelector(false);
-        // Reload video
-        if (videoRef.current) {
-            videoRef.current.load();
-            videoRef.current.playbackRate = 0.7;
-            videoRef.current.play();
-        }
     };
 
     return (
@@ -204,22 +197,13 @@ export default function StudyWithMe() {
             className="flex h-screen overflow-hidden bg-background text-foreground font-sans transition-colors duration-300"
             style={{ '--theme-accent': currentTheme.accent, '--theme-accent-rgb': currentTheme.accentRgb } as React.CSSProperties}
         >
-            {/* Video Background */}
-            <div className="fixed inset-0 z-0">
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                    onLoadedData={(e) => { (e.target as HTMLVideoElement).playbackRate = 0.5; }}
-                >
-                    <source src={currentTheme.video} type="video/mp4" />
-                </video>
-
+            {/* Gradient Background */}
+            <div
+                className="fixed inset-0 z-0 transition-all duration-700"
+                style={{ background: currentTheme.gradient }}
+            >
                 {/* Overlay for readability */}
-                <div className="absolute inset-0 bg-black/40 dark:bg-black/60" />
+                <div className="absolute inset-0 bg-black/30 dark:bg-black/50" />
             </div>
 
             {/* Sidebar */}
