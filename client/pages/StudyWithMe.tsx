@@ -55,7 +55,7 @@ export default function StudyWithMe() {
     const [currentTheme, setCurrentTheme] = useState<FocusTheme>(focusThemes[0]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showThemeSelector, setShowThemeSelector] = useState(false);
-    const [isAudioMuted, setIsAudioMuted] = useState(false);
+    const [isAudioPlaying, setIsAudioPlaying] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -96,7 +96,7 @@ export default function StudyWithMe() {
         fetchUser();
     }, []);
 
-    // Audio playback control with fade effects
+    // Audio playback control with fade effects - INDEPENDENT of timer
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
@@ -122,7 +122,7 @@ export default function StudyWithMe() {
             }
         };
 
-        if (isRunning && !isAudioMuted) {
+        if (isAudioPlaying) {
             audio.volume = 0; // Start at 0 for fade-in
             audio.play().catch(e => console.log('Audio play failed:', e));
             audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -134,13 +134,13 @@ export default function StudyWithMe() {
         return () => {
             audio.removeEventListener('timeupdate', handleTimeUpdate);
         };
-    }, [isRunning, isAudioMuted]);
+    }, [isAudioPlaying]);
 
     // Reload audio when theme changes
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.load();
-            if (isRunning && !isAudioMuted) {
+            if (isAudioPlaying) {
                 audioRef.current.volume = 0;
                 audioRef.current.play().catch(e => console.log('Audio play failed:', e));
             }
@@ -521,12 +521,12 @@ export default function StudyWithMe() {
                                 <RotateCcw className="w-5 h-5" />
                             </button>
                             <button
-                                onClick={() => setIsAudioMuted(!isAudioMuted)}
+                                onClick={() => setIsAudioPlaying(!isAudioPlaying)}
                                 className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:opacity-80 transition-all"
                                 style={{ '--hover-color': currentTheme.accent } as React.CSSProperties}
-                                title={isAudioMuted ? "Unmute audio" : "Mute audio"}
+                                title={isAudioPlaying ? "Pause music" : "Play music"}
                             >
-                                {isAudioMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                                {isAudioPlaying ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                             </button>
                             <button
                                 onClick={toggleTimer}
