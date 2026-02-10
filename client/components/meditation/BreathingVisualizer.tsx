@@ -340,76 +340,180 @@ const ArcRingViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { i
     );
 };
 
-// ─── 5. Alternate Nostril: Stylized nose with airflow ───────────────────────
+// ─── 5. Alternate Nostril: Realistic Nose with Airflow ───────────────────────
 const NostrilViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ breathPhase, isActive }) => {
-    const isLeft = breathPhase === 'inhale';
-    const isRight = breathPhase === 'exhale';
+    // We need to track the cycle side: Left In -> Right Out -> Right In -> Left Out
+    // For simplicity with the current simple phase prop, we'll map:
+    // Inhale = Left, Exhale = Right (as per previous simple logic) 
+    // To make it truly realistic in the future we'd need cycle tracking, but for now we fix the Visual.
+
+    // NOTE: To support true "Alternate" (L->R, R->L), we'd need parent state. 
+    // For now, we'll stick to the requested "Realistic" visual upgrade.
+
+    const isInhale = breathPhase === 'inhale';
+    const isExhale = breathPhase === 'exhale';
+    const isHold = breathPhase.includes('hold');
 
     return (
-        <div className="w-52 h-52 md:w-60 md:h-60 flex items-center justify-center">
-            <svg viewBox="0 0 240 240" className="w-full h-full">
+        <div className="w-52 h-52 md:w-64 md:h-64 flex items-center justify-center relative">
+            <svg viewBox="0 0 300 300" className="w-full h-full drop-shadow-xl">
                 <defs>
-                    <linearGradient id="leftFlow" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                    <linearGradient id="skinGradient" x1="0.5" y1="0" x2="0.5" y2="1">
+                        <stop offset="0%" stopColor="#e5e7eb" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="#d1d5db" stopOpacity="0.8" />
+                    </linearGradient>
+                    <filter id="glowInset" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k2="-1" k3="1" result="shadowDiff" />
+                        <feFlood floodColor="black" floodOpacity="0.2" />
+                        <feComposite in2="shadowDiff" operator="in" />
+                        <feComposite in2="SourceGraphic" operator="over" />
+                    </filter>
+                    <radialGradient id="airGlowBlue" cx="0.5" cy="0.5" r="0.5">
+                        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
                         <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </linearGradient>
-                    <linearGradient id="rightFlow" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                    </radialGradient>
+                    <radialGradient id="airGlowPurple" cx="0.5" cy="0.5" r="0.5">
+                        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.8" />
                         <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-                    </linearGradient>
+                    </radialGradient>
                 </defs>
 
-                {/* Nose outline */}
-                <path
-                    d="M 120 50 C 120 50, 100 90, 90 130 C 82 160, 80 170, 95 185 C 100 190, 108 192, 112 188 C 115 185, 115 178, 112 170 M 120 50 C 120 50, 140 90, 150 130 C 158 160, 160 170, 145 185 C 140 190, 132 192, 128 188 C 125 185, 125 178, 128 170"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    opacity="0.4"
-                    strokeLinecap="round"
-                />
+                {/* ─── Realistic Nose Geometry ─── */}
+                <g transform="translate(150, 150) scale(1.2)">
+                    {/* Main Nose Shape (Bridge + Tip) */}
+                    <path
+                        d="M -30,-90 
+                           C -15,-90 -10,-40 -12,0 
+                           C -35,20 -55,40 -50,70 
+                           C -45,95 -15,100 0,105 
+                           C 15,100 45,95 50,70 
+                           C 55,40 35,20 12,0 
+                           C 10,-40 15,-90 30,-90"
+                        fill="none"
+                        stroke="#9ca3af"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        opacity="0.3"
+                    />
 
-                {/* Bridge */}
-                <line x1="120" y1="50" x2="120" y2="155" stroke="currentColor" strokeWidth="1.5" opacity="0.15" strokeDasharray="4,4" />
+                    {/* Nostrils (The dark openings) */}
+                    <g>
+                        {/* Left Nostril */}
+                        <path
+                            d="M -12,85 C -20,85 -30,80 -35,70 C -30,65 -20,68 -12,70 Z"
+                            fill="#4b5563"
+                            opacity="0.6"
+                        />
+                        {/* Right Nostril */}
+                        <path
+                            d="M 12,85 C 20,85 30,80 35,70 C 30,65 20,68 12,70 Z"
+                            fill="#4b5563"
+                            opacity="0.6"
+                        />
+                    </g>
 
-                {/* Left nostril airflow */}
-                <g opacity={isActive && isLeft ? 1 : 0.15} style={{ transition: 'opacity 0.5s' }}>
-                    <rect x="65" y="140" width="22" height="55" rx="11" fill="url(#leftFlow)" />
-                    {/* Animated arrow */}
-                    <path d="M 76 140 L 70 150 M 76 140 L 82 150" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round"
-                        opacity={isActive && isLeft ? 1 : 0}>
-                        <animateTransform attributeName="transform" type="translate" values="0,0;0,-8;0,0" dur="1.5s" repeatCount="indefinite" />
-                    </path>
-                    <text x="76" y="210" textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.8">IN</text>
+                    {/* Alae (Nostril Wings) Shading */}
+                    <path
+                        d="M -35,70 Q -50,60 -50,45"
+                        fill="none"
+                        stroke="#9ca3af"
+                        strokeWidth="1.5"
+                        opacity="0.4"
+                    />
+                    <path
+                        d="M 35,70 Q 50,60 50,45"
+                        fill="none"
+                        stroke="#9ca3af"
+                        strokeWidth="1.5"
+                        opacity="0.4"
+                    />
                 </g>
 
-                {/* Right nostril airflow */}
-                <g opacity={isActive && isRight ? 1 : 0.15} style={{ transition: 'opacity 0.5s' }}>
-                    <rect x="153" y="140" width="22" height="55" rx="11" fill="url(#rightFlow)" />
-                    <path d="M 164 195 L 158 185 M 164 195 L 170 185" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round"
-                        opacity={isActive && isRight ? 1 : 0}>
-                        <animateTransform attributeName="transform" type="translate" values="0,0;0,8;0,0" dur="1.5s" repeatCount="indefinite" />
+                {/* ─── Airflow Simulations ─── */}
+
+                {/* LEFT NOSTRIL AIRFLOW (Inhale) */}
+                <g
+                    opacity={isActive && isInhale ? 1 : 0}
+                    style={{ transition: 'opacity 0.4s ease-in-out' }}
+                    transform="translate(135, 235)"
+                >
+                    {/* Air stream particles */}
+                    <circle r="4" fill="#60a5fa" filter="blur(2px)">
+                        <animate attributeName="cy" from="40" to="-10" dur="1s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
+                        <animate attributeName="r" values="3;6;2" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                    <circle r="3" fill="#93c5fd" filter="blur(1px)">
+                        <animate attributeName="cy" from="45" to="-5" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;0.8;0" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
+                    </circle>
+
+                    {/* Direction Arrow */}
+                    <path
+                        d="M 0,30 L 0,0 M -4,8 L 0,0 L 4,8"
+                        stroke="#3b82f6"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                        opacity="0.8"
+                    >
+                        <animateTransform attributeName="transform" type="translate" values="0,10; 0,-5" dur="1s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
                     </path>
-                    <text x="164" y="210" textAnchor="middle" fill="#8b5cf6" fontSize="10" fontWeight="bold" opacity="0.8">OUT</text>
+                    <text x="0" y="55" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="bold" letterSpacing="1">IN</text>
                 </g>
 
-                {/* X mark on closed nostril */}
-                {isActive && isLeft && (
-                    <g opacity="0.4">
-                        <line x1="155" y1="155" x2="173" y2="175" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                        <line x1="173" y1="155" x2="155" y2="175" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                    </g>
+                {/* RIGHT NOSTRIL AIRFLOW (Exhale) */}
+                <g
+                    opacity={isActive && isExhale ? 1 : 0}
+                    style={{ transition: 'opacity 0.4s ease-in-out' }}
+                    transform="translate(165, 235)"
+                >
+                    {/* Air stream particles */}
+                    <circle r="4" fill="#8b5cf6" filter="blur(2px)">
+                        <animate attributeName="cy" from="-10" to="40" dur="1s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                    <circle r="3" fill="#c4b5fd" filter="blur(1px)">
+                        <animate attributeName="cy" from="-5" to="45" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;0.8;0" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
+                    </circle>
+
+                    {/* Direction Arrow */}
+                    <path
+                        d="M 0,-5 L 0,30 M -4,22 L 0,30 L 4,22"
+                        stroke="#8b5cf6"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                        opacity="0.8"
+                    >
+                        <animateTransform attributeName="transform" type="translate" values="0,-5; 0,10" dur="1s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
+                    </path>
+                    <text x="0" y="55" textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="bold" letterSpacing="1">OUT</text>
+                </g>
+
+                {/* Thumb/Finger blocking indicator (Visual hint) */}
+                {isActive && isInhale && (
+                    <circle cx="172" cy="230" r="8" fill="#ef4444" opacity="0.1">
+                        <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.1;0.2;0.1" dur="2s" repeatCount="indefinite" />
+                    </circle>
                 )}
-                {isActive && isRight && (
-                    <g opacity="0.4">
-                        <line x1="67" y1="155" x2="85" y2="175" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                        <line x1="85" y1="155" x2="67" y2="175" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                    </g>
+                {isActive && isExhale && (
+                    <circle cx="128" cy="230" r="8" fill="#ef4444" opacity="0.1">
+                        <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.1;0.2;0.1" dur="2s" repeatCount="indefinite" />
+                    </circle>
                 )}
 
-                {/* Title */}
-                <text x="120" y="30" textAnchor="middle" fill="currentColor" fontSize="11" fontWeight="bold" opacity="0.4" letterSpacing="2">
-                    ALTERNATE NOSTRIL
+                {/* Technique Label */}
+                <text x="150" y="30" textAnchor="middle" fill="currentColor" fontSize="10" fontWeight="bold" opacity="0.3" letterSpacing="3">
+                    NADI SHODHANA
                 </text>
             </svg>
         </div>
