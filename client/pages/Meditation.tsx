@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import BreathingVisualizer from "@/components/meditation/BreathingVisualizer";
 import { useNavigate } from "react-router-dom";
+import meditationBg from "@/assets/meditation-bg.jpg";
 import { useTheme } from "@/contexts/ThemeContext";
 import { authService } from "@/utils/authService";
 import {
@@ -18,6 +19,8 @@ import {
     VolumeX,
     Home,
     HelpCircle,
+    Music,
+    Image,
 } from "lucide-react";
 import { useGuidedTour } from "@/contexts/GuidedTourContext";
 import { meditationTour } from "@/components/guided-tour/tourSteps";
@@ -253,17 +256,17 @@ export default function Meditation() {
     const progress = ((selectedSession.duration * 60 - timeLeft) / (selectedSession.duration * 60)) * 100;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-[#0a0a0f] dark:to-[#0f0f17] transition-colors duration-500 font-sans">
+        <div className="h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 dark:from-[#0a0a0f] dark:to-[#0f0f17] transition-colors duration-500 font-sans overflow-hidden">
             {/* Header */}
-            <header className="flex items-center justify-between px-6 py-4">
+            <header className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b border-slate-200/50 dark:border-white/5">
                 <button
                     onClick={() => navigate("/landing")}
                     className="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                 >
-                    <Home className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                    <Home className="w-5 h-5 text-slate-700 dark:text-slate-300" />
                 </button>
                 <div className="flex items-center gap-2">
-                    <span className="text-xl font-medium tracking-tight text-slate-900 dark:text-white">Meditation</span>
+                    <span className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">Meditation</span>
                 </div>
                 <Button
                     variant="outline"
@@ -275,7 +278,10 @@ export default function Meditation() {
                 </Button>
             </header>
 
-            <main className="max-w-5xl mx-auto px-8 py-10">
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* 3-COLUMN LAYOUT                                       */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <main className="flex-1 flex overflow-hidden">
 
                 {/* Active Session Modal Overlay */}
                 {isActive && (
@@ -298,15 +304,11 @@ export default function Meditation() {
                                     cycle={selectedSession.cycle}
                                 />
                             ) : (
-                                /* Sessions 1-4: Visualizer + Timer + Controls */
                                 <div className="flex flex-col items-center">
-                                    {/* Session Title */}
-                                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6 text-center">
-                                        {selectedSession.title}
-                                    </h2>
+                                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">{selectedSession.title}</h2>
+                                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{selectedSession.description}</p>
 
-                                    {/* Visualization */}
-                                    <div className={`relative rounded-3xl p-8 mb-8 transition-all duration-500 bg-white/50 dark:bg-white/5 shadow-xl ring-1 ring-emerald-500/20`}>
+                                    <div className="relative rounded-3xl p-6 bg-white/30 dark:bg-white/[0.02] shadow-lg ring-1 ring-slate-200/50 dark:ring-white/5 mb-6">
                                         <BreathingVisualizer
                                             sessionId={selectedSession.id}
                                             breathPhase={breathPhase}
@@ -315,29 +317,24 @@ export default function Meditation() {
                                         />
                                     </div>
 
-                                    {/* Breathing phase indicator */}
-                                    <div className="w-40 text-center mb-4">
-                                        <span
-                                            className={`text-lg font-bold uppercase tracking-widest transition-all duration-500 ${breathPhase === "inhale"
-                                                ? "text-emerald-500"
-                                                : breathPhase === "exhale"
-                                                    ? "text-blue-500"
-                                                    : "text-amber-500"
-                                                }`}
+                                    {/* Phase Label */}
+                                    <div className="text-center mb-4">
+                                        <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide transition-all duration-500
+                                            ${breathPhase === 'inhale' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' :
+                                                breathPhase === 'exhale' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300' :
+                                                    'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300'}`}
                                         >
-                                            {breathPhase.replace("-", " ")}
+                                            {breathPhase === 'inhale' ? 'Inhale' : breathPhase === 'exhale' ? 'Exhale' : 'Hold'}
                                         </span>
                                     </div>
 
                                     {/* Timer */}
-                                    <div data-tour="timer-display" className="text-center space-y-2 mb-6">
-                                        <div className="text-6xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums">
-                                            {formatTime(timeLeft)}
-                                        </div>
+                                    <div className="text-5xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums mb-4">
+                                        {formatTime(timeLeft)}
                                     </div>
 
-                                    {/* Progress bar */}
-                                    <div className="w-full max-w-sm h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-8">
+                                    {/* Progress */}
+                                    <div className="w-full max-w-xs h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
                                         <div
                                             className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
                                             style={{ width: `${progress}%` }}
@@ -348,24 +345,25 @@ export default function Meditation() {
                                     <div className="flex items-center justify-center gap-8">
                                         <button
                                             onClick={handleReset}
-                                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                            className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
                                         >
-                                            <RotateCcw className="w-6 h-6" />
+                                            <RotateCcw className="w-5 h-5" />
                                         </button>
                                         <button
                                             onClick={() => setIsActive(!isActive)}
-                                            className={`p-8 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 ${isActive
-                                                ? "bg-rose-500 text-white shadow-rose-500/40"
-                                                : "bg-emerald-500 text-white shadow-emerald-500/40"
+                                            className={`p-6 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95
+                                                ${isActive
+                                                    ? "bg-amber-500 text-white shadow-amber-500/40"
+                                                    : "bg-emerald-500 text-white shadow-emerald-500/40"
                                                 }`}
                                         >
-                                            {isActive ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-1" />}
+                                            {isActive ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
                                         </button>
                                         <button
                                             onClick={() => setIsMuted(!isMuted)}
-                                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                            className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
                                         >
-                                            {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                                         </button>
                                     </div>
                                 </div>
@@ -374,96 +372,164 @@ export default function Meditation() {
                     </div>
                 )}
 
-                {/* Inline preview (visible when NOT active) */}
-                {!isActive && (
-                    <div className="flex flex-col items-center mb-16">
-                        <div className="relative group mb-8">
-                            <div className="relative rounded-3xl p-6 bg-white/30 dark:bg-white/[0.02] shadow-lg ring-1 ring-slate-200/50 dark:ring-white/5">
-                                <BreathingVisualizer
-                                    sessionId={selectedSession.id}
-                                    breathPhase={breathPhase}
-                                    isActive={isActive}
-                                    cycle={selectedSession.cycle}
-                                />
-                            </div>
+                {/* ═══════ LEFT SIDEBAR ═══════ */}
+                <aside className="hidden lg:flex flex-col w-[260px] min-w-[260px] border-r border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 gap-4 overflow-y-auto">
+                    {/* Meditation Hero Image */}
+                    <div className="rounded-2xl overflow-hidden shadow-lg ring-1 ring-slate-200/30 dark:ring-white/5">
+                        <img src={meditationBg} alt="Meditation" className="w-full h-auto object-cover" />
+                    </div>
+
+                    {/* Selected Session Quick Info */}
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-500/20">
+                        <h3 className="font-bold text-slate-800 dark:text-white text-sm mb-1">{selectedSession.title}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{selectedSession.description}</p>
+                        <div className="flex items-center gap-2 mt-3">
+                            <Clock className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{selectedSession.duration} min</span>
+                        </div>
+                    </div>
+
+                    {/* Audio Library Placeholder */}
+                    <div className="flex-1 rounded-2xl border-2 border-dashed border-slate-200/70 dark:border-white/10 p-5 flex flex-col items-center justify-center text-center gap-3 min-h-[120px]">
+                        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+                            <Music className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">Audio Library</p>
+                            <p className="text-xs text-slate-300 dark:text-slate-600 mt-1">Coming Soon</p>
+                        </div>
+                    </div>
+
+                    {/* Banner Placeholder */}
+                    <div className="rounded-2xl border-2 border-dashed border-slate-200/70 dark:border-white/10 p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[80px]">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+                            <Image className="w-4 h-4 text-slate-400" />
+                        </div>
+                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">Banners</p>
+                    </div>
+                </aside>
+
+                {/* ═══════ CENTER CONTENT ═══════ */}
+                <section className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-6">
+                    {/* Background Image — very subtle */}
+                    <div className="absolute inset-0 opacity-[0.06] dark:opacity-[0.03] pointer-events-none select-none">
+                        <img src={meditationBg} alt="" className="w-full h-full object-cover" />
+                    </div>
+
+                    {/* Floating Gradient Orbs */}
+                    <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-400/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-teal-400/10 dark:bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-300/5 dark:bg-sky-500/3 rounded-full blur-3xl pointer-events-none" />
+
+                    {/* Center Content */}
+                    <div className="relative z-10 flex flex-col items-center gap-5 max-w-md">
+                        {/* Meditating Lady Silhouette as Logo */}
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-b from-sky-300/30 to-transparent rounded-3xl blur-2xl scale-125" />
+                            <img
+                                src={meditationBg}
+                                alt="Meditation"
+                                className="relative w-56 h-32 md:w-72 md:h-40 object-cover object-top rounded-2xl shadow-lg shadow-sky-200/30 dark:shadow-sky-900/20"
+                                style={{ filter: 'contrast(1.05) brightness(1.02)' }}
+                            />
                         </div>
 
-                        <div data-tour="timer-display" className="text-center space-y-2">
+                        {/* Session Title */}
+                        <div className="text-center mt-2">
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-1">{selectedSession.title}</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">{selectedSession.description}</p>
+                        </div>
+
+                        {/* Timer Display */}
+                        <div data-tour="timer-display" className="text-center">
                             <div className="text-6xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums">
                                 {formatTime(timeLeft)}
                             </div>
-                            <p className="text-slate-500 dark:text-slate-400 font-medium tracking-wide">
-                                Ready to start?
+                            <p className="text-slate-400 dark:text-slate-500 text-sm font-medium mt-2 tracking-wide">
+                                Select a technique & press play
                             </p>
                         </div>
 
-                        <div className="w-full max-w-xs h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-6">
+                        {/* Progress Bar */}
+                        <div className="w-64 h-1.5 bg-slate-200/80 dark:bg-slate-700/50 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
 
-                        <div className="flex items-center justify-center gap-12 mt-10 mb-8">
+                        {/* Playback Controls */}
+                        <div className="flex items-center justify-center gap-8 mt-1">
                             <button
                                 data-tour="reset-button"
                                 onClick={handleReset}
-                                className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105 ring-1 ring-slate-200/50 dark:ring-white/5"
                             >
-                                <RotateCcw className="w-6 h-6" />
+                                <RotateCcw className="w-5 h-5" />
                             </button>
 
                             <button
                                 data-tour="play-button"
                                 onClick={() => setIsActive(true)}
-                                className="p-8 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 bg-emerald-500 text-white shadow-emerald-500/40"
+                                className="p-7 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 bg-emerald-500 text-white shadow-emerald-500/40 hover:shadow-emerald-500/60"
                             >
-                                <Play className="w-10 h-10 fill-current ml-1" />
+                                <Play className="w-9 h-9 fill-current ml-0.5" />
                             </button>
 
                             <button
                                 onClick={() => setIsMuted(!isMuted)}
-                                className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105 ring-1 ring-slate-200/50 dark:ring-white/5"
                             >
-                                {isMuted ? (
-                                    <VolumeX className="w-6 h-6" />
-                                ) : (
-                                    <Volume2 className="w-6 h-6" />
-                                )}
+                                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                             </button>
                         </div>
                     </div>
-                )}
+                </section>
 
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Breathing Techniques</h3>
-                <div data-tour="session-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                    {sessions.map((session) => (
-                        <div
-                            key={session.id}
-                            onClick={() => handleCardClick(session)}
-                            className="group relative h-48 rounded-2xl bg-white dark:bg-[#15151A] border border-slate-200 dark:border-white/5 overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-500/30"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {/* ═══════ RIGHT SIDEBAR — Breathing Techniques ═══════ */}
+                <aside className="hidden md:flex flex-col w-[300px] min-w-[300px] border-l border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 overflow-y-auto">
+                    <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Breathing Techniques</h3>
 
-                            <div className="p-6 h-full flex flex-col relative z-10 transition-all duration-300 group-hover:opacity-0">
-                                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
-                                    <Wind className="w-5 h-5" />
+                    <div data-tour="session-cards" className="flex flex-col gap-3">
+                        {sessions.map((session) => (
+                            <div
+                                key={session.id}
+                                onClick={() => handleCardClick(session)}
+                                className={`group relative rounded-2xl border overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5
+                                    ${selectedSession.id === session.id
+                                        ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 shadow-md shadow-emerald-500/10'
+                                        : 'bg-white dark:bg-[#15151A] border-slate-200 dark:border-white/5 hover:border-emerald-500/30'
+                                    }`}
+                            >
+                                <div className="p-4 flex items-start gap-3">
+                                    <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors
+                                        ${selectedSession.id === session.id
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                        }`}
+                                    >
+                                        <Wind className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className={`font-bold text-sm leading-tight mb-0.5 transition-colors
+                                            ${selectedSession.id === session.id
+                                                ? 'text-emerald-700 dark:text-emerald-300'
+                                                : 'text-slate-900 dark:text-white'
+                                            }`}
+                                        >
+                                            {session.title}
+                                        </h4>
+                                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium capitalize">{session.type} • {session.duration} min</span>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 leading-relaxed line-clamp-2">{session.description}</p>
+                                    </div>
+                                    {selectedSession.id === session.id && (
+                                        <div className="flex-shrink-0 w-2 h-2 rounded-full bg-emerald-500 mt-1.5 animate-pulse" />
+                                    )}
                                 </div>
-                                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{session.title}</h4>
-                                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium capitalize">{session.type} • {session.duration} min</span>
                             </div>
-
-                            {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-emerald-900/90 dark:bg-emerald-950/90 p-6 flex flex-col justify-center text-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 backdrop-blur-sm">
-                                <h4 className="font-bold text-white mb-2">{session.title}</h4>
-                                <p className="text-emerald-100 text-sm leading-relaxed">
-                                    {session.description}
-                                </p>
-                                <span className="mt-4 text-xs font-bold text-emerald-400 uppercase tracking-widest">Click for Steps</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                </aside>
             </main>
 
             {/* Instruction Modal */}
