@@ -277,89 +277,163 @@ export default function Meditation() {
 
             <main className="max-w-5xl mx-auto px-8 py-10">
 
-                {/* Active Session Area */}
-                <div className="flex flex-col items-center mb-16">
-                    {/* Visual & Timer */}
-                    <div className="relative group mb-16">
-                        {/* Dynamic Breathing Visualizer */}
-                        <div className={`relative rounded-3xl p-6 transition-all duration-500 ${isActive
-                            ? "bg-white/50 dark:bg-white/5 shadow-2xl shadow-emerald-500/10 ring-1 ring-emerald-500/20"
-                            : "bg-white/30 dark:bg-white/[0.02] shadow-lg ring-1 ring-slate-200/50 dark:ring-white/5"
-                            }`}>
-                            <BreathingVisualizer
-                                sessionId={selectedSession.id}
-                                breathPhase={breathPhase}
-                                isActive={isActive}
-                                cycle={selectedSession.cycle}
+                {/* Active Session Modal Overlay */}
+                {isActive && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className={`relative bg-white dark:bg-[#12121a] rounded-3xl shadow-2xl border border-slate-200/50 dark:border-white/10 overflow-y-auto max-h-[90vh] ${selectedSession.id === '5' ? 'w-full max-w-xl' : 'w-full max-w-2xl p-8 md:p-10'}`}>
+                            {/* Close / Stop Button */}
+                            <button
+                                onClick={() => { setIsActive(false); handleReset(); }}
+                                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-slate-500 hover:text-red-500 transition-all"
+                            >
+                                ✕
+                            </button>
+
+                            {selectedSession.id === '5' ? (
+                                /* Session 5: Self-contained NostrilViz takes over */
+                                <BreathingVisualizer
+                                    sessionId={selectedSession.id}
+                                    breathPhase={breathPhase}
+                                    isActive={isActive}
+                                    cycle={selectedSession.cycle}
+                                />
+                            ) : (
+                                /* Sessions 1-4: Visualizer + Timer + Controls */
+                                <div className="flex flex-col items-center">
+                                    {/* Session Title */}
+                                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6 text-center">
+                                        {selectedSession.title}
+                                    </h2>
+
+                                    {/* Visualization */}
+                                    <div className={`relative rounded-3xl p-8 mb-8 transition-all duration-500 bg-white/50 dark:bg-white/5 shadow-xl ring-1 ring-emerald-500/20`}>
+                                        <BreathingVisualizer
+                                            sessionId={selectedSession.id}
+                                            breathPhase={breathPhase}
+                                            isActive={isActive}
+                                            cycle={selectedSession.cycle}
+                                        />
+                                    </div>
+
+                                    {/* Breathing phase indicator */}
+                                    <div className="w-40 text-center mb-4">
+                                        <span
+                                            className={`text-lg font-bold uppercase tracking-widest transition-all duration-500 ${breathPhase === "inhale"
+                                                ? "text-emerald-500"
+                                                : breathPhase === "exhale"
+                                                    ? "text-blue-500"
+                                                    : "text-amber-500"
+                                                }`}
+                                        >
+                                            {breathPhase.replace("-", " ")}
+                                        </span>
+                                    </div>
+
+                                    {/* Timer */}
+                                    <div data-tour="timer-display" className="text-center space-y-2 mb-6">
+                                        <div className="text-6xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums">
+                                            {formatTime(timeLeft)}
+                                        </div>
+                                    </div>
+
+                                    {/* Progress bar */}
+                                    <div className="w-full max-w-sm h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-8">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </div>
+
+                                    {/* Controls */}
+                                    <div className="flex items-center justify-center gap-8">
+                                        <button
+                                            onClick={handleReset}
+                                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                        >
+                                            <RotateCcw className="w-6 h-6" />
+                                        </button>
+                                        <button
+                                            onClick={() => setIsActive(!isActive)}
+                                            className={`p-8 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 ${isActive
+                                                ? "bg-rose-500 text-white shadow-rose-500/40"
+                                                : "bg-emerald-500 text-white shadow-emerald-500/40"
+                                                }`}
+                                        >
+                                            {isActive ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-1" />}
+                                        </button>
+                                        <button
+                                            onClick={() => setIsMuted(!isMuted)}
+                                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                        >
+                                            {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Inline preview (visible when NOT active) */}
+                {!isActive && (
+                    <div className="flex flex-col items-center mb-16">
+                        <div className="relative group mb-8">
+                            <div className="relative rounded-3xl p-6 bg-white/30 dark:bg-white/[0.02] shadow-lg ring-1 ring-slate-200/50 dark:ring-white/5">
+                                <BreathingVisualizer
+                                    sessionId={selectedSession.id}
+                                    breathPhase={breathPhase}
+                                    isActive={isActive}
+                                    cycle={selectedSession.cycle}
+                                />
+                            </div>
+                        </div>
+
+                        <div data-tour="timer-display" className="text-center space-y-2">
+                            <div className="text-6xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums">
+                                {formatTime(timeLeft)}
+                            </div>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium tracking-wide">
+                                Ready to start?
+                            </p>
+                        </div>
+
+                        <div className="w-full max-w-xs h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-6">
+                            <div
+                                className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
+                                style={{ width: `${progress}%` }}
                             />
                         </div>
 
-                        {/* Breathing phase indicator below visualizer */}
-                        {isActive && (
-                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-40 text-center">
-                                <span
-                                    className={`text-lg font-bold uppercase tracking-widest transition-all duration-500 ${breathPhase === "inhale"
-                                        ? "text-emerald-500"
-                                        : breathPhase === "exhale"
-                                            ? "text-blue-500"
-                                            : "text-amber-500"
-                                        }`}
-                                >
-                                    {breathPhase.replace("-", " ")}
-                                </span>
-                            </div>
-                        )}
-                    </div>
+                        <div className="flex items-center justify-center gap-12 mt-10 mb-8">
+                            <button
+                                data-tour="reset-button"
+                                onClick={handleReset}
+                                className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                            >
+                                <RotateCcw className="w-6 h-6" />
+                            </button>
 
-                    <div data-tour="timer-display" className="text-center space-y-2">
-                        <div className="text-6xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums">
-                            {formatTime(timeLeft)}
+                            <button
+                                data-tour="play-button"
+                                onClick={() => setIsActive(true)}
+                                className="p-8 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 bg-emerald-500 text-white shadow-emerald-500/40"
+                            >
+                                <Play className="w-10 h-10 fill-current ml-1" />
+                            </button>
+
+                            <button
+                                onClick={() => setIsMuted(!isMuted)}
+                                className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                            >
+                                {isMuted ? (
+                                    <VolumeX className="w-6 h-6" />
+                                ) : (
+                                    <Volume2 className="w-6 h-6" />
+                                )}
+                            </button>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium tracking-wide">
-                            {isActive ? selectedSession.title : "Ready to start?"}
-                        </p>
                     </div>
-
-                    {/* Progress bar */}
-                    <div className="w-full max-w-xs h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-6">
-                        <div
-                            className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-center gap-12 mt-10 mb-8">
-                        <button
-                            data-tour="reset-button"
-                            onClick={handleReset}
-                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
-                        >
-                            <RotateCcw className="w-6 h-6" />
-                        </button>
-
-                        <button
-                            data-tour="play-button"
-                            onClick={() => setIsActive(!isActive)}
-                            className={`p-8 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 ${isActive
-                                ? "bg-rose-500 text-white shadow-rose-500/40"
-                                : "bg-emerald-500 text-white shadow-emerald-500/40"
-                                }`}
-                        >
-                            {isActive ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-1" />}
-                        </button>
-
-                        <button
-                            onClick={() => setIsMuted(!isMuted)}
-                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
-                        >
-                            {isMuted ? (
-                                <VolumeX className="w-6 h-6" />
-                            ) : (
-                                <Volume2 className="w-6 h-6" />
-                            )}
-                        </button>
-                    </div>
-                </div>
+                )}
 
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Breathing Techniques</h3>
                 <div data-tour="session-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">

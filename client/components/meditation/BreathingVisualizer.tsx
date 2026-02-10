@@ -49,14 +49,12 @@ const WavyPathViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ bre
     return (
         <div className="w-52 h-52 md:w-60 md:h-60 flex items-center justify-center">
             <svg viewBox="0 0 240 240" className="w-full h-full">
-                {/* Soft background gradient */}
                 <defs>
                     <linearGradient id="wavyGrad" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stopColor="#f87171" stopOpacity="0.3" />
                         <stop offset="100%" stopColor="#fb923c" stopOpacity="0.3" />
                     </linearGradient>
                 </defs>
-                {/* Wavy S-curve */}
                 <path
                     id="wavy-path"
                     d="M 20 200 C 60 200, 80 40, 120 120 S 180 200, 220 40"
@@ -66,7 +64,6 @@ const WavyPathViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ bre
                     strokeLinecap="round"
                     opacity="0.6"
                 />
-                {/* Soft shadow path */}
                 <path
                     d="M 20 200 C 60 200, 80 40, 120 120 S 180 200, 220 40"
                     fill="none"
@@ -76,7 +73,6 @@ const WavyPathViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ bre
                     opacity="0.3"
                     filter="blur(4px)"
                 />
-                {/* Traveling dot */}
                 <circle
                     ref={dotRef}
                     cx="20"
@@ -87,7 +83,6 @@ const WavyPathViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ bre
                 >
                     <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
                 </circle>
-                {/* Phase label */}
                 <text x="120" y="230" textAnchor="middle" fill="currentColor" className="text-xs font-bold uppercase tracking-widest" fontSize="11" opacity="0.5">
                     {isActive ? 'follow the dot' : 'ready'}
                 </text>
@@ -105,7 +100,6 @@ const GoldenOrbViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ br
 
     return (
         <div className="w-52 h-52 md:w-60 md:h-60 flex items-center justify-center relative">
-            {/* Outer glow rings */}
             <div
                 className="absolute rounded-full transition-all ease-in-out"
                 style={{
@@ -126,7 +120,6 @@ const GoldenOrbViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ br
                     transitionDuration: breathPhase === 'inhale' ? '4000ms' : breathPhase === 'exhale' ? '4000ms' : '500ms',
                 }}
             />
-            {/* Core orb */}
             <div
                 className="rounded-full transition-all ease-in-out flex items-center justify-center relative z-10"
                 style={{
@@ -157,14 +150,13 @@ const BoxTraceViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { 
 
     useEffect(() => { phaseRef.current = breathPhase; }, [breathPhase]);
 
-    // Box coordinates (percentage within container)
     const boxSize = 160;
     const offset = 20;
     const corners = [
-        { x: offset, y: offset },                     // top-left
-        { x: offset + boxSize, y: offset },            // top-right
-        { x: offset + boxSize, y: offset + boxSize },  // bottom-right
-        { x: offset, y: offset + boxSize },            // bottom-left
+        { x: offset, y: offset },
+        { x: offset + boxSize, y: offset },
+        { x: offset + boxSize, y: offset + boxSize },
+        { x: offset, y: offset + boxSize },
     ];
 
     useEffect(() => {
@@ -174,10 +166,10 @@ const BoxTraceViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { 
 
         const getPhaseEdge = (phase: string) => {
             switch (phase) {
-                case 'inhale': return 0;  // top-left → top-right
-                case 'hold': return 1;    // top-right → bottom-right
-                case 'exhale': return 2;  // bottom-right → bottom-left
-                case 'hold-empty': return 3; // bottom-left → top-left
+                case 'inhale': return 0;
+                case 'hold': return 1;
+                case 'exhale': return 2;
+                case 'hold-empty': return 3;
                 default: return 0;
             }
         };
@@ -219,7 +211,6 @@ const BoxTraceViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { 
 
     return (
         <div className="w-52 h-52 md:w-60 md:h-60 flex items-center justify-center relative" style={{ width: '200px', height: '200px' }}>
-            {/* Box outline */}
             <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full">
                 <rect
                     x={offset} y={offset} width={boxSize} height={boxSize}
@@ -229,13 +220,11 @@ const BoxTraceViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { 
                     rx="4"
                     opacity={isActive ? 0.8 : 0.4}
                 />
-                {/* Phase labels on each edge */}
                 <text x={offset + boxSize / 2} y={offset - 6} textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7">INHALE</text>
                 <text x={offset + boxSize + 6} y={offset + boxSize / 2} textAnchor="start" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7" transform={`rotate(90, ${offset + boxSize + 6}, ${offset + boxSize / 2})`}>HOLD</text>
                 <text x={offset + boxSize / 2} y={offset + boxSize + 16} textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7">EXHALE</text>
                 <text x={offset - 6} y={offset + boxSize / 2} textAnchor="end" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7" transform={`rotate(-90, ${offset - 6}, ${offset + boxSize / 2})`}>HOLD</text>
             </svg>
-            {/* Traveling dot */}
             <div
                 ref={dotRef}
                 className="absolute w-5 h-5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 -translate-x-1/2 -translate-y-1/2 z-10"
@@ -302,9 +291,7 @@ const ArcRingViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { i
     return (
         <div className="w-52 h-52 md:w-60 md:h-60 flex items-center justify-center">
             <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
-                {/* Background ring */}
                 <circle cx="100" cy="100" r={radius} fill="none" stroke="currentColor" strokeWidth="6" opacity="0.1" />
-                {/* Progress arc */}
                 <circle
                     cx="100" cy="100" r={radius}
                     fill="none"
@@ -315,7 +302,6 @@ const ArcRingViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { i
                     strokeDashoffset={strokeDashoffset}
                     style={{ transition: 'stroke 0.3s' }}
                 />
-                {/* Glow circle */}
                 <circle
                     cx="100" cy="100" r={radius}
                     fill="none"
@@ -328,7 +314,6 @@ const ArcRingViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { i
                     filter="blur(4px)"
                 />
             </svg>
-            {/* Center text */}
             <div className="absolute flex flex-col items-center">
                 <span className="text-2xl font-bold" style={{ color: phaseColor }}>
                     {breathPhase === 'inhale' ? '↑' : breathPhase === 'exhale' ? '↓' : '•'}
@@ -341,156 +326,210 @@ const ArcRingViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { i
     );
 };
 
-// ─── 5. Alternate Nostril: User Provided Visualization (Adapted) ─────────────
-const NostrilViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ breathPhase, isActive }) => {
-    // Track cycle to alternate sides:
-    const [cycleCount, setCycleCount] = useState(0);
-    const prevPhaseRef = useRef(breathPhase);
+// ─── 5. Alternate Nostril: Full Self-Contained Visualization ─────────────────
+const NostrilViz: React.FC<{ breathPhase: string; isActive: boolean }> = () => {
+    const [phase, setPhase] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(true);
+    const [speed, setSpeed] = useState(1);
+    const localIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const baseDuration = 4000;
+    const duration = baseDuration / speed;
+
+    const phases = [
+        { label: 'Inhale Left', side: 'left', action: 'inhale', color: 'from-blue-400 to-blue-500', icon: '🌊' },
+        { label: 'Hold', side: 'both', action: 'hold', color: 'from-purple-400 to-purple-500', icon: '✨' },
+        { label: 'Exhale Right', side: 'right', action: 'exhale', color: 'from-teal-400 to-teal-500', icon: '🍃' },
+        { label: 'Inhale Right', side: 'right', action: 'inhale', color: 'from-teal-400 to-teal-500', icon: '🍃' },
+        { label: 'Hold', side: 'both', action: 'hold', color: 'from-purple-400 to-purple-500', icon: '✨' },
+        { label: 'Exhale Left', side: 'left', action: 'exhale', color: 'from-blue-400 to-blue-500', icon: '🌊' },
+    ];
 
     useEffect(() => {
-        if (!isActive) {
-            setCycleCount(0);
-            return;
+        if (isPlaying) {
+            localIntervalRef.current = setInterval(() => {
+                setPhase((prev) => (prev + 1) % phases.length);
+            }, duration);
         }
+        return () => {
+            if (localIntervalRef.current) clearInterval(localIntervalRef.current);
+        };
+    }, [isPlaying, speed, duration]);
 
-        // Detect start of new INHALE phase to increment cycle or switch sides?
-        if (prevPhaseRef.current !== 'inhale' && breathPhase === 'inhale') {
-            setCycleCount(c => c + 1);
-        }
-        prevPhaseRef.current = breathPhase;
-    }, [breathPhase, isActive]);
+    const current = phases[phase];
 
-    // Determine current logical step based on cycleCount & breathPhase
-    const checkIsLeftCycle = cycleCount % 2 === 0; // Even = Left In / Right Out? Or 1-based? Let's say 0 is first.
-    // Actually, user standard is often: L In, R Out, R In, L Out.
-    // Cycle 0 (First): Inhale Left. Exhale Right.
-    // Cycle 1 (Second): Inhale Right. Exhale Left.
+    const togglePlayPause = () => setIsPlaying(!isPlaying);
+    const resetExercise = () => setPhase(0);
 
-    // Map to the props expected by the visual
-    let side: 'left' | 'right' | 'both' = 'both';
-    let action: 'inhale' | 'exhale' | 'hold' = 'hold';
-
-    // Action mapping
-    if (breathPhase === 'inhale') action = 'inhale';
-    else if (breathPhase === 'exhale') action = 'exhale';
-    else action = 'hold';
-
-    // Side mapping
-    if (checkIsLeftCycle) {
-        // Cycle 0: In Left -> Out Right
-        if (breathPhase === 'inhale') side = 'left';
-        else if (breathPhase === 'exhale') side = 'right'; // Exhale Right
-        else side = 'both'; // Hold
-    } else {
-        // Cycle 1: In Right -> Out Left
-        if (breathPhase === 'inhale') side = 'right';
-        else if (breathPhase === 'exhale') side = 'left'; // Exhale Left
-        else side = 'both';
-    }
-
-    const color = side === 'left' ? 'from-blue-400 to-blue-500'
-        : side === 'right' ? 'from-teal-400 to-teal-500'
-            : 'from-purple-400 to-purple-500';
-
-    const label = `${action === 'inhale' ? 'Inhale' : action === 'exhale' ? 'Exhale' : 'Hold'} ${side === 'left' ? 'Left' : side === 'right' ? 'Right' : ''}`;
-    const icon = action === 'inhale' ? '🌊' : action === 'exhale' ? '🍃' : '✨';
-
-    // Scale down to fit standard container (250px vs 320px+ in original)
     return (
-        <div className="w-60 h-60 flex items-center justify-center overflow-hidden relative rounded-full bg-slate-50/50">
-            <div className="scale-[0.55] origin-center w-[400px] h-[400px] flex items-center justify-center relative">
-                {/* Left Nostril Channel */}
-                <div className="absolute left-10 flex flex-col items-center">
-                    <div className="text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Left</div>
-                    <div className="w-8 h-64 bg-slate-200 rounded-full overflow-hidden shadow-inner relative">
-                        <motion.div
-                            animate={{
-                                height: side === 'left' || side === 'both'
-                                    ? (action === 'inhale' || action === 'hold' ? '100%' : '0%')
-                                    : '0%',
-                            }}
-                            transition={{ duration: 1, ease: "easeInOut" }}
-                            className={`absolute bottom-0 w-full bg-gradient-to-t ${side === 'left' ? 'from-blue-500 to-blue-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
-                        />
-
-                        {(side === 'left' && action === 'inhale') && (
-                            <motion.div
-                                initial={{ y: 256, opacity: 0 }}
-                                animate={{ y: 0, opacity: [0, 1, 0] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="absolute w-4 h-4 bg-blue-100 rounded-full left-2"
-                            />
-                        )}
-                    </div>
+        <div className="flex items-center justify-center w-full">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-lg border border-white/20 dark:border-white/10">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                        Nadi Shodhana
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Alternate Nostril Breathing</p>
                 </div>
 
-                {/* Center Focus Point */}
-                <div className="flex flex-col items-center mx-8">
-                    <motion.div
-                        animate={{
-                            scale: action === 'hold' ? [1, 1.15, 1] : 1,
-                        }}
-                        transition={{
-                            duration: 2,
-                            repeat: action === 'hold' ? Infinity : 0,
-                            ease: "easeInOut"
-                        }}
-                        className="relative"
-                    >
-                        {/* Outer glow ring */}
-                        <motion.div
-                            animate={{
-                                opacity: action === 'hold' ? [0.3, 0.6, 0.3] : 0.2,
-                                scale: action === 'hold' ? [1, 1.3, 1] : 1,
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className={`absolute inset-0 rounded-full bg-gradient-to-r ${color} blur-xl -z-10`}
-                        />
-
-                        {/* Main circle */}
-                        <div className="w-40 h-40 rounded-full bg-white border-4 border-slate-100 shadow-xl flex items-center justify-center">
+                {/* Main Visualization */}
+                <div className="relative h-80 flex justify-center items-center mb-8">
+                    {/* Left Nostril Channel */}
+                    <div className="absolute left-16 flex flex-col items-center">
+                        <div className="text-xs font-medium text-slate-400 mb-2">Left</div>
+                        <div className="w-4 h-56 bg-gradient-to-b from-slate-200 to-slate-100 dark:from-slate-700 dark:to-slate-800 rounded-full overflow-hidden shadow-inner relative">
                             <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                className={`w-28 h-28 rounded-3xl bg-gradient-to-br ${color} shadow-lg flex items-center justify-center text-5xl`}
-                            >
-                                {icon}
-                            </motion.div>
+                                animate={{
+                                    height: current.side === 'left' || current.side === 'both'
+                                        ? (current.action === 'inhale' || current.action === 'hold' ? '100%' : '0%')
+                                        : '0%',
+                                }}
+                                transition={{ duration: duration / 1000, ease: "easeInOut" }}
+                                className={`absolute bottom-0 w-full bg-gradient-to-t ${current.side === 'left' ? 'from-blue-500 to-blue-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
+                            />
+                            {(current.side === 'left' && current.action === 'inhale') && (
+                                <motion.div
+                                    initial={{ y: 56 * 4, opacity: 0 }}
+                                    animate={{ y: 0, opacity: [0, 1, 0] }}
+                                    transition={{ duration: duration / 1000, repeat: Infinity }}
+                                    className="absolute w-2 h-2 bg-blue-300 rounded-full left-1"
+                                />
+                            )}
                         </div>
-                    </motion.div>
-                </div>
+                    </div>
 
-                {/* Right Nostril Channel */}
-                <div className="absolute right-10 flex flex-col items-center">
-                    <div className="text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Right</div>
-                    <div className="w-8 h-64 bg-slate-200 rounded-full overflow-hidden shadow-inner relative">
+                    {/* Center Focus Point */}
+                    <div className="flex flex-col items-center">
                         <motion.div
-                            animate={{
-                                height: side === 'right' || side === 'both'
-                                    ? (action === 'inhale' || action === 'hold' ? '100%' : '0%')
-                                    : '0%',
-                            }}
-                            transition={{ duration: 1, ease: "easeInOut" }}
-                            className={`absolute bottom-0 w-full bg-gradient-to-t ${side === 'right' ? 'from-teal-500 to-teal-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
-                        />
-
-                        {(side === 'right' && action === 'inhale') && (
+                            animate={{ scale: current.action === 'hold' ? [1, 1.15, 1] : 1 }}
+                            transition={{ duration: 2, repeat: current.action === 'hold' ? Infinity : 0, ease: "easeInOut" }}
+                            className="relative"
+                        >
                             <motion.div
-                                initial={{ y: 256, opacity: 0 }}
-                                animate={{ y: 0, opacity: [0, 1, 0] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="absolute w-4 h-4 bg-teal-100 rounded-full left-2"
+                                animate={{
+                                    opacity: current.action === 'hold' ? [0.3, 0.6, 0.3] : 0.2,
+                                    scale: current.action === 'hold' ? [1, 1.3, 1] : 1,
+                                }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                                className={`absolute inset-0 rounded-full bg-gradient-to-r ${current.color} blur-xl -z-10`}
                             />
-                        )}
+                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900 border-4 border-white dark:border-slate-700 shadow-xl flex items-center justify-center">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                    className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${current.color} shadow-lg flex items-center justify-center text-3xl`}
+                                >
+                                    {current.icon}
+                                </motion.div>
+                            </div>
+                        </motion.div>
+
+                        {/* Breathing instruction */}
+                        <div className="mt-6 min-h-[60px] flex flex-col items-center">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={current.label}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="text-center"
+                                >
+                                    <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-gradient-to-r ${current.color} text-white shadow-md`}>
+                                        {current.action}
+                                    </span>
+                                    <h3 className="text-2xl font-light text-slate-700 dark:text-slate-200">{current.label}</h3>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+                    </div>
+
+                    {/* Right Nostril Channel */}
+                    <div className="absolute right-16 flex flex-col items-center">
+                        <div className="text-xs font-medium text-slate-400 mb-2">Right</div>
+                        <div className="w-4 h-56 bg-gradient-to-b from-slate-200 to-slate-100 dark:from-slate-700 dark:to-slate-800 rounded-full overflow-hidden shadow-inner relative">
+                            <motion.div
+                                animate={{
+                                    height: current.side === 'right' || current.side === 'both'
+                                        ? (current.action === 'inhale' || current.action === 'hold' ? '100%' : '0%')
+                                        : '0%',
+                                }}
+                                transition={{ duration: duration / 1000, ease: "easeInOut" }}
+                                className={`absolute bottom-0 w-full bg-gradient-to-t ${current.side === 'right' ? 'from-teal-500 to-teal-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
+                            />
+                            {(current.side === 'right' && current.action === 'inhale') && (
+                                <motion.div
+                                    initial={{ y: 56 * 4, opacity: 0 }}
+                                    animate={{ y: 0, opacity: [0, 1, 0] }}
+                                    transition={{ duration: duration / 1000, repeat: Infinity }}
+                                    className="absolute w-2 h-2 bg-teal-300 rounded-full left-1"
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Overlay Label for clarity in small view */}
-            <div className="absolute bottom-4 text-center">
-                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r ${color} text-white shadow-md`}>
-                    {side === 'both' ? 'Hold' : side}
-                </span>
+                {/* Progress Bar */}
+                <div className="mb-6">
+                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                        <motion.div
+                            key={phase}
+                            initial={{ width: "0%" }}
+                            animate={{ width: "100%" }}
+                            transition={{ duration: duration / 1000, ease: "linear" }}
+                            className={`h-full bg-gradient-to-r ${current.color} shadow-sm`}
+                        />
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-slate-400">
+                        <span>Cycle {Math.floor(phase / 6) + 1}</span>
+                        <span>Phase {phase + 1}/6</span>
+                    </div>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center justify-between gap-4">
+                    <button
+                        onClick={togglePlayPause}
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                        {isPlaying ? '⏸ Pause' : '▶ Play'}
+                    </button>
+                    <button
+                        onClick={resetExercise}
+                        className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                        ↻ Reset
+                    </button>
+                </div>
+
+                {/* Speed Control */}
+                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Speed</label>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">{speed}x</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0.5"
+                        max="2"
+                        step="0.25"
+                        value={speed}
+                        onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                    />
+                    <div className="flex justify-between text-xs text-slate-400 mt-1">
+                        <span>Slower</span>
+                        <span>Faster</span>
+                    </div>
+                </div>
+
+                {/* Info */}
+                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/50">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        <strong className="text-blue-700 dark:text-blue-400">Tip:</strong> Nadi Shodhana balances the left and right hemispheres of the brain,
+                        promoting calmness and mental clarity. Practice for 5-10 minutes daily for best results.
+                    </p>
+                </div>
             </div>
         </div>
     );
