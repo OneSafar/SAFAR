@@ -1,62 +1,76 @@
+# Dependencies
 node_modules
+**/node_modules/**
+
+# Build outputs
 dist
-.git
-.gitignore
-README.md
-.env
+
+# Environment files
 .env.local
 .env.development
 .env.test
-.env.production
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+
+# OS files
 .DS_Store
-.vscode
-.idea
 *.swp
 *.swo
 *~
+
+# IDE
+.vscode
+.idea
 .cursor
-coverage
-.nyc_output
-.eslintcache
-*.log
-*.lock
-*.tmp
-*.tmp.*
-log.txt
 
-.DS_Store
-node_modules
-**/node_modules/**
-build
-data
-.env
-load-ids.txt
-
-server
-tmp
-types
+# Git
 .git
 .gitignore
-dist
-service
+.gitattributes
+
+# Testing
+coverage
+.nyc_output
 tests
 fixtures-pages
 fixtures-apps
 
+# Large media files (not needed for deployment)
+*.mp4
+*.mp3
+*.mov
+*.avi
+*.webm
+Themes/
+music/
+finak.mp4
+Whisk_ewn3kdzyitz5ijy50yy5qgotqwy5qtl5umy10sz.mp4
+
+# Database files
+*.db
+*.sqlite
+local.db
+server/sqlite.db
+
+# Development/debug scripts
+debug-*.ts
+test-*.ts
+delete-*.ts
+read-*.ts
+update-*.ts
+add-*.ts
+check-*.ts
+*.sql
+
+# Documentation (except README)
+*.md
+!README.md
+UI.md
+AGENTS.md
+
 # Netlify
 .netlify
-packages/ml-air/lib
-packages/ml-air/bin
-packages/ml-air/project
-packages/ml-air/share
-packages/ml-air/random_forest_classification/
-packages/ml-air/__pycache__/
-packages/ml-air/app/__pycache__/
-packages/vcp-common/native-bridge/build
-packages/vcp-common/_tests_/dataset-ranking.csv
-node_modules/
-Dockerfile
-.gitignore
