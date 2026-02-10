@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BreathingVisualizerProps {
     sessionId: string;
@@ -340,182 +341,157 @@ const ArcRingViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { i
     );
 };
 
-// ─── 5. Alternate Nostril: Realistic Nose with Airflow ───────────────────────
+// ─── 5. Alternate Nostril: User Provided Visualization (Adapted) ─────────────
 const NostrilViz: React.FC<{ breathPhase: string; isActive: boolean }> = ({ breathPhase, isActive }) => {
-    // We need to track the cycle side: Left In -> Right Out -> Right In -> Left Out
-    // For simplicity with the current simple phase prop, we'll map:
-    // Inhale = Left, Exhale = Right (as per previous simple logic) 
-    // To make it truly realistic in the future we'd need cycle tracking, but for now we fix the Visual.
+    // Track cycle to alternate sides:
+    const [cycleCount, setCycleCount] = useState(0);
+    const prevPhaseRef = useRef(breathPhase);
 
-    // NOTE: To support true "Alternate" (L->R, R->L), we'd need parent state. 
-    // For now, we'll stick to the requested "Realistic" visual upgrade.
+    useEffect(() => {
+        if (!isActive) {
+            setCycleCount(0);
+            return;
+        }
 
-    const isInhale = breathPhase === 'inhale';
-    const isExhale = breathPhase === 'exhale';
-    const isHold = breathPhase.includes('hold');
+        // Detect start of new INHALE phase to increment cycle or switch sides?
+        if (prevPhaseRef.current !== 'inhale' && breathPhase === 'inhale') {
+            setCycleCount(c => c + 1);
+        }
+        prevPhaseRef.current = breathPhase;
+    }, [breathPhase, isActive]);
 
+    // Determine current logical step based on cycleCount & breathPhase
+    const checkIsLeftCycle = cycleCount % 2 === 0; // Even = Left In / Right Out? Or 1-based? Let's say 0 is first.
+    // Actually, user standard is often: L In, R Out, R In, L Out.
+    // Cycle 0 (First): Inhale Left. Exhale Right.
+    // Cycle 1 (Second): Inhale Right. Exhale Left.
+
+    // Map to the props expected by the visual
+    let side: 'left' | 'right' | 'both' = 'both';
+    let action: 'inhale' | 'exhale' | 'hold' = 'hold';
+
+    // Action mapping
+    if (breathPhase === 'inhale') action = 'inhale';
+    else if (breathPhase === 'exhale') action = 'exhale';
+    else action = 'hold';
+
+    // Side mapping
+    if (checkIsLeftCycle) {
+        // Cycle 0: In Left -> Out Right
+        if (breathPhase === 'inhale') side = 'left';
+        else if (breathPhase === 'exhale') side = 'right'; // Exhale Right
+        else side = 'both'; // Hold
+    } else {
+        // Cycle 1: In Right -> Out Left
+        if (breathPhase === 'inhale') side = 'right';
+        else if (breathPhase === 'exhale') side = 'left'; // Exhale Left
+        else side = 'both';
+    }
+
+    const color = side === 'left' ? 'from-blue-400 to-blue-500'
+        : side === 'right' ? 'from-teal-400 to-teal-500'
+            : 'from-purple-400 to-purple-500';
+
+    const label = `${action === 'inhale' ? 'Inhale' : action === 'exhale' ? 'Exhale' : 'Hold'} ${side === 'left' ? 'Left' : side === 'right' ? 'Right' : ''}`;
+    const icon = action === 'inhale' ? '🌊' : action === 'exhale' ? '🍃' : '✨';
+
+    // Scale down to fit standard container (250px vs 320px+ in original)
     return (
-        <div className="w-52 h-52 md:w-64 md:h-64 flex items-center justify-center relative">
-            <svg viewBox="0 0 300 300" className="w-full h-full drop-shadow-xl">
-                <defs>
-                    <linearGradient id="skinGradient" x1="0.5" y1="0" x2="0.5" y2="1">
-                        <stop offset="0%" stopColor="#e5e7eb" stopOpacity="0.5" />
-                        <stop offset="100%" stopColor="#d1d5db" stopOpacity="0.8" />
-                    </linearGradient>
-                    <filter id="glowInset" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="3" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k2="-1" k3="1" result="shadowDiff" />
-                        <feFlood floodColor="black" floodOpacity="0.2" />
-                        <feComposite in2="shadowDiff" operator="in" />
-                        <feComposite in2="SourceGraphic" operator="over" />
-                    </filter>
-                    <radialGradient id="airGlowBlue" cx="0.5" cy="0.5" r="0.5">
-                        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id="airGlowPurple" cx="0.5" cy="0.5" r="0.5">
-                        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-                    </radialGradient>
-                </defs>
-
-                {/* ─── Realistic Nose Geometry ─── */}
-                <g transform="translate(150, 150) scale(1.2)">
-                    {/* Main Nose Shape (Bridge + Tip) */}
-                    <path
-                        d="M -30,-90 
-                           C -15,-90 -10,-40 -12,0 
-                           C -35,20 -55,40 -50,70 
-                           C -45,95 -15,100 0,105 
-                           C 15,100 45,95 50,70 
-                           C 55,40 35,20 12,0 
-                           C 10,-40 15,-90 30,-90"
-                        fill="none"
-                        stroke="#9ca3af"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        opacity="0.3"
-                    />
-
-                    {/* Nostrils (The dark openings) */}
-                    <g>
-                        {/* Left Nostril */}
-                        <path
-                            d="M -12,85 C -20,85 -30,80 -35,70 C -30,65 -20,68 -12,70 Z"
-                            fill="#4b5563"
-                            opacity="0.6"
+        <div className="w-60 h-60 flex items-center justify-center overflow-hidden relative rounded-full bg-slate-50/50">
+            <div className="scale-[0.55] origin-center w-[400px] h-[400px] flex items-center justify-center relative">
+                {/* Left Nostril Channel */}
+                <div className="absolute left-10 flex flex-col items-center">
+                    <div className="text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Left</div>
+                    <div className="w-8 h-64 bg-slate-200 rounded-full overflow-hidden shadow-inner relative">
+                        <motion.div
+                            animate={{
+                                height: side === 'left' || side === 'both'
+                                    ? (action === 'inhale' || action === 'hold' ? '100%' : '0%')
+                                    : '0%',
+                            }}
+                            transition={{ duration: 1, ease: "easeInOut" }}
+                            className={`absolute bottom-0 w-full bg-gradient-to-t ${side === 'left' ? 'from-blue-500 to-blue-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
                         />
-                        {/* Right Nostril */}
-                        <path
-                            d="M 12,85 C 20,85 30,80 35,70 C 30,65 20,68 12,70 Z"
-                            fill="#4b5563"
-                            opacity="0.6"
+
+                        {(side === 'left' && action === 'inhale') && (
+                            <motion.div
+                                initial={{ y: 256, opacity: 0 }}
+                                animate={{ y: 0, opacity: [0, 1, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                                className="absolute w-4 h-4 bg-blue-100 rounded-full left-2"
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {/* Center Focus Point */}
+                <div className="flex flex-col items-center mx-8">
+                    <motion.div
+                        animate={{
+                            scale: action === 'hold' ? [1, 1.15, 1] : 1,
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: action === 'hold' ? Infinity : 0,
+                            ease: "easeInOut"
+                        }}
+                        className="relative"
+                    >
+                        {/* Outer glow ring */}
+                        <motion.div
+                            animate={{
+                                opacity: action === 'hold' ? [0.3, 0.6, 0.3] : 0.2,
+                                scale: action === 'hold' ? [1, 1.3, 1] : 1,
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className={`absolute inset-0 rounded-full bg-gradient-to-r ${color} blur-xl -z-10`}
                         />
-                    </g>
 
-                    {/* Alae (Nostril Wings) Shading */}
-                    <path
-                        d="M -35,70 Q -50,60 -50,45"
-                        fill="none"
-                        stroke="#9ca3af"
-                        strokeWidth="1.5"
-                        opacity="0.4"
-                    />
-                    <path
-                        d="M 35,70 Q 50,60 50,45"
-                        fill="none"
-                        stroke="#9ca3af"
-                        strokeWidth="1.5"
-                        opacity="0.4"
-                    />
-                </g>
+                        {/* Main circle */}
+                        <div className="w-40 h-40 rounded-full bg-white border-4 border-slate-100 shadow-xl flex items-center justify-center">
+                            <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                className={`w-28 h-28 rounded-3xl bg-gradient-to-br ${color} shadow-lg flex items-center justify-center text-5xl`}
+                            >
+                                {icon}
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                </div>
 
-                {/* ─── Airflow Simulations ─── */}
+                {/* Right Nostril Channel */}
+                <div className="absolute right-10 flex flex-col items-center">
+                    <div className="text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Right</div>
+                    <div className="w-8 h-64 bg-slate-200 rounded-full overflow-hidden shadow-inner relative">
+                        <motion.div
+                            animate={{
+                                height: side === 'right' || side === 'both'
+                                    ? (action === 'inhale' || action === 'hold' ? '100%' : '0%')
+                                    : '0%',
+                            }}
+                            transition={{ duration: 1, ease: "easeInOut" }}
+                            className={`absolute bottom-0 w-full bg-gradient-to-t ${side === 'right' ? 'from-teal-500 to-teal-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
+                        />
 
-                {/* LEFT NOSTRIL AIRFLOW (Inhale) */}
-                <g
-                    opacity={isActive && isInhale ? 1 : 0}
-                    style={{ transition: 'opacity 0.4s ease-in-out' }}
-                    transform="translate(135, 235)"
-                >
-                    {/* Air stream particles */}
-                    <circle r="4" fill="#60a5fa" filter="blur(2px)">
-                        <animate attributeName="cy" from="40" to="-10" dur="1s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
-                        <animate attributeName="r" values="3;6;2" dur="1s" repeatCount="indefinite" />
-                    </circle>
-                    <circle r="3" fill="#93c5fd" filter="blur(1px)">
-                        <animate attributeName="cy" from="45" to="-5" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0;0.8;0" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
-                    </circle>
+                        {(side === 'right' && action === 'inhale') && (
+                            <motion.div
+                                initial={{ y: 256, opacity: 0 }}
+                                animate={{ y: 0, opacity: [0, 1, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                                className="absolute w-4 h-4 bg-teal-100 rounded-full left-2"
+                            />
+                        )}
+                    </div>
+                </div>
+            </div>
 
-                    {/* Direction Arrow */}
-                    <path
-                        d="M 0,30 L 0,0 M -4,8 L 0,0 L 4,8"
-                        stroke="#3b82f6"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                        opacity="0.8"
-                    >
-                        <animateTransform attributeName="transform" type="translate" values="0,10; 0,-5" dur="1s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
-                    </path>
-                    <text x="0" y="55" textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="bold" letterSpacing="1">IN</text>
-                </g>
-
-                {/* RIGHT NOSTRIL AIRFLOW (Exhale) */}
-                <g
-                    opacity={isActive && isExhale ? 1 : 0}
-                    style={{ transition: 'opacity 0.4s ease-in-out' }}
-                    transform="translate(165, 235)"
-                >
-                    {/* Air stream particles */}
-                    <circle r="4" fill="#8b5cf6" filter="blur(2px)">
-                        <animate attributeName="cy" from="-10" to="40" dur="1s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
-                    </circle>
-                    <circle r="3" fill="#c4b5fd" filter="blur(1px)">
-                        <animate attributeName="cy" from="-5" to="45" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0;0.8;0" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
-                    </circle>
-
-                    {/* Direction Arrow */}
-                    <path
-                        d="M 0,-5 L 0,30 M -4,22 L 0,30 L 4,22"
-                        stroke="#8b5cf6"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                        opacity="0.8"
-                    >
-                        <animateTransform attributeName="transform" type="translate" values="0,-5; 0,10" dur="1s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
-                    </path>
-                    <text x="0" y="55" textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="bold" letterSpacing="1">OUT</text>
-                </g>
-
-                {/* Thumb/Finger blocking indicator (Visual hint) */}
-                {isActive && isInhale && (
-                    <circle cx="172" cy="230" r="8" fill="#ef4444" opacity="0.1">
-                        <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.1;0.2;0.1" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                )}
-                {isActive && isExhale && (
-                    <circle cx="128" cy="230" r="8" fill="#ef4444" opacity="0.1">
-                        <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.1;0.2;0.1" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                )}
-
-                {/* Technique Label */}
-                <text x="150" y="30" textAnchor="middle" fill="currentColor" fontSize="10" fontWeight="bold" opacity="0.3" letterSpacing="3">
-                    NADI SHODHANA
-                </text>
-            </svg>
+            {/* Overlay Label for clarity in small view */}
+            <div className="absolute bottom-4 text-center">
+                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r ${color} text-white shadow-md`}>
+                    {side === 'both' ? 'Hold' : side}
+                </span>
+            </div>
         </div>
     );
 };
