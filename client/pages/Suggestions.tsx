@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
+import { TourPrompt } from "@/components/guided-tour";
+import { suggestionsTour } from "@/components/guided-tour/tourSteps";
 import {
   Lightbulb,
   Wind,
@@ -66,7 +68,7 @@ export default function Suggestions() {
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#6d1b2b]/10 to-transparent pointer-events-none z-10"></div>
 
         {/* Hero Section */}
-        <div className="relative w-full py-16 px-8 sm:px-12 z-10">
+        <div data-tour="suggestions-hero" className="relative w-full py-16 px-8 sm:px-12 z-10">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="relative z-10 max-w-2xl">
               <div className="flex items-center mb-4">
@@ -99,7 +101,7 @@ export default function Suggestions() {
         <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 pb-16 space-y-16">
 
           {/* Suggestions Grid - Obsidian Glass Cards */}
-          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <section data-tour="suggestion-cards" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
             {/* Card 1 */}
             <article className="glass-high group relative rounded-2xl overflow-hidden hover:shadow-[0_0_30px_rgba(13,148,136,0.1)] transition-all duration-500">
@@ -188,7 +190,7 @@ export default function Suggestions() {
           </section>
 
           {/* Quick Tips Section - Glowing Path */}
-          <section className="relative">
+          <section data-tour="wellbeing-path" className="relative">
             {/* Section Header */}
             <div className="flex items-center mb-12">
               <div className="relative">
@@ -262,6 +264,7 @@ export default function Suggestions() {
 
         </div>
       </div>
+      <TourPrompt tour={suggestionsTour} featureName="Suggestions" />
     </NishthaLayout>
   );
 }

@@ -9,8 +9,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authService } from "@/utils/authService";
-import { LogOut, Settings, Sun, Moon, Home } from "lucide-react";
+import { HelpCircle, LogOut, Settings, Sun, Moon, Home } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useGuidedTour } from "@/contexts/GuidedTourContext";
 import safarLogo from "@/assets/safar-logo.png.jpeg";
 
 interface TopNavbarProps {
@@ -22,6 +23,7 @@ interface TopNavbarProps {
 export default function TopNavbar({ userName = "Student", userAvatar = "", onLogout }: TopNavbarProps) {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { resetTourHistory } = useGuidedTour();
 
   const handleLogout = async () => {
     try {
@@ -65,8 +67,8 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="rounded-full h-10 w-10 p-0 hover:bg-slate-100 dark:hover:bg-white/10">
-                <Avatar className="h-10 w-10 border-2 border-[#6EE7B7]/30">
+              <Button variant="ghost" className="rounded-full h-[52px] w-[52px] p-0 hover:bg-slate-100 dark:hover:bg-white/10">
+                <Avatar className="h-[52px] w-[52px] border border-[#6EE7B7]/30">
                   <AvatarImage src={userAvatar} alt={userName} />
                   <AvatarFallback className="bg-gradient-to-br from-[#6EE7B7] to-teal-600 text-black font-bold">
                     {userName
@@ -87,6 +89,14 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
               <DropdownMenuItem onClick={handleProfile} className="cursor-pointer gap-2 text-slate-700 dark:text-slate-300 hover:text-[#6EE7B7] dark:hover:text-[#6EE7B7]">
                 <Settings className="w-4 h-4" />
                 <span>Profile Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-slate-200 dark:bg-white/10" />
+              <DropdownMenuItem
+                onClick={() => { resetTourHistory(); window.location.reload(); }}
+                className="cursor-pointer gap-2 text-slate-700 dark:text-slate-300 hover:text-[#6EE7B7] dark:hover:text-[#6EE7B7]"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span>Restart Tours</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-slate-200 dark:bg-white/10" />
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer gap-2 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300">

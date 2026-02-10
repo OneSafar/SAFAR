@@ -5,6 +5,11 @@ import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
+import { useGuidedTour } from "@/contexts/GuidedTourContext";
+import { checkInTour } from "@/components/guided-tour/tourSteps";
+import { TourPrompt } from "@/components/guided-tour";
+import { Button } from "@/components/ui/button";
+import { HelpCircle } from "lucide-react";
 import {
   CheckCircle,
   Moon,
@@ -81,6 +86,9 @@ export default function CheckIn() {
     loadData();
   }, [navigate]);
 
+  // Guided tour integration
+  const { startTour } = useGuidedTour();
+
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
@@ -138,6 +146,15 @@ export default function CheckIn() {
             <p className="text-muted-foreground font-light text-sm sm:text-base">Pause. Breathe. Connect with yourself.</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => startTour(checkInTour)}
+              className="gap-2"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Start Tour</span>
+            </Button>
           </div>
         </div>
 
@@ -157,7 +174,7 @@ export default function CheckIn() {
               <div className="h-1 w-20 bg-gradient-to-r from-primary to-transparent rounded-full"></div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1 relative z-10">
+            <div data-tour="mood-selection" className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1 relative z-10">
               {moodOptions.map((option) => (
                 <button
                   key={option.type}
@@ -207,7 +224,7 @@ export default function CheckIn() {
             </div>
 
             <div className="flex-1 flex items-center justify-center w-full z-10 py-6">
-              <div className="h-48 relative flex items-center justify-center w-24">
+              <div data-tour="intensity-slider" className="h-48 relative flex items-center justify-center w-24">
                 <div className="absolute inset-y-0 w-1 bg-muted rounded-full"></div>
                 <Slider
                   defaultValue={[3]}
@@ -262,7 +279,7 @@ export default function CheckIn() {
                   <Heart className="w-4 h-4 text-secondary" />
                   <h4 className="font-bold text-foreground text-sm uppercase tracking-wider">Context Tags</h4>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div data-tour="quick-tags" className="flex flex-wrap gap-2">
                   {quickTags.map(tag => (
                     <span
                       key={tag}
@@ -279,6 +296,7 @@ export default function CheckIn() {
               </div>
 
               <button
+                data-tour="submit-checkin"
                 onClick={handleSubmit}
                 disabled={!selectedMood || isSubmitting}
                 className="mt-8 md:mt-0 w-full py-4 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 disabled:opacity-50 disabled:cursor-not-allowed text-secondary-foreground rounded-xl font-bold tracking-wide shadow-lg hover:shadow-secondary/20 transform hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 group/btn"
@@ -340,6 +358,9 @@ export default function CheckIn() {
         </div >
 
       </div >
+
+      {/* Tour Prompt */}
+      <TourPrompt tour={checkInTour} featureName="Check-In" />
     </NishthaLayout >
   );
 }

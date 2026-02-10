@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 import { authService } from "@/utils/authService";
-import { Moon, Sun, Plus, Home, Settings, Play, Pause, RotateCcw, Leaf, Sparkles, LogOut, ArrowRight, BarChart2, Clock, Zap, Target, Flame, Calendar, Palette, ChevronLeft, ChevronRight, Trees, Waves, Sunset, MoonStar, Sparkle } from "lucide-react";
+import { Moon, Sun, Plus, Home, Settings, Play, Pause, RotateCcw, Leaf, Sparkles, LogOut, ArrowRight, BarChart2, Clock, Zap, Target, Flame, Calendar, Palette, ChevronLeft, ChevronRight, Trees, Waves, Sunset, MoonStar, Sparkle, HelpCircle } from "lucide-react";
 import TasksSidebar from "./TasksSidebar";
 import FocusAnalytics from "./FocusAnalytics";
 import { focusService } from "@/utils/focusService";
@@ -15,6 +15,9 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useGuidedTour } from "@/contexts/GuidedTourContext";
+import { focusTimerTour } from "@/components/guided-tour/tourSteps";
+import { TourPrompt } from "@/components/guided-tour";
 
 // Theme configuration
 interface FocusTheme {
@@ -92,6 +95,8 @@ export default function StudyWithMe() {
         fetchUser();
     }, []);
 
+    // Guided tour integration
+    const { startTour } = useGuidedTour();
 
 
     const handleLogout = async () => {
@@ -251,6 +256,7 @@ export default function StudyWithMe() {
 
 
                             <button
+                                data-tour="add-task"
                                 onClick={() => setIsTasksOpen(true)}
                                 className={`flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted/50 transition-all group ${isSidebarCollapsed ? 'justify-center' : ''}`}
                                 title="Add task"
@@ -270,6 +276,7 @@ export default function StudyWithMe() {
 
                             {/* Theme Selector */}
                             <button
+                                data-tour="theme-button"
                                 onClick={() => setShowThemeSelector(!showThemeSelector)}
                                 className={`flex items-center gap-3 w-full p-3 rounded-xl hover:bg-muted/50 transition-all group ${isSidebarCollapsed ? 'justify-center' : ''}`}
                                 title="Change Theme"
@@ -281,7 +288,7 @@ export default function StudyWithMe() {
 
                         {/* Timer Duration Slider */}
                         {!isSidebarCollapsed && (
-                            <div className="pt-6 border-t border-border/50 mt-6">
+                            <div data-tour="duration-slider" className="pt-6 border-t border-border/50 mt-6">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Timer Duration</span>
                                     <span
@@ -342,6 +349,7 @@ export default function StudyWithMe() {
                         {/* Analytics Link */}
                         <div className={`text-sm text-muted-foreground font-semibold mt-6 ${isSidebarCollapsed ? 'flex justify-center' : ''}`}>
                             <button
+                                data-tour="analytics-link"
                                 onClick={() => setShowAnalytics(true)}
                                 className={`flex items-center gap-3 hover:opacity-80 transition-colors ${isSidebarCollapsed ? 'p-3' : ''}`}
                                 style={{ color: currentTheme.accent }}
@@ -414,7 +422,7 @@ export default function StudyWithMe() {
                         <Sparkles className="absolute top-10 -left-10 w-24 h-24 opacity-5 -rotate-12 pointer-events-none" style={{ color: currentTheme.accent }} />
 
                         {/* Mode Tabs */}
-                        <div className="inline-flex bg-muted/50 p-2 rounded-full mb-12 backdrop-blur-sm relative z-20">
+                        <div data-tour="mode-tabs" className="inline-flex bg-muted/50 p-2 rounded-full mb-12 backdrop-blur-sm relative z-20">
                             {(["Timer", "short", "long"] as const).map((m) => (
                                 <button
                                     key={m}
@@ -434,7 +442,7 @@ export default function StudyWithMe() {
                         </div>
 
                         {/* Timer Display */}
-                        <div className="text-8xl md:text-9xl leading-none font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-foreground to-muted-foreground tracking-tight mb-12 drop-shadow-xl font-['Poppins']">
+                        <div data-tour="timer-display" className="text-8xl md:text-9xl leading-none font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-foreground to-muted-foreground tracking-tight mb-12 drop-shadow-xl font-['Poppins']">
                             {formatTime(minutes, seconds)}
                         </div>
 
@@ -449,6 +457,7 @@ export default function StudyWithMe() {
                             </button>
 
                             <button
+                                data-tour="start-button"
                                 onClick={toggleTimer}
                                 className="group relative px-16 py-5 text-white text-xl font-bold rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 active:translate-y-0 overflow-hidden"
                                 style={{
@@ -592,6 +601,9 @@ export default function StudyWithMe() {
                   100% { transform: translateX(0); }
                 }
               `}</style>
+
+            {/* Tour Prompt */}
+            <TourPrompt tour={focusTimerTour} featureName="Focus Timer" />
         </div>
     );
 }

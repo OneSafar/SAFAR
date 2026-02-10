@@ -302,6 +302,37 @@ export async function initDatabase() {
         )
     `);
 
+        // Mehfil communities table
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS mehfil_communities (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            creator_id TEXT REFERENCES users(id),
+            member_count INTEGER DEFAULT 1,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+    `);
+
+        // Mehfil community members table
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS mehfil_community_members (
+            community_id TEXT NOT NULL REFERENCES mehfil_communities(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id),
+            joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            PRIMARY KEY (community_id, user_id)
+        )
+    `);
+
+        // Add user_id column to mehfil_messages if not present (for top contributors tracking)
+        await pool.query(`
+        DO $$ BEGIN
+            ALTER TABLE mehfil_messages ADD COLUMN user_id TEXT REFERENCES users(id);
+        EXCEPTION
+            WHEN duplicate_column THEN NULL;
+        END $$;
+    `);
+
         // Seed default topics if none exist
         const existingTopics = await pool.query(`SELECT COUNT(*) as count FROM mehfil_topics`);
         if (parseInt(existingTopics.rows[0]?.count) === 0) {

@@ -66,7 +66,7 @@ export default function LeftSidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-white/80 dark:bg-[#0B0F19]/95 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 h-screen sticky top-0 overflow-y-auto">
+      <aside data-tour="sidebar-nav" className="hidden lg:flex flex-col w-64 bg-white/80 dark:bg-[#0B0F19]/95 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 h-screen sticky top-0 overflow-y-auto">
         <div className="flex-1 px-4 py-6 space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;

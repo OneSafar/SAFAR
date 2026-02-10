@@ -3,6 +3,8 @@ import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
 import { Goal } from "@shared/api";
+import { TourPrompt } from "@/components/guided-tour";
+import { goalsTour } from "@/components/guided-tour/tourSteps";
 import {
     Plus,
     Search,
@@ -167,6 +169,7 @@ export default function Goals() {
 
                                 {/* Add New Goal Card */}
                                 <div
+                                    data-tour="add-goal"
                                     className={`
                                     bg-white dark:bg-[#111827] border-2 border-[#2E7D73]/30 hover:border-[#2E7D73] rounded-2xl p-6 
                                     flex flex-col justify-center items-center cursor-pointer transition-all duration-300 group min-h-[160px]
@@ -215,9 +218,8 @@ export default function Goals() {
                                     )}
                                 </div>
 
-                                {/* Goal Cards */}
                                 {filteredGoals.map((goal) => (
-                                    <div key={goal.id} className="relative group bg-white dark:bg-[#111827] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 flex flex-col justify-between min-h-[160px]">
+                                    <div key={goal.id} data-tour="goal-cards" className="relative group bg-white dark:bg-[#111827] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 flex flex-col justify-between min-h-[160px]">
 
                                         <div className="flex justify-between items-start mb-3">
                                             <h3 className={`font-bold text-lg leading-tight line-clamp-2 ${goal.completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}>
@@ -263,7 +265,7 @@ export default function Goals() {
                         <div className="lg:col-span-4 space-y-6">
 
                             {/* Focus Distribution Cards */}
-                            <div>
+                            <div data-tour="focus-distribution">
                                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">Focus Distribution</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -288,7 +290,7 @@ export default function Goals() {
                             </div>
 
                             {/* Weekly Progress Chart */}
-                            <div>
+                            <div data-tour="weekly-progress">
                                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
                                     <TrendingUp className="w-3 h-3" /> Weekly Progress
                                 </h4>
@@ -384,6 +386,7 @@ export default function Goals() {
                     </div>
                 </div>
             </div>
+            <TourPrompt tour={goalsTour} featureName="Goals" />
         </NishthaLayout>
     );
 }

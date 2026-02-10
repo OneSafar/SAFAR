@@ -5,6 +5,8 @@ import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
 import { toast } from "sonner";
 import { User } from "@shared/api";
+import { TourPrompt } from "@/components/guided-tour";
+import { journalTour } from "@/components/guided-tour/tourSteps";
 
 import {
   Smile,
@@ -276,10 +278,10 @@ export default function Journal() {
               </header>
 
               {/* Editor Card */}
-              <div className="bg-white dark:bg-[#1E1E1E] rounded-3xl shadow-xl dark:shadow-2xl dark:shadow-black/50 border border-slate-200/50 dark:border-white/5 overflow-hidden transition-all duration-300 hover:shadow-emerald-500/5">
+              <div data-tour="journal-editor" className="bg-white dark:bg-[#1E1E1E] rounded-3xl shadow-xl dark:shadow-2xl dark:shadow-black/50 border border-slate-200/50 dark:border-white/5 overflow-hidden transition-all duration-300 hover:shadow-emerald-500/5">
 
                 {/* Toolbar */}
-                <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
+                <div data-tour="journal-toolbar" className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
                   <div className="flex items-center gap-4">
                     {/* Mood Dropdown */}
                     <div className="relative">
@@ -359,7 +361,7 @@ export default function Journal() {
                 <div className="h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-30" />
 
                 {/* Save Button */}
-                <div className="px-8 py-6 flex justify-end">
+                <div data-tour="save-entry" className="px-8 py-6 flex justify-end">
                   <button
                     onClick={handleAddEntry}
                     disabled={isSubmitting}
@@ -377,7 +379,7 @@ export default function Journal() {
           <aside className="w-full xl:w-[400px] xl:flex-shrink-0 border-t xl:border-t-0 xl:border-l border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-[#151515]/90 backdrop-blur-sm p-6 overflow-y-auto space-y-6">
 
             {/* Daily Inspiration Card */}
-            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 relative overflow-hidden group shadow-lg shadow-slate-200/50 dark:shadow-black/20 hover:shadow-xl hover:shadow-violet-500/5 dark:hover:shadow-violet-500/10 transition-all duration-300">
+            <div data-tour="daily-inspiration" className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 relative overflow-hidden group shadow-lg shadow-slate-200/50 dark:shadow-black/20 hover:shadow-xl hover:shadow-violet-500/5 dark:hover:shadow-violet-500/10 transition-all duration-300">
               {/* Decorative glow */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/20 dark:bg-violet-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-violet-500/30 transition-colors duration-500" />
 
@@ -557,7 +559,7 @@ export default function Journal() {
             </div>
 
             {/* History Section */}
-            <div className="space-y-4">
+            <div data-tour="journal-history" className="space-y-4">
               <div className="flex justify-between items-center px-1">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
                   <History className="w-5 h-5 text-slate-400" />
@@ -728,6 +730,7 @@ export default function Journal() {
           </div>
         </div>
       )}
+      <TourPrompt tour={journalTour} featureName="Journal" />
     </NishthaLayout>
   );
 }

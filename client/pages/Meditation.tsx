@@ -16,7 +16,12 @@ import {
     Volume2,
     VolumeX,
     Home,
+    HelpCircle,
 } from "lucide-react";
+import { useGuidedTour } from "@/contexts/GuidedTourContext";
+import { meditationTour } from "@/components/guided-tour/tourSteps";
+import { TourPrompt } from "@/components/guided-tour";
+import { Button } from "@/components/ui/button";
 
 interface Session {
     id: string;
@@ -129,6 +134,9 @@ export default function Meditation() {
         fetchUser();
     }, []);
 
+    // Guided tour integration
+    const { startTour } = useGuidedTour();
+
     useEffect(() => {
         // When session changes, reset but don't close instructions if user clicked a card
         setTimeLeft(selectedSession.duration * 60);
@@ -240,7 +248,14 @@ export default function Meditation() {
                 <div className="flex items-center gap-2">
                     <span className="text-xl font-medium tracking-tight text-slate-900 dark:text-white">Meditation</span>
                 </div>
-                <div className="w-10" /> {/* Spacer */}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => startTour(meditationTour)}
+                    className="gap-2"
+                >
+                    <HelpCircle className="w-4 h-4" />
+                </Button>
             </header>
 
             <main className="max-w-5xl mx-auto px-8 py-10">
@@ -293,7 +308,7 @@ export default function Meditation() {
                         )}
                     </div>
 
-                    <div className="text-center space-y-2">
+                    <div data-tour="timer-display" className="text-center space-y-2">
                         <div className="text-6xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums">
                             {formatTime(timeLeft)}
                         </div>
@@ -310,9 +325,9 @@ export default function Meditation() {
                         />
                     </div>
 
-                    {/* Controls */}
                     <div className="flex items-center justify-center gap-12 mt-10 mb-8">
                         <button
+                            data-tour="reset-button"
                             onClick={handleReset}
                             className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
                         >
@@ -320,6 +335,7 @@ export default function Meditation() {
                         </button>
 
                         <button
+                            data-tour="play-button"
                             onClick={() => setIsActive(!isActive)}
                             className={`p-8 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95 ${isActive
                                 ? "bg-rose-500 text-white shadow-rose-500/40"
@@ -342,9 +358,8 @@ export default function Meditation() {
                     </div>
                 </div>
 
-                {/* Session Cards - Grid */}
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Breathing Techniques</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div data-tour="session-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {sessions.map((session) => (
                         <div
                             key={session.id}
@@ -396,7 +411,7 @@ export default function Meditation() {
                             </p>
                         </div>
 
-                        <div className="bg-slate-50 dark:bg-black/20 rounded-xl p-6 mb-8 text-left">
+                        <div data-tour="session-info" className="bg-slate-50 dark:bg-black/20 rounded-xl p-6 mb-8 text-left">
                             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">How to perform</h3>
                             <ul className="space-y-3">
                                 {selectedSession.steps.map((step, idx) => (
@@ -419,6 +434,9 @@ export default function Meditation() {
                     </div>
                 </div>
             )}
+
+            {/* Tour Prompt */}
+            <TourPrompt tour={meditationTour} featureName="Meditation" />
         </div>
     );
 }

@@ -8,6 +8,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { authService } from "./utils/authService";
+import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
+import { GuidedTour } from "@/components/guided-tour";
+
 
 import Test from "./pages/Test";
 
@@ -79,124 +82,127 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+        <GuidedTourProvider>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Nishtha - Wellness App with 5 sections */}
-          <Route path="/nishtha">
+            {/* Protected Routes */}
             <Route
-              index
+              path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Navigate to="/nishtha/check-in" replace />
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Nishtha - Wellness App with 5 sections */}
+            <Route path="/nishtha">
+              <Route
+                index
+                element={
+                  <ProtectedRoute>
+                    <Navigate to="/nishtha/check-in" replace />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="check-in"
+                element={
+                  <ProtectedRoute>
+                    <CheckIn />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="journal"
+                element={
+                  <ProtectedRoute>
+                    <Journal />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="goals"
+                element={
+                  <ProtectedRoute>
+                    <Goals />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="streaks"
+                element={
+                  <ProtectedRoute>
+                    <Streaks />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="suggestions"
+                element={
+                  <ProtectedRoute>
+                    <Suggestions />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+
+            <Route
+              path="/study"
+              element={
+                <ProtectedRoute>
+                  <StudyWithMe />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="check-in"
+              path="/achievements"
               element={
                 <ProtectedRoute>
-                  <CheckIn />
+                  <Achievements />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="journal"
+              path="/profile"
               element={
                 <ProtectedRoute>
-                  <Journal />
+                  <Profile />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="goals"
+              path="/mehfil"
               element={
                 <ProtectedRoute>
-                  <Goals />
+                  <Mehfil />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="streaks"
+              path="/meditation"
               element={
                 <ProtectedRoute>
-                  <Streaks />
+                  <Meditation />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="suggestions"
-              element={
-                <ProtectedRoute>
-                  <Suggestions />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
 
-          <Route
-            path="/study"
-            element={
-              <ProtectedRoute>
-                <StudyWithMe />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/achievements"
-            element={
-              <ProtectedRoute>
-                <Achievements />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/mehfil"
-            element={
-              <ProtectedRoute>
-                <Mehfil />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/meditation"
-            element={
-              <ProtectedRoute>
-                <Meditation />
-              </ProtectedRoute>
-            }
-          />
+            {/* Landing page - Public Home */}
+            <Route path="/landing" element={<Landing />} />
 
-          {/* Landing page - Public Home */}
-          <Route path="/landing" element={<Landing />} />
+            {/* Default route - Landing page is now home */}
+            <Route path="/" element={<Landing />} />
 
-          {/* Default route - Landing page is now home */}
-          <Route path="/" element={<Landing />} />
-
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <GuidedTour />
+        </GuidedTourProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

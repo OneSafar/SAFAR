@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import NishthaLayout from "@/components/NishthaLayout";
 import { authService } from "@/utils/authService";
 import { dataService } from "@/utils/dataService";
+import { TourPrompt } from "@/components/guided-tour";
+import { streaksTour } from "@/components/guided-tour/tourSteps";
 import {
   LineChart,
   Line,
@@ -257,7 +259,7 @@ export default function Streaks() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Check-In Streak Card (Teal) */}
-            <div className="group relative overflow-hidden rounded-[1.5rem] p-6 flex flex-col justify-between h-48 bg-primary/20 shadow-xl border border-primary/30 hover:-translate-y-1 transition-transform duration-200">
+            <div data-tour="streak-cards" className="group relative overflow-hidden rounded-[1.5rem] p-6 flex flex-col justify-between h-48 bg-primary/20 shadow-xl border border-primary/30 hover:-translate-y-1 transition-transform duration-200">
               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Heart className="w-24 h-24 text-primary transform rotate-12" />
               </div>
@@ -309,7 +311,7 @@ export default function Streaks() {
             </div>
 
             {/* Activity Calendar - Redesigned Style */}
-            <div id="calendar-view" className="md:col-span-2 rounded-[1.5rem] bg-white dark:bg-[#1e1e1e] text-slate-900 dark:text-white p-5 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-gray-800 font-sans transition-colors duration-300">
+            <div data-tour="activity-calendar" id="calendar-view" className="md:col-span-2 rounded-[1.5rem] bg-white dark:bg-[#1e1e1e] text-slate-900 dark:text-white p-5 shadow-xl dark:shadow-2xl border border-slate-200 dark:border-gray-800 font-sans transition-colors duration-300">
 
               {/* Header Navigation - Compact */}
               <div className="flex items-center justify-between mb-4">
@@ -392,7 +394,7 @@ export default function Streaks() {
             </div>
 
             {/* Goal Consistency Graph - Full Width */}
-            <div className="md:col-span-3 glass-high rounded-[1.5rem] p-6 md:p-8 shadow-sm">
+            <div data-tour="consistency-chart" className="md:col-span-3 glass-high rounded-[1.5rem] p-6 md:p-8 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="font-['Outfit'] font-semibold text-lg text-foreground flex items-center gap-2">
@@ -465,6 +467,7 @@ export default function Streaks() {
           </div>
         </div>
       </div>
+      <TourPrompt tour={streaksTour} featureName="Streaks" />
     </NishthaLayout>
   );
 }

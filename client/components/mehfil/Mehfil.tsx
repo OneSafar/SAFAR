@@ -7,7 +7,7 @@ import MessageCard from './MessageCard';
 import Composer from './Composer';
 import LeftSidebar from './LeftSidebar';
 import RightSidebar from './RightSidebar';
-import { Contrast, Search, Settings, LogOut, Home } from 'lucide-react';
+import { Contrast, Search, Settings, LogOut, Home, HelpCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -18,6 +18,9 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useGuidedTour } from "@/contexts/GuidedTourContext";
+import { mehfilTour } from "@/components/guided-tour/tourSteps";
+import { TourPrompt } from "@/components/guided-tour";
 
 interface MehfilProps {
     backendUrl?: string;
@@ -56,6 +59,9 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
         };
         fetchUser();
     }, []);
+
+    // Guided tour integration
+    const { startTour } = useGuidedTour();
 
     const {
         topics,
@@ -131,6 +137,7 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
                 imageUrl,
                 sessionId,
                 author: user?.name || 'Anonymous',
+                userId: user?.id || null,
             });
         }
     };
@@ -185,7 +192,14 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
                         <Home className="w-5 h-5" />
                     </Link>
 
-
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startTour(mehfilTour)}
+                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400"
+                    >
+                        <HelpCircle className="w-5 h-5" />
+                    </Button>
                     <button
                         onClick={toggleTheme}
                         className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
@@ -230,13 +244,17 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
             {/* Main Content Layout */}
             <div className="w-full px-6 lg:px-8 xl:px-12 pt-28 pb-12 flex gap-8 min-h-screen">
                 {/* Left Sidebar */}
-                <LeftSidebar />
+                <div data-tour="topic-sidebar">
+                    <LeftSidebar socket={socket} userId={user?.id} />
+                </div>
 
                 {/* Main Feed */}
                 <main className="flex-1 max-w-6xl scrollbar-blend">
-                    <Composer onSendMessage={handleSendMessage} />
+                    <div data-tour="message-composer">
+                        <Composer onSendMessage={handleSendMessage} />
+                    </div>
 
-                    <div className="space-y-6">
+                    <div data-tour="message-feed" className="space-y-6">
                         {currentMessages.length === 0 ? (
                             // Demo content if empty
                             <>
@@ -279,8 +297,11 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
                 </main>
 
                 {/* Right Sidebar */}
-                <RightSidebar />
+                <RightSidebar socket={socket} />
             </div>
+
+            {/* Tour Prompt */}
+            <TourPrompt tour={mehfilTour} featureName="Mehfil" />
         </div>
     );
 };
