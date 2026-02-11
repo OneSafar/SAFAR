@@ -65,7 +65,7 @@ const AppsGrid = () => {
             {/* White Dashboard Container Box - Glassmorphism */}
             <Link to="/dashboard" className="group block w-full max-w-2xl mx-auto">
                 <div className="rounded-xl border border-white/1 dark:border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md hover:bg-white/6 dark:hover:bg-white/10 transition-all duration-300 py-5 px-10 flex items-center justify-center shadow-lg shadow-slate-200/50 dark:shadow-black/20 hover:scale-[1.02] hover:shadow-xl">
-                    <span className="text-white text-sm md:text-base font-bold px-8 py-2 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 shadow-md group-hover:shadow-orange-400/50 group-hover:from-orange-500 group-hover:to-orange-700 transition-all">Go to Dashboard</span>
+                    <span className="text-white text-sm md:text-base font-bold px-8 py-2 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-600 shadow-md group-hover:shadow-cyan-400/50 group-hover:from-cyan-500 group-hover:to-cyan-700 transition-all">Go to Dashboard</span>
                 </div>
             </Link>
         </div>

@@ -102,7 +102,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ user, setIsAuthModalOpen }) =
                         ) : (
                             <button
                                 onClick={() => setIsAuthModalOpen(true)}
-                                className="px-5 py-2.5 md:px-7 md:py-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm md:text-base shadow-lg shadow-amber-500/30 border-2 border-white/20 hover:shadow-xl hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 relative overflow-hidden group"
+                                className="px-5 py-2.5 md:px-7 md:py-3 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-600 text-white font-semibold text-sm md:text-base shadow-lg shadow-cyan-500/30 border-2 border-white/20 hover:shadow-xl hover:shadow-cyan-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 relative overflow-hidden group"
                             >
                                 <span className="relative z-10">Sign In</span>
                                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
@@ -144,7 +144,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ user, setIsAuthModalOpen }) =
                     <div className="flex flex-col sm:flex-row gap-4 md:gap-5 w-full sm:w-auto">
                         <Link
                             to="/dashboard"
-                            className="group relative flex items-center justify-center gap-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 md:px-10 md:py-5 rounded-full font-semibold text-base md:text-lg transition-all duration-300 hover:-translate-y-1 active:translate-y-0 overflow-hidden shadow-lg shadow-amber-500/40 hover:shadow-xl hover:shadow-amber-500/50 border-2 border-white/20"
+                            className="group relative flex items-center justify-center gap-3 bg-gradient-to-r from-cyan-400 to-cyan-600 text-white px-8 py-4 md:px-10 md:py-5 rounded-full font-semibold text-base md:text-lg transition-all duration-300 hover:-translate-y-1 active:translate-y-0 overflow-hidden shadow-lg shadow-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/50 border-2 border-white/20"
                         >
                             <span className="relative z-10">Start your Safar</span>
                             <ArrowRight className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:translate-x-1" />

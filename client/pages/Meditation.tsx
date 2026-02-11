@@ -381,20 +381,21 @@ export default function Meditation() {
                 )}
 
                 {/* ═══════ LEFT SIDEBAR ═══════ */}
-                <aside className="hidden lg:flex flex-col w-[260px] min-w-[260px] border-r border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 gap-4 overflow-y-auto">
-                    {/* Meditation Hero Image */}
-                    <div className="rounded-2xl overflow-hidden shadow-lg ring-1 ring-slate-200/30 dark:ring-white/5">
-                        <img src={meditationBg} alt="Meditation" className="w-full h-auto object-cover" />
-                    </div>
-
-                    {/* Selected Session Quick Info */}
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-500/20">
-                        <h3 className="font-bold text-slate-800 dark:text-white text-sm mb-1">{selectedSession.title}</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{selectedSession.description}</p>
-                        <div className="flex items-center gap-2 mt-3">
-                            <Clock className="w-3.5 h-3.5 text-emerald-500" />
-                            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{selectedSession.duration} min</span>
-                        </div>
+                <aside className="hidden lg:flex flex-col w-[406px] min-w-[406px] border-r border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 gap-4 overflow-y-auto">
+                    {/* Banner - Clickable Link to Payment Page */}
+                    <div className="flex flex-col gap-2">
+                        <a
+                            href="https://www.parmaracademy.in/courses/75-safar-30"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 ring-2 ring-cyan-400/60"
+                            style={{
+                                boxShadow: '0 0 15px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2)',
+                            }}
+                        >
+                            <img src="/Banner.jpeg" alt="Safar Course Banner" className="w-full h-auto object-cover" />
+                        </a>
+                        <p className="text-center text-xs text-slate-500 dark:text-slate-400 font-medium mt-2">Click here to know more</p>
                     </div>
 
                     {/* Audio Library Placeholder */}
@@ -406,14 +407,6 @@ export default function Meditation() {
                             <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">Audio Library</p>
                             <p className="text-xs text-slate-300 dark:text-slate-600 mt-1">Coming Soon</p>
                         </div>
-                    </div>
-
-                    {/* Banner Placeholder */}
-                    <div className="rounded-2xl border-2 border-dashed border-slate-200/70 dark:border-white/10 p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[80px]">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center">
-                            <Image className="w-4 h-4 text-slate-400" />
-                        </div>
-                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">Banners</p>
                     </div>
                 </aside>
 
@@ -431,7 +424,7 @@ export default function Meditation() {
 
                     {/* Center Content */}
                     <div className="relative z-10 flex flex-col items-center gap-5 max-w-md">
-                        {/* Meditating Lady Silhouette as Logo */}
+                        {/* Meditation Image */}
                         <div className="relative">
                             <div className="absolute inset-0 bg-gradient-to-b from-sky-300/30 to-transparent rounded-3xl blur-2xl scale-125" />
                             <img
@@ -442,10 +435,10 @@ export default function Meditation() {
                             />
                         </div>
 
-                        {/* Session Title */}
+                        {/* Dhyan Section Description */}
                         <div className="text-center mt-2">
-                            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-1">{selectedSession.title}</h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">{selectedSession.description}</p>
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-2">Dhyan</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">A mindful space to breathe, relax, and restore inner calm through guided breathing techniques.</p>
                         </div>
 
                         {/* Timer Display */}

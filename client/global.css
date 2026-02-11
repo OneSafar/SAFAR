@@ -667,6 +667,19 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
+/* Banner Glow Animation */
+@keyframes glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(34, 211, 238, 0.6), 0 0 50px rgba(34, 211, 238, 0.3), 0 0 70px rgba(34, 211, 238, 0.15);
+  }
+}
+
 /* Perk Card Active Border Pulse Animations */
 .perk-card-active-aura {
   animation: pulse-border-aura 2s ease-in-out infinite;

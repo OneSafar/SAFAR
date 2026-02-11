@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import TopNavbar from "./TopNavbar";
 import LeftSidebar from "./LeftSidebar";
+import GlobalPageFooter from "./GlobalPageFooter";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -24,6 +25,7 @@ export default function MainLayout({
         <TopNavbar userName={userName} userAvatar={userAvatar} onLogout={onLogout} />
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-0 text-slate-800 dark:text-slate-100">
           {children}
+          <GlobalPageFooter />
         </main>
       </div>
     </div>

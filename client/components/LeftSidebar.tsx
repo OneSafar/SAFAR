@@ -117,6 +117,16 @@ export default function LeftSidebar() {
               Take breaks, stay balanced, succeed sustainably.
             </p>
           </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Write to us</p>
+            <a
+              href="mailto:safarparmar0@gmail.com"
+              className="text-base font-medium text-[#6EE7B7] hover:text-teal-500 transition-colors"
+            >
+              safarparmar0@gmail.com
+            </a>
+          </div>
         </div>
       </aside>
 

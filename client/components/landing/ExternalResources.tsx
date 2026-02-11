@@ -8,7 +8,7 @@ const ExternalResources = () => {
         <section className="bg-slate-50 dark:bg-midnight px-4 md:px-12 py-12 md:py-20 relative z-10">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-8 md:mb-12">
-                    <span className="inline-block px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-full text-sm font-semibold mb-4">
+                    <span className="inline-block px-6 py-3 bg-gradient-to-r from-cyan-400 to-cyan-600 text-white rounded-full text-lg font-semibold mb-6 shadow-lg shadow-cyan-500/30 border-2 border-white/20">
                         Resources
                     </span>
 
