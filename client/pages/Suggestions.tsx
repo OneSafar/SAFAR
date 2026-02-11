@@ -60,8 +60,8 @@ export default function Suggestions() {
 
         {/* Background Ambient Glows */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-secondary/20 rounded-full blur-[120px] animate-pulse-slow"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-primary/10 rounded-full blur-[100px] animate-pulse-slower"></div>
+          <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bg-secondary/20 rounded-full blur-[120px] animate-pulse-slow"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] bg-primary/10 rounded-full blur-[100px] animate-pulse-slower"></div>
         </div>
 
         {/* Top Navigation / Header Spacer is handled by MainLayout, but we can add a subtle gradient at top */}

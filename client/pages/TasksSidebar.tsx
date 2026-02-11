@@ -43,7 +43,7 @@ const TasksSidebar: React.FC<TasksSidebarProps> = ({ isOpen, onClose }) => {
                 className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
                 onClick={onClose}
             />
-            <div className="fixed inset-y-0 right-0 w-80 bg-background/95 backdrop-blur-xl border-l border-white/10 shadow-2xl z-50 p-6 flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="fixed inset-y-0 right-0 w-80 max-w-[90vw] bg-background/95 backdrop-blur-xl border-l border-white/10 shadow-2xl z-50 p-6 flex flex-col animate-in slide-in-from-right duration-300">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-xl font-bold font-['Poppins']">Tasks</h2>
                     <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
