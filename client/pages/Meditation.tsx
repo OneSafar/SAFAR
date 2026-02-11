@@ -382,9 +382,9 @@ export default function Meditation() {
                 )}
 
                 {/* ═══════ LEFT SIDEBAR ═══════ */}
-                <aside className="hidden lg:flex flex-col w-[406px] min-w-[406px] border-r border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 gap-4 overflow-y-auto">
+                <aside className="hidden lg:flex flex-col w-[406px] min-w-[406px] border-r border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 gap-4">
                     {/* Course Banner with In-App Payment */}
-                    <CourseBanner 
+                    <CourseBanner
                         user={user ? { name: user.name, email: user.email } : null}
                         courseId="safar-30"
                     />
@@ -479,7 +479,7 @@ export default function Meditation() {
                 </section>
 
                 {/* ═══════ RIGHT SIDEBAR — Breathing Techniques ═══════ */}
-                <aside className="hidden md:flex flex-col w-[300px] min-w-[300px] border-l border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 overflow-y-auto">
+                <aside className="hidden md:flex flex-col w-[300px] min-w-[300px] border-l border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4">
                     <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Breathing Techniques</h3>
 
                     <div data-tour="session-cards" className="flex flex-col gap-3">

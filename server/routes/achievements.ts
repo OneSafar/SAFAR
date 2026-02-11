@@ -10,12 +10,22 @@ const router = Router();
 // ========================================
 
 const ACHIEVEMENT_DEFINITIONS = [
+    // GOAL COMPLETION BADGES - Based on total goals completed
+    { id: 'G001', name: 'Alpha Finisher', type: 'badge', category: 'goals', tier: 1, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 10 }), display_priority: 15 },
+    { id: 'G002', name: 'Finish Line', type: 'badge', category: 'goals', tier: 2, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 25 }), display_priority: 25 },
+    { id: 'G003', name: 'Goal Slayer', type: 'badge', category: 'goals', tier: 3, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 50 }), display_priority: 35 },
+    { id: 'G004', name: 'The Closer', type: 'badge', category: 'goals', tier: 4, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 100 }), display_priority: 45 },
+
     // FOCUS BADGES - Based on total focus hours
     { id: 'F001', name: 'Focus Initiate', type: 'badge', category: 'focus', tier: 1, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 10 }), display_priority: 10 },
     { id: 'F002', name: 'Focus Adept', type: 'badge', category: 'focus', tier: 2, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 50 }), display_priority: 20 },
-    { id: 'F003', name: 'Deep Work Disciple', type: 'badge', category: 'focus', tier: 3, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 100 }), display_priority: 30 },
-    { id: 'F004', name: 'Concentration Master', type: 'badge', category: 'focus', tier: 4, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 250 }), display_priority: 40 },
-    { id: 'F005', name: 'Flow State Legend', type: 'badge', category: 'focus', tier: 5, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 500 }), display_priority: 50 },
+    { id: 'F003', name: 'A Legend', type: 'badge', category: 'focus', tier: 3, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 100 }), display_priority: 30 },
+    { id: 'F004', name: 'The Finisher', type: 'badge', category: 'focus', tier: 4, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 250 }), display_priority: 40 },
+    { id: 'F005', name: 'Dhurandhar', type: 'badge', category: 'focus', tier: 5, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 500 }), display_priority: 50 },
+
+    // CHECK-IN STREAK BADGES - Based on check-in streak
+    { id: 'S001', name: 'Unstoppable Sigma', type: 'badge', category: 'streak', tier: 1, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 7 }), display_priority: 17 },
+    { id: 'S002', name: 'Jeet Express', type: 'badge', category: 'streak', tier: 2, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 30 }), display_priority: 27 },
 ];
 
 // ========================================
@@ -50,9 +60,17 @@ async function getUserStats(userId: string) {
     });
     const goalsCompleted = (goalsResult.rows[0] as any).count || 0;
 
+    // Get check-in streak
+    const streakResult = await db.execute({
+        sql: 'SELECT check_in_streak FROM streaks WHERE user_id = ?',
+        args: [userId]
+    });
+    const checkInStreak = (streakResult.rows[0] as any)?.check_in_streak || 0;
+
     return {
         total_focus_hours: totalFocusHours,
         goals_completed: goalsCompleted,
+        check_in_streak: checkInStreak,
     };
 }
 
@@ -234,7 +252,7 @@ router.get('/', requireAuth, async (req: any, res) => {
                          ad.name, ad.type, ad.category, ad.rarity, ad.tier, ad.display_priority
                   FROM user_achievements ua
                   JOIN achievement_definitions ad ON ua.achievement_id = ad.id
-                  WHERE ua.user_id = ? AND ua.is_active = 1
+                  WHERE ua.user_id = ? AND ua.is_active = TRUE
                   ORDER BY ad.display_priority DESC`,
             args: [userId]
         });
@@ -269,7 +287,7 @@ router.get('/active-title', requireAuth, async (req: any, res) => {
                 sql: `SELECT ad.name, ad.type, ad.rarity
                       FROM user_achievements ua
                       JOIN achievement_definitions ad ON ua.achievement_id = ad.id
-                      WHERE ua.user_id = ? AND ua.achievement_id = ? AND ua.is_active = 1`,
+                      WHERE ua.user_id = ? AND ua.achievement_id = ? AND ua.is_active = TRUE`,
                 args: [userId, selectedId]
             });
 
@@ -369,14 +387,14 @@ router.get('/all', requireAuth, async (req: any, res) => {
 
         // Get user's earned achievements
         const userAchievements = await db.execute({
-            sql: `SELECT achievement_id FROM user_achievements WHERE user_id = ? AND is_active = 1`,
+            sql: `SELECT achievement_id FROM user_achievements WHERE user_id = ? AND is_active = TRUE`,
             args: [userId]
         });
         const earnedIds = new Set((userAchievements.rows as any[]).map(a => a.achievement_id));
 
         // Get holder counts
         const holderCounts = await db.execute({
-            sql: `SELECT achievement_id, COUNT(*) as count FROM user_achievements WHERE is_active = 1 GROUP BY achievement_id`,
+            sql: `SELECT achievement_id, COUNT(*) as count FROM user_achievements WHERE is_active = TRUE GROUP BY achievement_id`,
             args: []
         });
         const countsMap: Record<string, number> = {};
@@ -399,6 +417,10 @@ router.get('/all', requireAuth, async (req: any, res) => {
                 case 'goals_completed':
                     currentValue = stats.goals_completed;
                     requirementText = `${targetValue} goals completed`;
+                    break;
+                case 'check_in_streak':
+                    currentValue = stats.check_in_streak;
+                    requirementText = `${targetValue}-day check-in streak`;
                     break;
                 default:
                     requirementText = 'Special achievement';
@@ -498,15 +520,6 @@ export async function seedAchievementDefinitions() {
         }
     }
 
-    // Clean up old goal badges if they exist
-    try {
-        await db.execute({
-            sql: `DELETE FROM achievement_definitions WHERE category = 'goals'`,
-            args: []
-        });
-    } catch (e) {
-        // Ignore error
-    }
 
     console.log('✅ Achievement definitions seeded');
 }

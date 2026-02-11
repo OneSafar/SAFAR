@@ -131,7 +131,7 @@ export default function Goals() {
 
     return (
         <NishthaLayout userName={user?.name} userAvatar={user?.avatar}>
-            <div className="flex-1 h-full overflow-y-auto bg-background/95 font-['Plus_Jakarta_Sans']">
+            <div className="flex-1 bg-background/95 font-['Plus_Jakarta_Sans']">
 
                 {/* Background - matching Achievements page */}
                 <div

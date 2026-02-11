@@ -242,7 +242,7 @@ export default function Streaks() {
 
   return (
     <NishthaLayout userName={user.name} userAvatar={user.avatar}>
-      <div className="flex-1 h-full overflow-y-auto bg-background font-['Inter'] text-foreground p-6 md:p-8 transition-colors duration-300">
+      <div className="flex-1 bg-background font-['Inter'] text-foreground p-6 md:p-8 transition-colors duration-300">
         <div className="max-w-[1800px] mx-auto space-y-8">
 
           {/* Header */}

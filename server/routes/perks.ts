@@ -177,7 +177,7 @@ export async function checkPerks(userId: string, trigger?: string): Promise<{ aw
         const criteria = JSON.parse(perk.criteria_json);
         const qualifies = evaluateCriteria(criteria, stats);
         const hasPerk = currentPerks.has(perk.id);
-        const isActive = currentPerks.get(perk.id) === 1;
+        const isActive = currentPerks.get(perk.id) === true;
 
         if (qualifies && !hasPerk) {
             // Award new perk
@@ -190,14 +190,14 @@ export async function checkPerks(userId: string, trigger?: string): Promise<{ aw
         } else if (qualifies && hasPerk && !isActive) {
             // Reactivate perk (user regained criteria)
             await db.execute({
-                sql: `UPDATE user_perks SET is_active = 1, lost_at = NULL WHERE user_id = ? AND perk_id = ?`,
+                sql: `UPDATE user_perks SET is_active = TRUE, lost_at = NULL WHERE user_id = ? AND perk_id = ?`,
                 args: [userId, perk.id]
             });
             awarded.push(perk.name);
         } else if (!qualifies && hasPerk && isActive && perk.type === 'aura') {
             // Only Aura perks can be lost
             await db.execute({
-                sql: `UPDATE user_perks SET is_active = 0, lost_at = CURRENT_TIMESTAMP WHERE user_id = ? AND perk_id = ?`,
+                sql: `UPDATE user_perks SET is_active = FALSE, lost_at = CURRENT_TIMESTAMP WHERE user_id = ? AND perk_id = ?`,
                 args: [userId, perk.id]
             });
             lost.push(perk.name);
@@ -226,7 +226,7 @@ router.get('/', requireAuth, async (req: any, res) => {
                          pd.name, pd.type, pd.category, pd.rarity, pd.tier, pd.display_priority
                   FROM user_perks up
                   JOIN perk_definitions pd ON up.perk_id = pd.id
-                  WHERE up.user_id = ? AND up.is_active = 1
+                  WHERE up.user_id = ? AND up.is_active = TRUE
                   ORDER BY pd.display_priority DESC`,
             args: [userId]
         });
@@ -265,7 +265,7 @@ router.get('/active-title', requireAuth, async (req: any, res) => {
                 sql: `SELECT pd.name, pd.type, pd.rarity
                       FROM user_perks up
                       JOIN perk_definitions pd ON up.perk_id = pd.id
-                      WHERE up.user_id = ? AND up.perk_id = ? AND up.is_active = 1`,
+                      WHERE up.user_id = ? AND up.perk_id = ? AND up.is_active = TRUE`,
                 args: [userId, selectedPerkId]
             });
 
@@ -281,7 +281,7 @@ router.get('/active-title', requireAuth, async (req: any, res) => {
             sql: `SELECT pd.name, pd.type, pd.rarity, up.perk_id
                   FROM user_perks up
                   JOIN perk_definitions pd ON up.perk_id = pd.id
-                  WHERE up.user_id = ? AND up.is_active = 1 AND pd.type = 'aura'
+                  WHERE up.user_id = ? AND up.is_active = TRUE AND pd.type = 'aura'
                   ORDER BY pd.display_priority DESC
                   LIMIT 1`,
             args: [userId]
@@ -319,7 +319,7 @@ router.post('/select', requireAuth, async (req: any, res) => {
         const userPerk = await db.execute({
             sql: `SELECT up.*, pd.name, pd.type FROM user_perks up 
                   JOIN perk_definitions pd ON up.perk_id = pd.id
-                  WHERE up.user_id = ? AND up.perk_id = ? AND up.is_active = 1`,
+                  WHERE up.user_id = ? AND up.perk_id = ? AND up.is_active = TRUE`,
             args: [userId, perkId]
         });
 
@@ -361,7 +361,7 @@ router.get('/all', requireAuth, async (req: any, res) => {
 
         // Get holder counts for each perk
         const holderCounts = await db.execute({
-            sql: `SELECT perk_id, COUNT(*) as count FROM user_perks WHERE is_active = 1 GROUP BY perk_id`,
+            sql: `SELECT perk_id, COUNT(*) as count FROM user_perks WHERE is_active = TRUE GROUP BY perk_id`,
             args: []
         });
         const countsMap: Record<string, number> = {};
@@ -376,7 +376,7 @@ router.get('/all', requireAuth, async (req: any, res) => {
         });
         const userPerksMap: Record<string, boolean> = {};
         for (const row of userPerks.rows) {
-            userPerksMap[(row as any).perk_id] = (row as any).is_active === 1;
+            userPerksMap[(row as any).perk_id] = (row as any).is_active === true;
         }
 
         // Get user's current stats for progress calculation

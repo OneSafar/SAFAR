@@ -56,7 +56,7 @@ export default function Suggestions() {
   return (
     <NishthaLayout userName={user?.name} userAvatar={user?.avatar}>
       {/* Midnight Insight Theme Wrapper */}
-      <div className="flex-1 overflow-y-auto bg-background font-sans min-h-full transition-colors duration-300 relative scroll-smooth selection:bg-primary selection:text-primary-foreground">
+      <div className="flex-1 bg-background font-sans min-h-full transition-colors duration-300 relative scroll-smooth selection:bg-primary selection:text-primary-foreground">
 
         {/* Background Ambient Glows */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">

@@ -128,7 +128,7 @@ export default function CheckIn() {
 
   return (
     <NishthaLayout userName={user.name} userAvatar={user.avatar}>
-      <div className="flex-1 overflow-y-auto w-full h-full bg-background font-['Plus_Jakarta_Sans'] p-4 md:p-8 lg:p-10 relative selection:bg-primary/30 selection:text-primary transition-colors duration-300">
+      <div className="flex-1 w-full bg-background font-['Plus_Jakarta_Sans'] p-4 md:p-8 lg:p-10 relative selection:bg-primary/30 selection:text-primary transition-colors duration-300">
 
         {/* Deep Space Ambient Glows */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">

@@ -13,7 +13,7 @@ import { goalRoutes } from "./routes/goals";
 import { streakRoutes } from "./routes/streaks";
 import { focusSessionRoutes } from "./routes/focus-sessions";
 import { achievementRoutes, seedAchievementDefinitions } from "./routes/achievements";
-import { initDatabase } from "./db";
+import { initDatabase, fixAchievementSchema } from "./db";
 import { setupMehfilSocket } from "./routes/mehfil-socket";
 import { paymentRoutes } from "./routes/payments";
 
@@ -22,9 +22,12 @@ export async function createServer() {
 
   // Initialize DB (async for Turso)
   await initDatabase();
+  await fixAchievementSchema();
 
   // Seed achievement definitions
   await seedAchievementDefinitions();
+  const { seedPerkDefinitions } = await import("./routes/perks");
+  await seedPerkDefinitions();
 
   // Middleware
   app.use(cors({

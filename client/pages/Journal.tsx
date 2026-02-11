@@ -260,7 +260,7 @@ export default function Journal() {
         <div className="relative z-10 flex flex-col lg:flex-row h-full overflow-auto">
 
           {/* Editor Section - Main Area */}
-          <section className="flex-[2] min-w-0 p-4 md:p-6 lg:p-10 overflow-y-auto relative">
+          <section className="flex-[2] min-w-0 p-4 md:p-6 lg:p-10 relative">
             {/* Writing glow effect */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(16,185,129,0.06),transparent_60%)] dark:bg-[radial-gradient(circle_at_50%_10%,rgba(16,185,129,0.08),transparent_60%)] pointer-events-none" />
 
@@ -377,7 +377,7 @@ export default function Journal() {
 
           {/* Right Sidebar - Daily Inspiration & History */}
           {/* Right Sidebar - Daily Inspiration & History */}
-          <aside className="w-full lg:w-[400px] lg:flex-shrink-0 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-[#151515]/90 backdrop-blur-sm p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-6 lg:flex lg:flex-col lg:gap-6 lg:space-y-0">
+          <aside className="w-full lg:w-[400px] lg:flex-shrink-0 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-[#151515]/90 backdrop-blur-sm p-4 md:p-6 space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-6 lg:flex lg:flex-col lg:gap-6 lg:space-y-0">
 
             {/* Daily Inspiration Card */}
             <div data-tour="daily-inspiration" className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 relative overflow-hidden group shadow-lg shadow-slate-200/50 dark:shadow-black/20 hover:shadow-xl hover:shadow-violet-500/5 dark:hover:shadow-violet-500/10 transition-all duration-300">

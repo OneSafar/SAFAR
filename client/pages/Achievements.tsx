@@ -44,6 +44,25 @@ const categoryIcons: Record<string, any> = {
     focus: Clock,
     goals: Target,
     emotional: Heart,
+    streak: RefreshCw,
+};
+
+// Achievement badge images - mythological theme mapping
+const achievementImages: Record<string, string> = {
+    // Goals - Completion themed
+    'G001': '/Achievments/Gemini_Generated_Image_u283ydu283ydu283.png', // Alpha Finisher - Om
+    'G002': '/Achievments/Gemini_Generated_Image_lx76w4lx76w4lx76.png', // Finish Line - Vortex
+    'G003': '/Achievments/Gemini_Generated_Image_cz5vl6cz5vl6cz5v.png', // Goal Slayer - Cornucopia
+    'G004': '/Achievments/Gemini_Generated_Image_go9g49go9g49go9g.png', // The Closer - Tree of Life
+
+    // Focus - Power and mastery themed
+    'F003': '/Achievments/Gemini_Generated_Image_wf9x2ywf9x2ywf9x.png', // A Legend - Rocket
+    'F004': '/Achievments/Gemini_Generated_Image_gvsik4gvsik4gvsi.png', // The Finisher - Fire
+    'F005': '/Achievments/Gemini_Generated_Image_7bbkx77bbkx77bbk.png', // Dhurandhar - Trishul
+
+    // Streak - Consistency themed
+    'S001': '/Achievments/Gemini_Generated_Image_wkkzj5wkkzj5wkkz.png', // Unstoppable Sigma - Compass
+    'S002': '/Achievments/Gemini_Generated_Image_pc5a9ppc5a9ppc5a.png', // Jeet Express - Dharma Wheel
 };
 
 export default function Achievements() {
@@ -136,7 +155,7 @@ export default function Achievements() {
 
     return (
         <MainLayout userName={user?.name} userAvatar={user?.avatar}>
-            <div className="flex-1 h-full overflow-y-auto bg-background/95 font-['Poppins']">
+            <div className="flex-1 bg-background/95 font-['Poppins']">
                 {/* Background */}
                 <div
                     className="fixed inset-0 pointer-events-none z-0"
@@ -269,6 +288,17 @@ export default function Achievements() {
                                                 {style.label}
                                             </span>
                                         </div>
+
+                                        {/* Badge Image - Mythological Symbol */}
+                                        {achievementImages[achievement.id] && (
+                                            <div className="flex justify-center mb-4">
+                                                <img
+                                                    src={achievementImages[achievement.id]}
+                                                    alt={achievement.name}
+                                                    className={`w-20 h-20 object-contain transition-all ${!achievement.earned ? 'grayscale opacity-40' : ''}`}
+                                                />
+                                            </div>
+                                        )}
 
                                         {/* Achievement Name */}
                                         <h3 className="font-bold text-lg text-foreground mb-1">{achievement.name}</h3>

@@ -181,7 +181,7 @@ export default function Dashboard() {
 
     return (
         <MainLayout userName={user.name} userAvatar={user.avatar} hideSidebar={true}>
-            <div className="flex-1 h-full overflow-y-auto bg-background/95 font-['Plus_Jakarta_Sans'] transition-colors duration-300">
+            <div className="flex-1 bg-background/95 font-['Plus_Jakarta_Sans'] transition-colors duration-300">
                 {/* Background Gradient */}
                 <div
                     className="fixed inset-0 pointer-events-none z-0"

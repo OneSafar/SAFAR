@@ -264,7 +264,7 @@ export async function initDatabase() {
             name TEXT NOT NULL,
             description TEXT,
             type TEXT CHECK(type IN ('badge', 'title')) NOT NULL,
-            category TEXT CHECK(category IN ('focus', 'goals', 'emotional')) NOT NULL,
+            category TEXT CHECK(category IN ('focus', 'goals', 'emotional', 'streak')) NOT NULL,
             rarity TEXT CHECK(rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary', 'special')),
             tier INTEGER,
             criteria_json TEXT NOT NULL DEFAULT '{}',
@@ -435,8 +435,32 @@ export async function initDatabase() {
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_enrollments_user_course ON course_enrollments(user_id, course_id)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_transaction_logs_order ON transaction_logs(order_id)`);
 
-        console.log('Database initialized successfully (PostgreSQL)');
     }, 'Database initialization', 3, 3000);
+}
+
+// Fix for schema mismatch - allow 'streak' category
+export async function fixAchievementSchema() {
+    return withRetry(async () => {
+        console.log('🔄 Checking achievement schema...');
+        try {
+            // Drop old constraint
+            await pool.query(`
+                ALTER TABLE achievement_definitions 
+                DROP CONSTRAINT IF EXISTS achievement_definitions_category_check
+            `);
+
+            // Add new constraint
+            await pool.query(`
+                ALTER TABLE achievement_definitions 
+                ADD CONSTRAINT achievement_definitions_category_check 
+                CHECK (category IN ('focus', 'goals', 'emotional', 'streak'))
+            `);
+
+            console.log('✅ Achievement schema updated (streak category allowed)');
+        } catch (err: any) {
+            console.warn('⚠️  Schema update warning:', err.message);
+        }
+    }, 'Schema fix', 3, 1000);
 }
 
 // Graceful shutdown
