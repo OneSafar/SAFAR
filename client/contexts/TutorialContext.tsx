@@ -55,7 +55,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   return (
     <TutorialContext.Provider value={value}>
       {children}
-      {!["/login", "/signup", "/forgot-password"].includes(location.pathname) && (
+      {!["/login", "/signup", "/forgot-password", "/reset-password"].includes(location.pathname) && (
         <TutorialFab hasSeenTutorial={hasSeenTutorial} onOpenTutorial={() => setOpen(true)} />
       )}
       <TutorialDialog open={open} onOpenChange={handleOpenChange} />

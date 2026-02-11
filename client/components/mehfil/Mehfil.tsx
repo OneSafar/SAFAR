@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useChatStore } from '@/store/chatStore';
+import { useMehfilStore } from '@/store/mehfilStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { authService } from '@/utils/authService';
-import MessageCard from './MessageCard';
+import ThoughtCard from './ThoughtCard';
 import Composer from './Composer';
-import LeftSidebar from './LeftSidebar';
-import RightSidebar from './RightSidebar';
-import { Contrast, Search, Settings, LogOut, Home, HelpCircle, Menu, Info } from 'lucide-react';
+import { Contrast, Search, Settings, LogOut, Home, HelpCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,18 +19,27 @@ import { Button } from "@/components/ui/button";
 import { useGuidedTour } from "@/contexts/GuidedTourContext";
 import { mehfilTour } from "@/components/guided-tour/tourSteps";
 import { TourPrompt } from "@/components/guided-tour";
-import BottomSheet from '@/components/ui/bottom-sheet';
-import FloatingActionButton from '@/components/ui/floating-action-button';
 
 interface MehfilProps {
     backendUrl?: string;
 }
 
-const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' }) => {
+const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:8080' }) => {
     const navigate = useNavigate();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [user, setUser] = useState<any>(null);
     const { theme, toggleTheme } = useTheme();
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const {
+        thoughts,
+        userReactions,
+        setThoughts,
+        addThought,
+        updateRelatableCount,
+        toggleUserReaction,
+        setUserReactions,
+    } = useMehfilStore();
 
     const handleLogout = async () => {
         try {
@@ -65,18 +72,6 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
     // Guided tour integration
     const { startTour } = useGuidedTour();
 
-    const {
-        topics,
-        messages,
-        currentTopicId,
-        sessionId,
-        setTopics,
-        setMessages,
-        setCurrentTopic,
-        addMessage,
-        updateRelatableCount,
-    } = useChatStore();
-
     // Initialize Socket.IO connection
     useEffect(() => {
         const newSocket = io(backendUrl, {
@@ -87,33 +82,37 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
         });
 
         newSocket.on('connect', () => {
-            console.log('Connected to Mehfil chat server');
-            newSocket.emit('topic:load');
+            console.log('Connected to Mehfil server');
+            newSocket.emit('thoughts:load');
         });
 
-        newSocket.on('topic:list', (topicList) => {
-            setTopics(topicList);
-            if (topicList.length > 0 && !currentTopicId) {
-                setCurrentTopic(topicList[0].id);
-                // Load messages for first topic
-                newSocket.emit('topic:select', topicList[0].id);
+        newSocket.on('thoughts:list', (thoughtList) => {
+            setThoughts(thoughtList);
+            
+            // Load user reactions for these thoughts
+            if (user?.id && thoughtList.length > 0) {
+                const thoughtIds = thoughtList.map((t: any) => t.id);
+                newSocket.emit('thoughts:get_user_reactions', {
+                    userId: user.id,
+                    thoughtIds
+                });
             }
         });
 
-        newSocket.on('topic:messages', (messageList) => {
-            setMessages(messageList);
+        newSocket.on('thought:new', (thought) => {
+            addThought(thought);
         });
 
-        newSocket.on('message:new', (message) => {
-            addMessage(message);
+        newSocket.on('thought:reaction_updated', ({ thoughtId, relatableCount }) => {
+            updateRelatableCount(thoughtId, relatableCount);
         });
 
-        newSocket.on('poll:updated', ({ messageId, relatableCount }) => {
-            updateRelatableCount(messageId, relatableCount);
+        newSocket.on('thoughts:user_reactions', (reactedThoughtIds: string[]) => {
+            setUserReactions(reactedThoughtIds);
         });
 
         newSocket.on('disconnect', () => {
-            console.log('Disconnected from Mehfil chat server');
+            console.log('Disconnected from Mehfil server');
         });
 
         setSocket(newSocket);
@@ -121,52 +120,42 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
         return () => {
             newSocket.close();
         };
-    }, [backendUrl, setTopics, setMessages, setCurrentTopic, addMessage, updateRelatableCount, currentTopicId]);
+    }, [backendUrl, setThoughts, addThought, updateRelatableCount, setUserReactions, user?.id]);
 
-    // Emit topic:select when currentTopicId changes to load messages from database
-    useEffect(() => {
-        if (socket && currentTopicId) {
-            socket.emit('topic:select', currentTopicId);
-        }
-    }, [socket, currentTopicId]);
-
-    const handleSendMessage = (text: string, imageUrl?: string) => {
-        // Emit to server - the message will be added when server broadcasts 'message:new'
-        if (socket && currentTopicId) {
-            socket.emit('message:create', {
-                topicId: currentTopicId,
-                text,
+    const handleSendThought = (content: string, imageUrl?: string) => {
+        if (socket && user) {
+            socket.emit('thought:create', {
+                userId: user.id,
+                authorName: user.name,
+                authorAvatar: user.avatar,
+                content,
                 imageUrl,
-                sessionId,
-                author: user?.name || 'Anonymous',
-                userId: user?.id || null,
             });
         }
     };
 
-    const handleRelate = (messageId: string, option: number) => {
-        if (!socket) return;
-        socket.emit('poll:vote', { messageId, sessionId, option });
+    const handleReact = (thoughtId: string) => {
+        if (!socket || !user) return;
+        socket.emit('thought:react', {
+            thoughtId,
+            userId: user.id,
+        });
+        toggleUserReaction(thoughtId);
     };
 
-    const [searchTerm, setSearchTerm] = useState('');
-    const [showLeftSidebar, setShowLeftSidebar] = useState(false);
-    const [showRightSidebar, setShowRightSidebar] = useState(false);
-
-    const currentMessages = messages
-        .filter((m) => m.topicId === currentTopicId)
-        .filter((m) => m.text.toLowerCase().includes(searchTerm.toLowerCase()) || m.author.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredThoughts = thoughts.filter((t) =>
+        t.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.authorName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 text-foreground selection:bg-teal-200/50 overflow-x-hidden font-sans">
-            {/* Gradient Blobs Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 bg-[#f8fafc] dark:bg-slate-950">
                 <div className="gradient-blob bg-teal-400/30 dark:bg-teal-500/20 w-[800px] h-[800px] -top-64 -left-32"></div>
                 <div className="gradient-blob bg-indigo-300/30 dark:bg-indigo-500/20 w-[600px] h-[600px] top-1/2 -right-32"></div>
                 <div className="gradient-blob bg-sky-300/30 dark:bg-sky-500/20 w-[500px] h-[500px] bottom-0 left-1/3 opacity-40"></div>
             </div>
 
-            {/* Floating Navbar */}
             <nav className="fixed top-4 left-4 right-4 h-16 glass-2-0 rounded-2xl z-50 px-6 flex items-center justify-between border border-white/40 dark:border-white/10 shadow-lg shadow-black/5">
                 <Link to="/landing" className="flex items-center gap-3 group cursor-pointer text-inherit no-underline">
                     <div className="relative flex items-center justify-center">
@@ -186,7 +175,7 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm w-96 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500/50 transition-all focus:outline-none placeholder:text-slate-400 text-slate-900 dark:text-slate-100"
-                        placeholder="Search discussions, topics, and pools..."
+                        placeholder="Search thoughts..."
                         type="text"
                     />
                 </div>
@@ -219,7 +208,7 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
                                         <p className="text-sm font-bold leading-none text-slate-900 dark:text-slate-100 group-hover:text-teal-600 transition-colors">
                                             {user?.name || 'Guest User'}
                                         </p>
-                                        <p className="text-[10px] text-slate-500 font-semibold mt-0.5 tracking-wide uppercase">Beta Member</p>
+                                        <p className="text-[10px] text-slate-500 font-semibold mt-0.5 tracking-wide uppercase">Member</p>
                                     </div>
                                     <Avatar className="w-10 h-10 border-2 border-white dark:border-slate-700 shadow-sm cursor-pointer transition-transform group-hover:scale-105">
                                         <AvatarImage src={user?.avatar} />
@@ -245,99 +234,30 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl = 'http://localhost:3000' })
                 </div>
             </nav>
 
-            {/* Main Content Layout */}
-            <div className="w-full px-6 lg:px-8 xl:px-12 pt-28 pb-12 flex gap-8 min-h-screen">
-                {/* Left Sidebar */}
-                <div data-tour="topic-sidebar">
-                    <LeftSidebar socket={socket} userId={user?.id} />
-                </div>
+            <div className="w-full max-w-4xl mx-auto px-6 pt-28 pb-12">
+                <main className="scrollbar-blend">
+                    <Composer onSendThought={handleSendThought} userAvatar={user?.avatar} />
 
-                {/* Main Feed */}
-                <main className="flex-1 max-w-6xl scrollbar-blend">
-                    <div data-tour="message-composer">
-                        <Composer onSendMessage={handleSendMessage} />
-                    </div>
-
-                    <div data-tour="message-feed" className="space-y-6">
-                        {currentMessages.length === 0 ? (
-                            // Demo content if empty
-                            <>
-                                <MessageCard
-                                    message={{
-                                        id: 'demo1',
-                                        topicId: '1',
-                                        author: 'John Doe',
-                                        text: "Honestly, balancing finals prep with part-time work feels impossible right now. Does anyone else feel like they're just running on caffeine and hope? ☕️😩",
-                                        relatableCount: 521,
-                                        flagCount: 0,
-                                        createdAt: new Date(Date.now() - 7200000).toISOString()
-                                    }}
-                                    onRelate={() => { }}
-                                    userVote={1}
-                                />
-                                <MessageCard
-                                    message={{
-                                        id: 'demo2',
-                                        topicId: '1',
-                                        author: 'Sarah A.',
-                                        text: "Is anyone else finding the new campus library hours really inconvenient? I can barely get any work done. It closes at 8 PM now instead of midnight! 📚😤",
-                                        relatableCount: 120,
-                                        flagCount: 0,
-                                        createdAt: new Date(Date.now() - 900000).toISOString()
-                                    }}
-                                    onRelate={() => { }}
-                                />
-                            </>
+                    <div className="space-y-6">
+                        {filteredThoughts.length === 0 ? (
+                            <div className="text-center py-12">
+                                <p className="text-slate-400 text-lg">No thoughts yet. Be the first to share!</p>
+                            </div>
                         ) : (
-                            currentMessages.map((message) => (
-                                <MessageCard
-                                    key={message.id}
-                                    message={message}
-                                    onRelate={(option) => handleRelate(message.id, option)}
+                            filteredThoughts.map((thought) => (
+                                <ThoughtCard
+                                    key={thought.id}
+                                    thought={thought}
+                                    onReact={() => handleReact(thought.id)}
+                                    hasReacted={userReactions.has(thought.id)}
+                                    isOwnThought={thought.userId === user?.id}
                                 />
                             ))
                         )}
                     </div>
                 </main>
-
-                {/* Right Sidebar */}
-                <RightSidebar socket={socket} />
             </div>
 
-            {/* Mobile FABs for Sidebars */}
-            <div className="lg:hidden xl:hidden">
-                <FloatingActionButton
-                    onClick={() => setShowLeftSidebar(true)}
-                    icon={<Menu className="w-5 h-5" />}
-                    label="Topics"
-                    position="bottom-left"
-                />
-                <FloatingActionButton
-                    onClick={() => setShowRightSidebar(true)}
-                    icon={<Info className="w-5 h-5" />}
-                    label="Info"
-                    position="bottom-right"
-                />
-            </div>
-
-            {/* Mobile Bottom Sheets */}
-            <BottomSheet
-                isOpen={showLeftSidebar}
-                onClose={() => setShowLeftSidebar(false)}
-                title="Topics & Filters"
-            >
-                <LeftSidebar socket={socket} />
-            </BottomSheet>
-
-            <BottomSheet
-                isOpen={showRightSidebar}
-                onClose={() => setShowRightSidebar(false)}
-                title="Community Info"
-            >
-                <RightSidebar socket={socket} />
-            </BottomSheet>
-
-            {/* Tour Prompt */}
             <TourPrompt tour={mehfilTour} featureName="Mehfil" />
         </div>
     );

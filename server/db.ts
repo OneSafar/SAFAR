@@ -181,6 +181,26 @@ export async function initDatabase() {
         )
     `);
 
+        // Password reset tokens
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token_hash TEXT UNIQUE NOT NULL,
+            expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            used_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+    `);
+        await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id
+        ON password_reset_tokens(user_id)
+    `);
+        await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires_at
+        ON password_reset_tokens(expires_at)
+    `);
+
         // Login/Activity history
         await pool.query(`
         CREATE TABLE IF NOT EXISTS login_history (
@@ -265,86 +285,55 @@ export async function initDatabase() {
         )
     `);
 
-        // Mehfil topics table
-        await pool.query(`
-        CREATE TABLE IF NOT EXISTS mehfil_topics (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT,
-            message_count INTEGER DEFAULT 0,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        )
-    `);
+        // ═══════════════════════════════════════════════════════════
+        // Mehfil - Thought Sharing Platform
+        // ═══════════════════════════════════════════════════════════
 
-        // Mehfil messages table
+        // Mehfil thoughts table - stores user thoughts/posts
         await pool.query(`
-        CREATE TABLE IF NOT EXISTS mehfil_messages (
+        CREATE TABLE IF NOT EXISTS mehfil_thoughts (
             id TEXT PRIMARY KEY,
-            topic_id TEXT NOT NULL REFERENCES mehfil_topics(id),
-            author TEXT NOT NULL,
-            text TEXT NOT NULL,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            author_name TEXT NOT NULL,
+            author_avatar TEXT,
+            content TEXT NOT NULL,
             image_url TEXT,
             relatable_count INTEGER DEFAULT 0,
-            flag_count INTEGER DEFAULT 0,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         )
     `);
 
-        // Mehfil votes table
+        // Mehfil reactions table - tracks who reacted to which thought
         await pool.query(`
-        CREATE TABLE IF NOT EXISTS mehfil_votes (
+        CREATE TABLE IF NOT EXISTS mehfil_reactions (
             id TEXT PRIMARY KEY,
-            message_id TEXT NOT NULL REFERENCES mehfil_messages(id),
-            session_id TEXT NOT NULL,
-            vote_option INTEGER NOT NULL,
+            thought_id TEXT NOT NULL REFERENCES mehfil_thoughts(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            UNIQUE(message_id, session_id)
+            UNIQUE(thought_id, user_id)
         )
     `);
 
-        // Mehfil communities table
+        // Indexes for performance
         await pool.query(`
-        CREATE TABLE IF NOT EXISTS mehfil_communities (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT,
-            creator_id TEXT REFERENCES users(id),
-            member_count INTEGER DEFAULT 1,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        )
+        CREATE INDEX IF NOT EXISTS idx_mehfil_thoughts_user_id 
+        ON mehfil_thoughts(user_id)
     `);
 
-        // Mehfil community members table
         await pool.query(`
-        CREATE TABLE IF NOT EXISTS mehfil_community_members (
-            community_id TEXT NOT NULL REFERENCES mehfil_communities(id) ON DELETE CASCADE,
-            user_id TEXT NOT NULL REFERENCES users(id),
-            joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            PRIMARY KEY (community_id, user_id)
-        )
+        CREATE INDEX IF NOT EXISTS idx_mehfil_thoughts_created_at 
+        ON mehfil_thoughts(created_at DESC)
     `);
 
-        // Add user_id column to mehfil_messages if not present (for top contributors tracking)
         await pool.query(`
-        DO $$ BEGIN
-            ALTER TABLE mehfil_messages ADD COLUMN user_id TEXT REFERENCES users(id);
-        EXCEPTION
-            WHEN duplicate_column THEN NULL;
-        END $$;
+        CREATE INDEX IF NOT EXISTS idx_mehfil_reactions_thought_id 
+        ON mehfil_reactions(thought_id)
     `);
 
-        // Seed default topics if none exist
-        const existingTopics = await pool.query(`SELECT COUNT(*) as count FROM mehfil_topics`);
-        if (parseInt(existingTopics.rows[0]?.count) === 0) {
-            await pool.query(`
-            INSERT INTO mehfil_topics (id, name, description) VALUES
-            ('1', 'General', 'General discussions and thoughts'),
-            ('2', 'Study Tips', 'Share your study strategies'),
-            ('3', 'Stress Relief', 'Support for stressful times'),
-            ('4', 'Achievements', 'Celebrate your wins')
-        `);
-            console.log('Seeded default Mehfil topics');
-        }
+        await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_mehfil_reactions_user_id 
+        ON mehfil_reactions(user_id)
+    `);
 
         console.log('Database initialized successfully (PostgreSQL)');
     }, 'Database initialization', 3, 3000);

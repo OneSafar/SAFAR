@@ -115,21 +115,23 @@ export const authService = {
         }
     },
 
-    async checkEmailExists(email: string): Promise<boolean> {
-        const response = await fetch("/api/auth/check-email", {
+    async requestPasswordReset(email: string): Promise<void> {
+        const response = await fetch("/api/auth/forgot-password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
         });
-        const data = await response.json();
-        return data.exists;
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to request password reset");
+        }
     },
 
-    async resetPassword(email: string, newPassword: string): Promise<void> {
-        const response = await fetch("/api/auth/reset-password", {
+    async confirmPasswordReset(token: string, newPassword: string): Promise<void> {
+        const response = await fetch("/api/auth/reset-password/confirm", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, newPassword }),
+            body: JSON.stringify({ token, newPassword }),
         });
         if (!response.ok) {
             const error = await response.json();

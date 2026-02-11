@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +10,29 @@ import { ArrowLeft, KeyRound, Mail, Eye, EyeOff } from "lucide-react";
 
 export default function ForgotPassword() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [step, setStep] = useState<"email" | "reset">("email");
+    const [token, setToken] = useState("");
     const [email, setEmail] = useState("");
+    const [emailSent, setEmailSent] = useState(false);
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleVerifyEmail = async (e: React.FormEvent) => {
+    useEffect(() => {
+        const tokenFromQuery = (searchParams.get("token") || "").trim();
+        if (tokenFromQuery) {
+            setStep("reset");
+            setToken(tokenFromQuery);
+        } else {
+            setStep("email");
+            setToken("");
+        }
+    }, [searchParams]);
+
+    const handleRequestReset = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
@@ -34,16 +48,11 @@ export default function ForgotPassword() {
 
         setIsLoading(true);
         try {
-            // Check if email exists
-            const exists = await authService.checkEmailExists(email);
-            if (!exists) {
-                setError("No account found with this email");
-                return;
-            }
-            setStep("reset");
-            toast.success("Email verified! Set your new password.");
+            await authService.requestPasswordReset(email);
+            setEmailSent(true);
+            toast.success("If an account exists, a reset link has been sent.");
         } catch (err: any) {
-            setError(err.message || "Failed to verify email");
+            setError(err.message || "Failed to send reset link");
         } finally {
             setIsLoading(false);
         }
@@ -58,8 +67,8 @@ export default function ForgotPassword() {
             return;
         }
 
-        if (newPassword.length < 6) {
-            setError("Password must be at least 6 characters");
+        if (newPassword.length < 8) {
+            setError("Password must be at least 8 characters");
             return;
         }
 
@@ -68,9 +77,14 @@ export default function ForgotPassword() {
             return;
         }
 
+        if (!token) {
+            setError("Invalid or missing reset token. Please request a new reset link.");
+            return;
+        }
+
         setIsLoading(true);
         try {
-            await authService.resetPassword(email, newPassword);
+            await authService.confirmPasswordReset(token, newPassword);
             toast.success("Password reset successfully!");
             navigate("/login");
         } catch (err: any) {
@@ -99,14 +113,14 @@ export default function ForgotPassword() {
                         </CardTitle>
                         <CardDescription className="text-base mt-2">
                             {step === "email"
-                                ? "Enter your email to reset your password"
+                                ? "Enter your email and we'll send a secure reset link"
                                 : "Create a new password for your account"}
                         </CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent>
                     {step === "email" ? (
-                        <form onSubmit={handleVerifyEmail} className="space-y-4">
+                        <form onSubmit={handleRequestReset} className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-foreground flex items-center gap-2">
                                     <Mail className="w-4 h-4" />
@@ -122,6 +136,12 @@ export default function ForgotPassword() {
                                 />
                             </div>
 
+                            {emailSent && !error && (
+                                <div className="p-3 rounded-lg bg-primary/10 text-primary text-sm">
+                                    Check your inbox for the reset link. If the account exists, the email will arrive shortly.
+                                </div>
+                            )}
+
                             {error && (
                                 <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                                     {error}
@@ -133,7 +153,7 @@ export default function ForgotPassword() {
                                 disabled={isLoading}
                                 className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300"
                             >
-                                {isLoading ? "Verifying..." : "Continue"}
+                                {isLoading ? "Sending link..." : "Send Reset Link"}
                             </Button>
 
                             <Link
@@ -147,7 +167,7 @@ export default function ForgotPassword() {
                     ) : (
                         <form onSubmit={handleResetPassword} className="space-y-4">
                             <div className="p-3 rounded-lg bg-primary/10 text-primary text-sm mb-4">
-                                Resetting password for: <strong>{email}</strong>
+                                Enter your new password. This link is one-time use.
                             </div>
 
                             <div className="space-y-2">
@@ -197,14 +217,13 @@ export default function ForgotPassword() {
                                 {isLoading ? "Resetting..." : "Reset Password"}
                             </Button>
 
-                            <button
-                                type="button"
-                                onClick={() => setStep("email")}
+                            <Link
+                                to="/forgot-password"
                                 className="flex items-center justify-center gap-2 w-full text-sm text-muted-foreground hover:text-primary transition-colors"
                             >
                                 <ArrowLeft className="w-4 h-4" />
-                                Change Email
-                            </button>
+                                Request a new link
+                            </Link>
                         </form>
                     )}
                 </CardContent>

@@ -105,6 +105,8 @@ Defined in `client/App.tsx` (SPA routing):
 The server registers these base paths in `server/index.ts`:
 
 - `POST /api/auth/*` (signup/login/profile, etc.)
+  - `POST /api/auth/forgot-password` (request reset link)
+  - `POST /api/auth/reset-password/confirm` (redeem reset token)
 - `/api/moods/*`
 - `/api/journal/*`
 - `/api/goals/*`
@@ -154,4 +156,3 @@ Minimum production settings:
 - Configure health check to `GET /api/ping`
 - Ensure WebSockets are supported (ALB + ECS/EB works well)
 - Run a single instance unless you add a shared session store
-

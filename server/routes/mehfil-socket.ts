@@ -6,212 +6,184 @@ export function setupMehfilSocket(io: Server) {
     io.on('connection', (socket: Socket) => {
         console.log('🔌 Mehfil client connected:', socket.id);
 
-        // Load all topics
-        socket.on('topic:load', async () => {
+        // ═══════════════════════════════════════════════════════════
+        // Load all thoughts (newest first, paginated)
+        // ═══════════════════════════════════════════════════════════
+        socket.on('thoughts:load', async (data?: { limit?: number; offset?: number }) => {
             try {
-                const result = await db.execute(`
-                    SELECT id, name, description, message_count 
-                    FROM mehfil_topics 
-                    ORDER BY created_at ASC
-                `);
-                socket.emit('topic:list', result.rows);
-            } catch (error) {
-                console.error('Error loading topics:', error);
-                socket.emit('topic:list', []);
-            }
-        });
+                const limit = data?.limit || 50;
+                const offset = data?.offset || 0;
 
-        // Load messages for a topic
-        socket.on('topic:select', async (topicId: string) => {
-            try {
-                const result = await db.execute({
-                    sql: `
-                        SELECT id, topic_id as "topicId", author, text, image_url as "imageUrl", 
-                               relatable_count as "relatableCount", flag_count as "flagCount", 
-                               created_at as "createdAt", user_id as "userId"
-                        FROM mehfil_messages 
-                        WHERE topic_id = ?
-                        ORDER BY created_at DESC
-                        LIMIT 100
-                    `,
-                    args: [topicId]
-                });
-                socket.emit('topic:messages', result.rows);
-            } catch (error) {
-                console.error('Error loading messages:', error);
-                socket.emit('topic:messages', []);
-            }
-        });
-
-        // Create new message (now with user_id for contributor tracking)
-        socket.on('message:create', async (data: { topicId: string; text: string; imageUrl?: string; sessionId: string; author?: string; userId?: string }) => {
-            try {
-                const messageId = uuidv4();
-                const author = data.author || 'Anonymous';
-
-                await db.execute({
-                    sql: `INSERT INTO mehfil_messages (id, topic_id, author, text, image_url, relatable_count, flag_count, user_id)
-                        VALUES (?, ?, ?, ?, ?, 0, 0, ?)`,
-                    args: [messageId, data.topicId, author, data.text, data.imageUrl || null, data.userId || null]
-                });
-
-                // Update message count in topic
-                await db.execute({
-                    sql: `UPDATE mehfil_topics SET message_count = message_count + 1 WHERE id = ? `,
-                    args: [data.topicId]
-                });
-
-                const newMessage = {
-                    id: messageId,
-                    topicId: data.topicId,
-                    author,
-                    text: data.text,
-                    imageUrl: data.imageUrl,
-                    relatableCount: 0,
-                    flagCount: 0,
-                    userId: data.userId || null,
-                    createdAt: new Date().toISOString()
-                };
-
-                // Broadcast to all clients
-                io.emit('message:new', newMessage);
-            } catch (error) {
-                console.error('Error creating message:', error);
-            }
-        });
-
-        // Vote/React to a message
-        socket.on('poll:vote', async (data: { messageId: string; sessionId: string; option: number }) => {
-            try {
-                const voteId = uuidv4();
-
-                // Check if already voted
-                const existing = await db.execute({
-                    sql: `SELECT id FROM mehfil_votes WHERE message_id = ? AND session_id = ? `,
-                    args: [data.messageId, data.sessionId]
-                });
-
-                if (existing.rows.length === 0) {
-                    // Insert new vote
-                    await db.execute({
-                        sql: `INSERT INTO mehfil_votes(id, message_id, session_id, vote_option) VALUES(?, ?, ?, ?)`,
-                        args: [voteId, data.messageId, data.sessionId, data.option]
-                    });
-
-                    // Update relatable count
-                    await db.execute({
-                        sql: `UPDATE mehfil_messages SET relatable_count = relatable_count + 1 WHERE id = ? `,
-                        args: [data.messageId]
-                    });
-
-                    // Get updated count
-                    const result = await db.execute({
-                        sql: `SELECT relatable_count as "relatableCount" FROM mehfil_messages WHERE id = ? `,
-                        args: [data.messageId]
-                    });
-
-                    const newCount = result.rows[0]?.relatableCount || 0;
-                    io.emit('poll:updated', { messageId: data.messageId, relatableCount: newCount });
-                }
-            } catch (error) {
-                console.error('Error processing vote:', error);
-            }
-        });
-
-        // ── Community Events ──────────────────────────────────
-
-        // Load all communities
-        socket.on('community:load', async () => {
-            try {
-                const result = await pool.query(`
-                    SELECT id, name, description, creator_id, member_count, created_at
-                    FROM mehfil_communities
+                const result = await pool.query(
+                    `SELECT 
+                        id, user_id as "userId", author_name as "authorName", 
+                        author_avatar as "authorAvatar", content, image_url as "imageUrl",
+                        relatable_count as "relatableCount", created_at as "createdAt"
+                    FROM mehfil_thoughts
                     ORDER BY created_at DESC
-                `);
-                socket.emit('community:list', result.rows);
+                    LIMIT $1 OFFSET $2`,
+                    [limit, offset]
+                );
+
+                socket.emit('thoughts:list', result.rows);
             } catch (error) {
-                console.error('Error loading communities:', error);
-                socket.emit('community:list', []);
+                console.error('Error loading thoughts:', error);
+                socket.emit('thoughts:list', []);
             }
         });
 
-        // Create a community
-        socket.on('community:create', async (data: { name: string; description?: string; userId: string }) => {
+        // ═══════════════════════════════════════════════════════════
+        // Create a new thought
+        // ═══════════════════════════════════════════════════════════
+        socket.on('thought:create', async (data: {
+            userId: string;
+            authorName: string;
+            authorAvatar?: string;
+            content: string;
+            imageUrl?: string;
+        }) => {
             try {
-                const communityId = uuidv4();
+                if (!data.userId || !data.content?.trim()) {
+                    console.error('Invalid thought data:', data);
+                    return;
+                }
+
+                const thoughtId = uuidv4();
+                const now = new Date().toISOString();
 
                 await pool.query(
-                    `INSERT INTO mehfil_communities (id, name, description, creator_id, member_count)
-                     VALUES ($1, $2, $3, $4, 1)`,
-                    [communityId, data.name, data.description || '', data.userId]
+                    `INSERT INTO mehfil_thoughts 
+                    (id, user_id, author_name, author_avatar, content, image_url, relatable_count, created_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, 0, $7)`,
+                    [
+                        thoughtId,
+                        data.userId,
+                        data.authorName,
+                        data.authorAvatar || null,
+                        data.content.trim(),
+                        data.imageUrl || null,
+                        now
+                    ]
                 );
 
-                // Add creator as first member
-                await pool.query(
-                    `INSERT INTO mehfil_community_members (community_id, user_id) VALUES ($1, $2)`,
-                    [communityId, data.userId]
-                );
-
-                const newCommunity = {
-                    id: communityId,
-                    name: data.name,
-                    description: data.description || '',
-                    creator_id: data.userId,
-                    member_count: 1,
-                    created_at: new Date().toISOString()
+                const newThought = {
+                    id: thoughtId,
+                    userId: data.userId,
+                    authorName: data.authorName,
+                    authorAvatar: data.authorAvatar || null,
+                    content: data.content.trim(),
+                    imageUrl: data.imageUrl || null,
+                    relatableCount: 0,
+                    createdAt: now
                 };
 
-                // Broadcast to all clients
-                io.emit('community:new', newCommunity);
+                // Broadcast to all connected clients
+                io.emit('thought:new', newThought);
+                console.log('✅ New thought created:', thoughtId);
             } catch (error) {
-                console.error('Error creating community:', error);
+                console.error('Error creating thought:', error);
             }
         });
 
-        // Join a community
-        socket.on('community:join', async (data: { communityId: string; userId: string }) => {
+        // ═══════════════════════════════════════════════════════════
+        // Toggle relatable reaction on a thought
+        // ═══════════════════════════════════════════════════════════
+        socket.on('thought:react', async (data: {
+            thoughtId: string;
+            userId: string;
+        }) => {
             try {
-                // Check if already a member
-                const existing = await pool.query(
-                    `SELECT 1 FROM mehfil_community_members WHERE community_id = $1 AND user_id = $2`,
-                    [data.communityId, data.userId]
+                if (!data.thoughtId || !data.userId) {
+                    console.error('Invalid reaction data:', data);
+                    return;
+                }
+
+                // Check if user already reacted
+                const existingReaction = await pool.query(
+                    `SELECT id FROM mehfil_reactions 
+                    WHERE thought_id = $1 AND user_id = $2`,
+                    [data.thoughtId, data.userId]
                 );
 
-                if (existing.rows.length === 0) {
+                if (existingReaction.rows.length > 0) {
+                    // Remove reaction (toggle off)
                     await pool.query(
-                        `INSERT INTO mehfil_community_members (community_id, user_id) VALUES ($1, $2)`,
-                        [data.communityId, data.userId]
+                        `DELETE FROM mehfil_reactions 
+                        WHERE thought_id = $1 AND user_id = $2`,
+                        [data.thoughtId, data.userId]
                     );
+
+                    // Decrement count
                     await pool.query(
-                        `UPDATE mehfil_communities SET member_count = member_count + 1 WHERE id = $1`,
-                        [data.communityId]
+                        `UPDATE mehfil_thoughts 
+                        SET relatable_count = GREATEST(relatable_count - 1, 0)
+                        WHERE id = $1`,
+                        [data.thoughtId]
                     );
-                    io.emit('community:updated', { communityId: data.communityId, action: 'joined' });
+                } else {
+                    // Add reaction (toggle on)
+                    const reactionId = uuidv4();
+                    await pool.query(
+                        `INSERT INTO mehfil_reactions (id, thought_id, user_id)
+                        VALUES ($1, $2, $3)`,
+                        [reactionId, data.thoughtId, data.userId]
+                    );
+
+                    // Increment count
+                    await pool.query(
+                        `UPDATE mehfil_thoughts 
+                        SET relatable_count = relatable_count + 1
+                        WHERE id = $1`,
+                        [data.thoughtId]
+                    );
                 }
+
+                // Get updated count
+                const result = await pool.query(
+                    `SELECT relatable_count as "relatableCount" 
+                    FROM mehfil_thoughts 
+                    WHERE id = $1`,
+                    [data.thoughtId]
+                );
+
+                const newCount = result.rows[0]?.relatableCount || 0;
+
+                // Broadcast updated count to all clients
+                io.emit('thought:reaction_updated', {
+                    thoughtId: data.thoughtId,
+                    relatableCount: newCount
+                });
+
+                console.log('✅ Reaction toggled for thought:', data.thoughtId);
             } catch (error) {
-                console.error('Error joining community:', error);
+                console.error('Error toggling reaction:', error);
             }
         });
 
-        // ── Top Contributors ──────────────────────────────────
-
-        // Get top contributors (users who posted the most messages)
-        socket.on('contributors:top', async () => {
+        // ═══════════════════════════════════════════════════════════
+        // Get user's reaction status for thoughts
+        // ═══════════════════════════════════════════════════════════
+        socket.on('thoughts:get_user_reactions', async (data: {
+            userId: string;
+            thoughtIds: string[];
+        }) => {
             try {
-                const result = await pool.query(`
-                    SELECT 
-                        u.id, u.name, u.avatar,
-                        COUNT(m.id) as post_count
-                    FROM users u
-                    INNER JOIN mehfil_messages m ON m.user_id = u.id
-                    GROUP BY u.id, u.name, u.avatar
-                    ORDER BY post_count DESC
-                    LIMIT 5
-                `);
-                socket.emit('contributors:list', result.rows);
+                if (!data.userId || !data.thoughtIds?.length) {
+                    socket.emit('thoughts:user_reactions', []);
+                    return;
+                }
+
+                const result = await pool.query(
+                    `SELECT thought_id as "thoughtId"
+                    FROM mehfil_reactions
+                    WHERE user_id = $1 AND thought_id = ANY($2)`,
+                    [data.userId, data.thoughtIds]
+                );
+
+                socket.emit('thoughts:user_reactions', result.rows.map(r => r.thoughtId));
             } catch (error) {
-                console.error('Error loading top contributors:', error);
-                socket.emit('contributors:list', []);
+                console.error('Error getting user reactions:', error);
+                socket.emit('thoughts:user_reactions', []);
             }
         });
 
