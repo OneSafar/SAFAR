@@ -13,55 +13,59 @@ import {
   Home,
 } from "lucide-react";
 
-const navItems = [
-  {
-    label: "Home",
-    href: "/landing",
-    icon: Home,
-  },
-  {
-    label: "Emotional Check-In",
-    href: "/nishtha/check-in",
-    icon: Heart,
-    description: "Daily mood tracking",
-  },
-  {
-    label: "Journal",
-    href: "/nishtha/journal",
-    icon: BookOpen,
-    description: "Private thoughts",
-  },
-  {
-    label: "Goals",
-    href: "/nishtha/goals",
-    icon: Target,
-    description: "Daily & weekly goals",
-  },
-  {
-    label: "Streaks",
-    href: "/nishtha/streaks",
-    icon: Flame,
-    description: "Maintain your streaks",
-  },
-  {
-    label: "Suggestions",
-    href: "/nishtha/suggestions",
-    icon: Lightbulb,
-    description: "Personalized tips",
-  },
-];
+interface LeftSidebarProps {
+  homeRoute?: string;
+}
 
-// Mobile bottom nav items - all sections for full navigation
-const mobileNavItems = [
-  { label: "Check-In", href: "/nishtha/check-in", icon: Heart },
-  { label: "Journal", href: "/nishtha/journal", icon: BookOpen },
-  { label: "Goals", href: "/nishtha/goals", icon: Target },
-  { label: "Streaks", href: "/nishtha/streaks", icon: Flame },
-  { label: "Tips", href: "/nishtha/suggestions", icon: Lightbulb },
-];
-
-export default function LeftSidebar() {
+export default function LeftSidebar({ homeRoute = "/landing" }: LeftSidebarProps) {
   const location = useLocation();
+
+  const navItems = [
+    {
+      label: "Home",
+      href: homeRoute,
+      icon: Home,
+    },
+    {
+      label: "Emotional Check-In",
+      href: "/nishtha/check-in",
+      icon: Heart,
+      description: "Daily mood tracking",
+    },
+    {
+      label: "Journal",
+      href: "/nishtha/journal",
+      icon: BookOpen,
+      description: "Private thoughts",
+    },
+    {
+      label: "Goals",
+      href: "/nishtha/goals",
+      icon: Target,
+      description: "Daily & weekly goals",
+    },
+    {
+      label: "Streaks",
+      href: "/nishtha/streaks",
+      icon: Flame,
+      description: "Maintain your streaks",
+    },
+    {
+      label: "Suggestions",
+      href: "/nishtha/suggestions",
+      icon: Lightbulb,
+      description: "Personalized tips",
+    },
+  ];
+
+  // Mobile bottom nav items - all sections for full navigation
+  const mobileNavItems = [
+    { label: "Check-In", href: "/nishtha/check-in", icon: Heart },
+    { label: "Journal", href: "/nishtha/journal", icon: BookOpen },
+    { label: "Goals", href: "/nishtha/goals", icon: Target },
+    { label: "Streaks", href: "/nishtha/streaks", icon: Flame },
+    { label: "Tips", href: "/nishtha/suggestions", icon: Lightbulb },
+  ];
 
   return (
     <>

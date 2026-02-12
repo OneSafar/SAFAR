@@ -9,6 +9,7 @@ interface MainLayoutProps {
   userAvatar?: string;
   onLogout?: () => void;
   hideSidebar?: boolean;
+  homeRoute?: string;
 }
 
 export default function MainLayout({
@@ -17,12 +18,13 @@ export default function MainLayout({
   userAvatar = "",
   onLogout,
   hideSidebar = false,
+  homeRoute = "/landing",
 }: MainLayoutProps) {
   return (
     <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">
-      {!hideSidebar && <LeftSidebar />}
+      {!hideSidebar && <LeftSidebar homeRoute={homeRoute} />}
       <div className="flex flex-col flex-1 relative z-10">
-        <TopNavbar userName={userName} userAvatar={userAvatar} onLogout={onLogout} />
+        <TopNavbar userName={userName} userAvatar={userAvatar} onLogout={onLogout} homeRoute={homeRoute} />
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-0 text-slate-800 dark:text-slate-100">
           {children}
           <GlobalPageFooter />

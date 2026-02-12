@@ -20,9 +20,10 @@ interface TopNavbarProps {
   userAvatar?: string;
   onLogout?: () => void;
   showMobileMenu?: boolean;
+  homeRoute?: string;
 }
 
-export default function TopNavbar({ userName = "Student", userAvatar = "", onLogout, showMobileMenu = true }: TopNavbarProps) {
+export default function TopNavbar({ userName = "Student", userAvatar = "", onLogout, showMobileMenu = true, homeRoute = "/landing" }: TopNavbarProps) {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { resetTourHistory } = useGuidedTour();
@@ -67,7 +68,7 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
               </button>
             )}
 
-            <Link to="/landing" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Link to={homeRoute} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               {/* Logo with teal gradient background like Landing page */}
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#6EE7B7] to-teal-600 flex items-center justify-center text-black font-serif text-xl font-bold shadow-lg shadow-[#6EE7B7]/20 overflow-hidden">
                 <img
@@ -154,7 +155,7 @@ export default function TopNavbar({ userName = "Student", userAvatar = "", onLog
             {/* Navigation Links */}
             <div className="p-4 space-y-2">
               <button
-                onClick={() => handleNavigation("/landing")}
+                onClick={() => handleNavigation(homeRoute)}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors text-left"
               >
                 <Home className="w-5 h-5" />

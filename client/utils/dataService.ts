@@ -111,7 +111,7 @@ export const dataService = {
         achievements: Array<{
             achievement_id: string;
             acquired_at: string;
-            is_active: number;
+            is_active: boolean;
             name: string;
             type: 'badge' | 'title';
             category: string;
@@ -129,7 +129,7 @@ export const dataService = {
         return res.json();
     },
 
-    async getActiveTitle(): Promise<{ title: string | null; type?: string }> {
+    async getActiveTitle(): Promise<{ title: string | null; type?: string; selectedId?: string }> {
         const res = await fetch(`${API_URL}/achievements/active-title`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -146,6 +146,7 @@ export const dataService = {
             description: string | null;
             type: 'badge' | 'title';
             category: string;
+            rarity: string | null;
             tier: number | null;
             requirement: string;
             holderCount: number;

@@ -11,6 +11,7 @@ interface Achievement {
     description: string | null;
     type: 'badge' | 'title';
     category: string;
+    rarity: string | null;
     tier: number | null;
     requirement: string;
     holderCount: number;
@@ -50,19 +51,43 @@ const categoryIcons: Record<string, any> = {
 // Achievement badge images - mythological theme mapping
 const achievementImages: Record<string, string> = {
     // Goals - Completion themed
-    'G001': '/Achievments/Gemini_Generated_Image_u283ydu283ydu283.png', // Alpha Finisher - Om
-    'G002': '/Achievments/Gemini_Generated_Image_lx76w4lx76w4lx76.png', // Finish Line - Vortex
-    'G003': '/Achievments/Gemini_Generated_Image_cz5vl6cz5vl6cz5v.png', // Goal Slayer - Cornucopia
-    'G004': '/Achievments/Gemini_Generated_Image_go9g49go9g49go9g.png', // The Closer - Tree of Life
+    'G001': '/Achievments/Badges/Badge (1).png', // Alpha Finisher - Om
+    'G002': '/Achievments/Badges/Badge (2).png', // Finish Line - Vortex
+    'G003': '/Achievments/Badges/Badge (3).png', // Goal Slayer - Cornucopia
+    'G004': '/Achievments/Badges/Badge (4).png', // The Closer - Tree of Life
 
     // Focus - Power and mastery themed
-    'F003': '/Achievments/Gemini_Generated_Image_wf9x2ywf9x2ywf9x.png', // A Legend - Rocket
-    'F004': '/Achievments/Gemini_Generated_Image_gvsik4gvsik4gvsi.png', // The Finisher - Fire
-    'F005': '/Achievments/Gemini_Generated_Image_7bbkx77bbkx77bbk.png', // Dhurandhar - Trishul
+    'F001': '/Achievments/Badges/Special_Badge (2).png', // Focus Initiate
+    'F002': '/Achievments/Badges/Special_Badge (5).png', // Focus Adept
+    'F003': '/Achievments/Badges/Special_Badge (4).png', // Aura of Arjun
+    'F004': '/Achievments/Badges/Badge (6).png', // The Finisher - Fire
+    'F005': '/Achievments/Badges/Badge (7).png', // Dhurandhar - Trishul
 
     // Streak - Consistency themed
-    'S001': '/Achievments/Gemini_Generated_Image_wkkzj5wkkzj5wkkz.png', // Unstoppable Sigma - Compass
-    'S002': '/Achievments/Gemini_Generated_Image_pc5a9ppc5a9ppc5a.png', // Jeet Express - Dharma Wheel
+    'S001': '/Achievments/Badges/Badge (8).png', // Unstoppable Sigma - Compass
+    'S002': '/Achievments/Badges/Special_Badge (1).png', // Jeet Express
+
+    // Emotional / Flow
+    'ET006': '/Achievments/Badges/Special_Badge (3).png', // Flow Seeker
+
+    // Titles - Goal Completion
+    'T005': '/Achievments/Titles/Title (5).png', // Goal Getter
+    'T006': '/Achievments/Titles/Title (6).png', // Ambition Master
+    'T007': '/Achievments/Titles/Title (7).png', // Dream Chaser
+    'T008': '/Achievments/Titles/Title (8).png', // Legendary Achiever
+
+    // Titles - Login Streaks
+    'T001': '/Achievments/Titles/Title (1).png', // The Regular
+    'T002': '/Achievments/Titles/Title (2).png', // Dedicated Soul
+    'T003': '/Achievments/Titles/Title (3).png', // Consistency King
+    'T004': '/Achievments/Titles/Title (4).png', // Unstoppable Force
+
+    // Weekly Emotional Titles
+    'ET001': '/Achievments/Titles/Special_Title (3).png', // Showed Up Tired
+    'ET002': '/Achievments/Titles/Special_Title (2).png', // Did It Anyway
+    'ET003': '/Achievments/Titles/Special_Title (1).png', // Quiet Consistency
+    'ET004': '/Achievments/Titles/Special_Title (4).png', // Survived Bad Week
+    'ET005': '/Achievments/Titles/Special_Title (5).png', // Pushed Through Overwhelm
 };
 
 export default function Achievements() {
@@ -111,9 +136,14 @@ export default function Achievements() {
                 credentials: 'include',
                 body: JSON.stringify({ achievementId }),
             });
+            if (!res.ok) {
+                const errData = await res.json();
+                toast.error(errData.message || 'Failed to set active');
+                return;
+            }
             const data = await res.json();
             setSelectedId(data.selectedId);
-            toast.success(`Active display set to "${data.title}"`);
+            toast.success(`Active display set to "${data.title || data.selectedId}"`);
         } catch (error) {
             console.error('Failed to select:', error);
             toast.error('Failed to set active');
@@ -154,7 +184,7 @@ export default function Achievements() {
     if (!user) return null;
 
     return (
-        <MainLayout userName={user?.name} userAvatar={user?.avatar}>
+        <MainLayout userName={user?.name} userAvatar={user?.avatar} homeRoute="/dashboard">
             <div className="flex-1 bg-background/95 font-['Poppins']">
                 {/* Background */}
                 <div
@@ -199,35 +229,7 @@ export default function Achievements() {
                         </div>
                     </div>
 
-                    {/* Evaluate My Week Button */}
-                    <div className="glass-high rounded-xl p-6 mb-8 flex items-center justify-between border border-amber-500/20">
-                        <div>
-                            <h3 className="font-semibold text-foreground mb-1 flex items-center gap-2">
-                                <Heart className="w-4 h-4 text-amber-500" />
-                                Evaluate My Week
-                            </h3>
-                            <p className="text-sm text-muted-foreground">Check if you've earned an emotional title based on your mood and effort this week.</p>
-                        </div>
-                        <button
-                            onClick={handleEvaluateWeek}
-                            disabled={evaluating}
-                            className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-full font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
-                        >
-                            <RefreshCw className={`w-4 h-4 ${evaluating ? 'animate-spin' : ''}`} />
-                            {evaluating ? 'Evaluating...' : 'Evaluate'}
-                        </button>
-                    </div>
 
-                    {/* Week Title Result */}
-                    {weekTitle.title && (
-                        <div className="glass-high rounded-xl p-6 mb-8 border-2 border-amber-500/40 bg-amber-500/5">
-                            <div className="flex items-center gap-3 mb-2">
-                                <Sparkles className="w-6 h-6 text-amber-500" />
-                                <h3 className="text-xl font-bold text-foreground">"{weekTitle.title}"</h3>
-                            </div>
-                            <p className="text-muted-foreground">{weekTitle.description}</p>
-                        </div>
-                    )}
 
                     {/* Filter Tabs */}
                     <div className="flex gap-2 mb-6">
@@ -249,95 +251,97 @@ export default function Achievements() {
                     {loading ? (
                         <div className="text-center py-12 text-muted-foreground">Loading achievements...</div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             {filteredAchievements.map(achievement => {
                                 const style = typeStyles[achievement.type] || typeStyles.badge;
                                 const TypeIcon = style.icon;
                                 const CategoryIcon = categoryIcons[achievement.category] || Award;
                                 const isSelected = selectedId === achievement.id;
 
+                                // For titles, we might want a slightly different card style or just use the same
+                                // The user wants them displayed in the list
                                 return (
                                     <div
                                         key={achievement.id}
-                                        className={`glass-high rounded-xl p-5 relative overflow-hidden transition-all hover:scale-[1.02] border ${style.border} ${style.bg
-                                            } ${achievement.earned && !isSelected ? `ring-2 ${style.earnedRing}` : ''
-                                            } ${!achievement.earned ? 'opacity-60' : ''}`}
+                                        className={`relative group flex flex-col items-center justify-center p-4 transition-all duration-500
+                                            ${achievement.earned ? 'opacity-100' : 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100'}`}
                                     >
-                                        {/* Selected/Earned indicator */}
-                                        {isSelected && achievement.earned && (
-                                            <div className={`absolute top-3 right-3 flex items-center gap-1 ${style.bg} px-2 py-0.5 rounded-full border ${style.border}`}>
-                                                <Check className={`w-3 h-3 ${style.text}`} />
-                                                <span className={`text-xs font-medium ${style.text}`}>Active</span>
-                                            </div>
-                                        )}
-                                        {achievement.earned && !isSelected && (
-                                            <div className="absolute top-3 right-3">
-                                                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                                            </div>
-                                        )}
-                                        {!achievement.earned && (
-                                            <div className="absolute top-3 right-3">
-                                                <Lock className="w-4 h-4 text-muted-foreground" />
-                                            </div>
-                                        )}
+                                        {/* Badge Image - The main "Card" */}
+                                        {achievementImages[achievement.id] ? (
+                                            <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110">
+                                                {/* Glow effect for earned badges */}
+                                                {achievement.earned && (
+                                                    <div className="absolute inset-0 bg-teal-500/20 dark:bg-teal-500/10 blur-[50px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                )}
 
-                                        {/* Type Badge with Icon */}
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <TypeIcon className={`w-4 h-4 ${style.text}`} />
-                                            <span className={`text-xs font-semibold uppercase px-2 py-0.5 rounded ${style.bg} ${style.text} border ${style.border}`}>
-                                                {style.label}
-                                            </span>
-                                        </div>
-
-                                        {/* Badge Image - Mythological Symbol */}
-                                        {achievementImages[achievement.id] && (
-                                            <div className="flex justify-center mb-4">
                                                 <img
                                                     src={achievementImages[achievement.id]}
                                                     alt={achievement.name}
-                                                    className={`w-20 h-20 object-contain transition-all ${!achievement.earned ? 'grayscale opacity-40' : ''}`}
+                                                    className={`w-full h-full object-contain filter drop-shadow-2xl 
+                                                        ${achievement.earned ? 'drop-shadow-[0_0_15px_rgba(20,184,166,0.5)]' : 'drop-shadow-none'}
+                                                        ${['F003', 'S002', 'ET006'].includes(achievement.id) ? 'scale-150' : ''}
+                                                        ${['ET003'].includes(achievement.id) ? 'scale-[2.1]' : ''}
+                                                        ${!['F003', 'S002', 'ET006', 'ET003'].includes(achievement.id) ? 'scale-100' : ''}`}
                                                 />
+
+                                                {/* Lock overlay for locked badges */}
+                                                {!achievement.earned && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-full backdrop-blur-[2px]">
+                                                        <Lock className="w-8 h-8 text-white/70 drop-shadow-md" />
+                                                    </div>
+                                                )}
+
+                                                {/* Active Indicator */}
+                                                {isSelected && achievement.earned && (
+                                                    <div className="absolute -top-2 -right-2 bg-teal-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white dark:border-[#0B0F19] animate-bounce">
+                                                        <Check className="w-4 h-4" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            /* Fallback for items without images (like Titles) */
+                                            <div className={`w-full aspect-square flex items-center justify-center rounded-full mb-4 ${style.bg} border-4 ${style.border}`}>
+                                                <TypeIcon className={`w-12 h-12 ${style.text}`} />
                                             </div>
                                         )}
 
-                                        {/* Achievement Name */}
-                                        <h3 className="font-bold text-lg text-foreground mb-1">{achievement.name}</h3>
+                                        {/* Text Content - Always evident but subtle */}
+                                        <div className="text-center z-10">
+                                            <h3 className={`font-bold text-lg mb-1 ${achievement.earned ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                {achievement.name}
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground line-clamp-2 max-w-[200px] mx-auto">
+                                                {achievement.requirement || achievement.description}
+                                            </p>
+                                        </div>
 
-                                        {/* Requirement */}
-                                        <p className="text-sm text-muted-foreground mb-3">{achievement.requirement || achievement.description}</p>
-
-                                        {/* Progress Bar (only for unearned badges) */}
+                                        {/* Progress Bar (only for unearned) */}
                                         {!achievement.earned && achievement.targetValue > 0 && (
-                                            <div className="mb-3">
-                                                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                                    <span>Progress</span>
-                                                    <span>{achievement.currentValue} / {achievement.targetValue}</span>
-                                                </div>
-                                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                            <div className="w-full max-w-[150px] mt-3">
+                                                <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
                                                     <div
-                                                        className={`h-full rounded-full transition-all ${achievement.type === 'badge' ? 'bg-teal-500' : 'bg-amber-500'}`}
+                                                        className={`h-full rounded-full transition-all ${achievement.type === 'badge' ? 'bg-teal-500/50' : 'bg-amber-500/50'}`}
                                                         style={{ width: `${achievement.progress}%` }}
                                                     ></div>
                                                 </div>
+                                                <p className="text-[10px] text-center text-muted-foreground mt-1">
+                                                    {achievement.currentValue} / {achievement.targetValue}
+                                                </p>
                                             </div>
                                         )}
 
-                                        {/* Footer */}
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                <Users className="w-3 h-3" />
-                                                <span>{achievement.holderCount} {achievement.holderCount === 1 ? 'holder' : 'holders'}</span>
-                                            </div>
-                                            {achievement.earned && !isSelected && (
-                                                <button
-                                                    onClick={() => handleSelect(achievement.id)}
-                                                    disabled={selecting}
-                                                    className={`text-xs px-3 py-1 rounded-lg ${style.bg} ${style.text} hover:opacity-80 transition-opacity font-medium disabled:opacity-50 border ${style.border}`}
-                                                >
-                                                    Set Active
-                                                </button>
-                                            )}
-                                        </div>
+                                        {/* Action Button (Set Active) */}
+                                        {achievement.earned && !isSelected && (
+                                            <button
+                                                onClick={() => handleSelect(achievement.id)}
+                                                disabled={selecting}
+                                                className="mt-4 px-4 py-1.5 rounded-full bg-slate-200/50 dark:bg-white/10 text-xs font-medium 
+                                                    opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300
+                                                    hover:bg-teal-500 hover:text-white"
+                                            >
+                                                {achievement.type === 'title' ? 'Equip Title' : 'Equip Badge'}
+                                            </button>
+                                        )}
                                     </div>
                                 );
                             })}

@@ -43,6 +43,39 @@ const getMoodEmoji = (mood: string): string => {
     return moodEmojis[mood.toLowerCase()] || "😐";
 };
 
+// Achievement badge images - mythological theme mapping
+const achievementImages: Record<string, string> = {
+    'G001': '/Achievments/Badges/Badge (1).png',
+    'G002': '/Achievments/Badges/Badge (2).png',
+    'G003': '/Achievments/Badges/Badge (3).png',
+    'G004': '/Achievments/Badges/Badge (4).png',
+    'F001': '/Achievments/Badges/Special_Badge (2).png',
+    'F002': '/Achievments/Badges/Special_Badge (5).png',
+    'F003': '/Achievments/Badges/Special_Badge (4).png',
+    'F004': '/Achievments/Badges/Badge (6).png',
+    'F005': '/Achievments/Badges/Badge (7).png',
+    'S001': '/Achievments/Badges/Badge (8).png',
+    'S002': '/Achievments/Badges/Special_Badge (1).png',
+    'ET006': '/Achievments/Badges/Special_Badge (3).png',
+
+    // Titles
+    'T005': '/Achievments/Titles/Title (5).png',
+    'T006': '/Achievments/Titles/Title (6).png',
+    'T007': '/Achievments/Titles/Title (7).png',
+    'T008': '/Achievments/Titles/Title (8).png',
+    'T001': '/Achievments/Titles/Title (1).png',
+    'T002': '/Achievments/Titles/Title (2).png',
+    'T003': '/Achievments/Titles/Title (3).png',
+    'T004': '/Achievments/Titles/Title (4).png',
+
+    // Emotional Titles
+    'ET001': '/Achievments/Titles/Special_Title (3).png',
+    'ET002': '/Achievments/Titles/Special_Title (2).png',
+    'ET003': '/Achievments/Titles/Special_Title (1).png',
+    'ET004': '/Achievments/Titles/Special_Title (4).png',
+    'ET005': '/Achievments/Titles/Special_Title (5).png',
+};
+
 export default function Dashboard() {
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
@@ -52,6 +85,7 @@ export default function Dashboard() {
     const [weeklyMoods, setWeeklyMoods] = useState<{ day: string; intensity: number; mood: string }[]>([]);
     const [allGoals, setAllGoals] = useState<any[]>([]);
     const [activeTitle, setActiveTitle] = useState<string | null>(null);
+    const [activeTitleId, setActiveTitleId] = useState<string | null>(null);
     const [activeBadge, setActiveBadge] = useState<any | null>(null);
 
     useEffect(() => {
@@ -123,24 +157,33 @@ export default function Dashboard() {
                     const completed = todaysGoals.filter((g: any) => g.completed).length;
                     setGoals({ total, completed });
                 } catch (e) { console.error('Failed to fetch goals', e); }
-                // Fetch active achievement title
+                // Fetch active achievement title & badge
                 try {
-                    const titleData = await dataService.getActiveTitle();
-                    setActiveTitle(titleData.title);
+                    const [titleData, allAchievementsData] = await Promise.all([
+                        dataService.getActiveTitle(),
+                        dataService.getAllAchievements(),
+                    ]);
 
-                    // Fetch all achievements to find active badge (highest tier earned)
-                    try {
-                        const allAchievementsData = await dataService.getAllAchievements();
-                        const earnedBadges = (allAchievementsData.achievements || [])
-                            .filter((a: any) => a.type === 'badge' && a.earned)
-                            .sort((a: any, b: any) => (b.tier || 0) - (a.tier || 0)); // Sort by tier descending, highest first
+                    // Set active title (name + ID for image lookup)
+                    setActiveTitle(titleData.title || null);
+                    setActiveTitleId(titleData.selectedId || null);
 
-                        if (earnedBadges.length > 0) {
-                            setActiveBadge(earnedBadges[0]);
-                        }
-                    } catch (e) { console.error('Failed to fetch badges', e); }
+                    // Find active badge: if user selected a badge, use that; otherwise highest-tier earned badge
+                    const allAchievements = allAchievementsData.achievements || [];
+                    const earnedBadges = allAchievements
+                        .filter((a) => a.type === 'badge' && a.earned)
+                        .sort((a, b) => (b.tier || 0) - (a.tier || 0));
 
-                } catch (e) { console.error('Failed to fetch active title', e); }
+                    // Check if user's selected achievement is a badge
+                    const selectedId = titleData.selectedId;
+                    const selectedBadge = selectedId ? allAchievements.find(a => a.id === selectedId && a.type === 'badge' && a.earned) : null;
+
+                    if (selectedBadge) {
+                        setActiveBadge(selectedBadge);
+                    } else if (earnedBadges.length > 0) {
+                        setActiveBadge(earnedBadges[0]);
+                    }
+                } catch (e) { console.error('Failed to fetch achievements', e); }
             } catch (error) {
                 navigate("/login");
             }
@@ -197,28 +240,79 @@ export default function Dashboard() {
 
                 {/* Content Wrapper */}
                 <div className="relative z-10 p-4 md:p-6 lg:p-8">
-                    <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-4">
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => navigate('/landing')}
-                                className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
-                                title="Back to Home"
-                            >
-                                <Home className="w-5 h-5 text-primary" />
-                            </button>
-                            <div>
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Welcome Back, {user.name}</h1>
-                                    {activeTitle && <PerkTitle title={activeTitle} type="aura" size="md" />}
+                    {/* Unified Identity Hero Card */}
+                    <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 mb-8 md:mb-10 group">
+                        {/* Dynamic Hero Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/50 to-white/30 dark:from-[#1a1a20]/90 dark:via-[#15151a]/80 dark:to-[#0f0f12]/50 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-2xl transition-all duration-500"></div>
+
+                        {/* Animated Mesh Gradients */}
+                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 animate-pulse duration-1000"></div>
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-full blur-[60px] translate-y-1/3 -translate-x-1/4"></div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 md:gap-12">
+                            {/* Left Side: Greeting & Quote */}
+                            <div className="flex-1 text-center md:text-left space-y-4">
+                                <div className="space-y-1">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-md mb-2">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                        </span>
+                                        <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500 dark:text-slate-400">Online</span>
+                                    </div>
+                                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-800 dark:text-white tracking-tight">
+                                        Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">{user.name.split(' ')[0]}</span>
+                                    </h1>
                                 </div>
-                                <p className="text-muted-foreground text-xs sm:text-sm">
-                                    "{getDailyQuote()}"
-                                </p>
+                                <div className="max-w-xl">
+                                    <Quote className="w-5 h-5 text-indigo-400 mb-2 mx-auto md:mx-0 opacity-50" />
+                                    <p className="text-lg text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed">
+                                        "{getDailyQuote()}"
+                                    </p>
+                                </div>
+
+                                <div className="pt-2 flex flex-wrap justify-center md:justify-start gap-3">
+                                    <button
+                                        onClick={() => navigate('/landing')}
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md"
+                                    >
+                                        <Home className="w-4 h-4" /> Home
+                                    </button>
+                                </div>
                             </div>
+
+                            {/* Right Side: Identity Badge */}
+                            {(activeTitleId && achievementImages[activeTitleId]) || activeTitle ? (
+                                <div className="relative flex-shrink-0 group/badge">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent rounded-full blur-2xl transform translate-y-4 group-hover/badge:translate-y-2 transition-transform duration-500"></div>
+
+                                    <div className="relative flex flex-col items-center p-6 rounded-2xl bg-white/40 dark:bg-black/20 border border-white/40 dark:border-white/5 backdrop-blur-md shadow-xl transition-transform hover:scale-[1.02] duration-300">
+                                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-2">Current Title</div>
+
+                                        {activeTitleId && achievementImages[activeTitleId] ? (
+                                            <div className="relative w-32 h-32 md:w-36 md:h-36 mb-2 filter drop-shadow-lg">
+                                                <img
+                                                    src={achievementImages[activeTitleId]}
+                                                    alt={activeTitle || 'Title'}
+                                                    className="w-full h-full object-contain transform group-hover/badge:scale-110 transition-transform duration-500 ease-out"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="w-24 h-24 flex items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/20 mb-2">
+                                                <Sparkles className="w-10 h-10 text-indigo-500" />
+                                            </div>
+                                        )}
+
+                                        <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-200/50 to-yellow-400/50 dark:from-amber-500/20 dark:to-yellow-600/20 border border-amber-300/30 dark:border-amber-500/20">
+                                            <p className="text-xs md:text-sm font-bold text-amber-900 dark:text-amber-200 whitespace-nowrap">
+                                                {activeTitle || 'Explorer'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null}
                         </div>
-                        <div className="flex items-center gap-6">
-                        </div>
-                    </header>
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6">
 
@@ -308,31 +402,31 @@ export default function Dashboard() {
                             <div className="relative z-10 text-center">
                                 <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-muted-foreground mb-6">Current Badge</p>
                                 {activeBadge ? (
-                                    <div
-                                        className="relative inline-block px-10 py-5 rounded-2xl bg-gradient-to-br from-teal-400/20 via-emerald-300/15 to-teal-400/20 dark:from-teal-500/15 dark:via-emerald-400/10 dark:to-teal-500/15 border-2 border-teal-500/50 dark:border-teal-400/40 animate-pulse"
-                                        style={{
-                                            boxShadow: '0 0 40px rgba(20, 184, 166, 0.4), 0 0 80px rgba(20, 184, 166, 0.2), inset 0 0 20px rgba(20, 184, 166, 0.1)',
-                                        }}
-                                    >
-                                        {/* Decorative sparkles with glow */}
-                                        <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-teal-400/30 dark:bg-teal-500/20 blur-md"></div>
-                                        <Medal className="absolute -top-3 -right-3 text-teal-500 dark:text-teal-400 w-6 h-6 drop-shadow-[0_0_8px_rgba(20,184,166,0.6)]" />
+                                    <div className="relative inline-block group">
+                                        {/* Glow effect behind the badge */}
+                                        <div className="absolute inset-0 bg-teal-500/20 dark:bg-teal-500/10 blur-[40px] rounded-full animate-pulse" />
 
-                                        <div className="absolute -bottom-3 -left-3 w-6 h-6 rounded-full bg-teal-400/20 dark:bg-teal-500/15 blur-sm"></div>
-                                        <Medal className="absolute -bottom-2 -left-3 text-teal-500/70 dark:text-teal-400/60 w-5 h-5 drop-shadow-[0_0_6px_rgba(20,184,166,0.4)]" />
+                                        {achievementImages[activeBadge.id] ? (
+                                            <div className="relative w-40 h-40 flex items-center justify-center transition-transform duration-500 hover:scale-110">
+                                                <img
+                                                    src={achievementImages[activeBadge.id]}
+                                                    alt={activeBadge.name}
+                                                    className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]"
+                                                />
+                                            </div>
+                                        ) : (
+                                            /* Fallback if no image mapped */
+                                            <div className="relative w-32 h-32 rounded-full border-4 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
+                                                <Medal className="w-16 h-16 text-teal-500" />
+                                            </div>
+                                        )}
 
-                                        {/* Badge text with enhanced gradient and glow */}
-                                        <span
-                                            className="text-3xl font-serif italic font-bold bg-gradient-to-r from-teal-700 via-emerald-500 to-teal-700 dark:from-teal-300 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent"
-                                            style={{
-                                                filter: 'drop-shadow(0 0 10px rgba(20, 184, 166, 0.5))',
-                                            }}
-                                        >
-                                            {activeBadge.name}
-                                        </span>
-
-                                        {/* Inner glow effect */}
-                                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-teal-400/10 to-transparent pointer-events-none"></div>
+                                        {/* Badge Name */}
+                                        <div className="mt-4">
+                                            <span className="text-xl font-bold font-serif bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-600 dark:from-teal-300 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent filter drop-shadow-sm">
+                                                {activeBadge.name}
+                                            </span>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="text-center py-6">

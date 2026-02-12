@@ -23,6 +23,7 @@ import {
     Image,
     List,
     Dumbbell,
+    X,
 } from "lucide-react";
 import { useGuidedTour } from "@/contexts/GuidedTourContext";
 import { meditationTour } from "@/components/guided-tour/tourSteps";
@@ -292,32 +293,51 @@ export default function Meditation() {
             {/* ═══════════════════════════════════════════════════════ */}
             <main className="flex-1 flex overflow-hidden">
 
-                {/* Active Session Modal Overlay */}
+                {/* Active Session Modal Overlay - Full Screen Adaptive */}
                 {isActive && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
-                        <div className={`relative bg-white dark:bg-[#12121a] rounded-3xl shadow-2xl border border-slate-200/50 dark:border-white/10 overflow-y-auto max-h-[90vh] ${selectedSession.id === '5' ? 'w-full max-w-xl' : 'w-full max-w-2xl p-8 md:p-10'}`}>
-                            {/* Close / Stop Button */}
-                            <button
-                                onClick={() => { setIsActive(false); handleReset(); }}
-                                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-slate-500 hover:text-red-500 transition-all"
+                    <div className="fixed inset-0 z-50 bg-slate-50 dark:bg-[#0a0a0f] animate-in fade-in duration-300 flex flex-col h-[100dvh] w-screen overflow-hidden">
+                        {/* Close / Stop Button */}
+                        <button
+                            onClick={() => { setIsActive(false); handleReset(); }}
+                            className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-3 rounded-full bg-white dark:bg-white/10 hover:bg-red-50 dark:hover:bg-red-500/20 text-slate-400 hover:text-red-500 transition-all shadow-sm"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+
+                        {/* Main Content Container with safe area padding */}
+                        <div className="flex-1 flex flex-col items-center h-full w-full relative pt-12 pb-6 px-4 md:py-8">
+
+                            {/* Background Ambience */}
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                                <div className="absolute top-1/4 left-1/4 w-[40rem] h-[40rem] bg-emerald-500/5 rounded-full blur-3xl" />
+                                <div className="absolute bottom-1/4 right-1/4 w-[40rem] h-[40rem] bg-teal-500/5 rounded-full blur-3xl" />
+                            </div>
+
+                            {/* 1. Header Section - Always at top */}
+                            <div className="flex-none text-center space-y-1 md:space-y-2 z-10 mb-4 md:mb-8 w-full max-w-4xl mx-auto">
+                                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white tracking-tight">{selectedSession.title}</h2>
+                                <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-lg mx-auto line-clamp-2 md:line-clamp-none px-4">{selectedSession.description}</p>
+                            </div>
+
+                            {/* Flexible Layout Container: Switches to Row for Nostril Breathing */}
+                            <div className={`flex-1 w-full flex relative z-10 min-h-0 transition-all duration-500 
+                                ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
+                                    ? 'flex-col md:flex-row items-center justify-center gap-8 md:gap-16 lg:gap-24 px-4 md:px-12'
+                                    : 'flex-col items-center justify-between'}`}
                             >
-                                ✕
-                            </button>
 
-                            {selectedSession.id === '5' ? (
-                                /* Session 5: Self-contained NostrilViz takes over */
-                                <BreathingVisualizer
-                                    sessionId={selectedSession.id}
-                                    breathPhase={breathPhase}
-                                    isActive={isActive}
-                                    cycle={selectedSession.cycle}
-                                />
-                            ) : (
-                                <div className="flex flex-col items-center w-full h-full justify-between min-h-[350px]">
-                                    <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-1">{selectedSession.title}</h2>
-                                    <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm mb-4 line-clamp-2">{selectedSession.description}</p>
-
-                                    <div className="relative rounded-3xl p-4 md:p-6 bg-white/30 dark:bg-white/[0.02] shadow-lg ring-1 ring-slate-200/50 dark:ring-white/5 mb-4 flex-shrink-0">
+                                {/* 2. Visualizer Section */}
+                                <div className={`flex items-center justify-center transition-all duration-500
+                                    ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
+                                        ? 'flex-1 w-full md:w-1/2 md:justify-end order-1'
+                                        : 'flex-1 w-full order-1'}`}
+                                >
+                                    {/* Wrapper for scaling */}
+                                    <div className={`transform transition-transform duration-500 
+                                        ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
+                                            ? 'scale-75 md:scale-80' // Reduced size by ~20% as requested
+                                            : 'scale-90 sm:scale-100 md:scale-125 lg:scale-150 origin-center'}`} // Scaled up for others
+                                    >
                                         <BreathingVisualizer
                                             sessionId={selectedSession.id}
                                             breathPhase={breathPhase}
@@ -325,58 +345,68 @@ export default function Meditation() {
                                             cycle={selectedSession.cycle}
                                         />
                                     </div>
+                                </div>
+
+                                {/* 3. Controls Section */}
+                                <div className={`flex flex-col items-center gap-4 md:gap-6 w-full max-w-md transition-all duration-500
+                                    ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
+                                        ? 'flex-none md:flex-1 w-full md:w-1/2 md:items-start order-2 pb-0'
+                                        : 'flex-none order-2 pb-4 md:pb-8'}`}
+                                >
 
                                     {/* Phase Label */}
-                                    <div className="text-center mb-4">
-                                        <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide transition-all duration-500
-                                            ${breathPhase === 'inhale' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' :
-                                                breathPhase === 'exhale' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300' :
-                                                    'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300'}`}
+                                    <div className="text-center w-full md:w-auto">
+                                        <span className={`inline-block px-6 py-2 rounded-full text-lg md:text-xl font-bold tracking-widest transition-all duration-300 shadow-lg
+                                            ${breathPhase === 'inhale' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300' :
+                                                breathPhase === 'exhale' ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300' :
+                                                    'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300'}`}
                                         >
-                                            {breathPhase === 'inhale' ? 'Inhale' : breathPhase === 'exhale' ? 'Exhale' : 'Hold'}
+                                            {breathPhase === 'inhale' ? 'INHALE' : breathPhase === 'exhale' ? 'EXHALE' : 'HOLD'}
                                         </span>
                                     </div>
 
                                     {/* Timer */}
-                                    <div className="text-4xl md:text-5xl font-light text-slate-800 dark:text-white font-mono tracking-wider tabular-nums mb-3">
+                                    <div className={`text-5xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-widest tabular-nums w-full md:w-auto text-center md:text-left
+                                        ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril')) ? 'md:text-8xl' : ''}`}
+                                    >
                                         {formatTime(timeLeft)}
                                     </div>
 
-                                    {/* Progress */}
-                                    <div className="w-full max-w-xs h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6 flex-shrink-0">
+                                    {/* Progress Bar */}
+                                    <div className="w-full max-w-xs h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
                                             style={{ width: `${progress}%` }}
                                         />
                                     </div>
 
-                                    {/* Controls */}
-                                    <div className="flex items-center justify-center gap-6 md:gap-8 pb-1">
+                                    {/* Controls Buttons */}
+                                    <div className="flex items-center justify-center gap-8 md:gap-10 mt-2 w-full md:w-auto">
                                         <button
                                             onClick={handleReset}
-                                            className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-110 active:scale-95 border border-slate-100 dark:border-white/5"
                                         >
-                                            <RotateCcw className="w-5 h-5" />
+                                            <RotateCcw className="w-5 h-5 md:w-6 md:h-6" />
                                         </button>
                                         <button
                                             onClick={() => setIsActive(!isActive)}
-                                            className={`p-6 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95
+                                            className={`p-6 md:p-7 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95
                                                 ${isActive
-                                                    ? "bg-amber-500 text-white shadow-amber-500/40"
-                                                    : "bg-emerald-500 text-white shadow-emerald-500/40"
+                                                    ? "bg-amber-500 text-white shadow-amber-500/40 hover:shadow-amber-500/50"
+                                                    : "bg-emerald-500 text-white shadow-emerald-500/40 hover:shadow-emerald-500/50"
                                                 }`}
                                         >
-                                            {isActive ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
+                                            {isActive ? <Pause className="w-8 h-8 md:w-9 md:h-9 fill-current" /> : <Play className="w-8 h-8 md:w-9 md:h-9 fill-current ml-1" />}
                                         </button>
                                         <button
                                             onClick={() => setIsMuted(!isMuted)}
-                                            className="p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105"
+                                            className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-110 active:scale-95 border border-slate-100 dark:border-white/5"
                                         >
-                                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                                            {isMuted ? <VolumeX className="w-5 h-5 md:w-6 md:h-6" /> : <Volume2 className="w-5 h-5 md:w-6 md:h-6" />}
                                         </button>
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 )}

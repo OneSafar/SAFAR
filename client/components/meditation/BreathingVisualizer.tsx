@@ -298,10 +298,10 @@ const BoxTraceViz: React.FC<{ breathPhase: string; isActive: boolean; cycle?: { 
                     rx="4"
                     opacity={isActive ? 0.8 : 0.4}
                 />
-                <text x={offset + boxSize / 2} y={offset - 6} textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7">INHALE</text>
-                <text x={offset + boxSize + 6} y={offset + boxSize / 2} textAnchor="start" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7" transform={`rotate(90, ${offset + boxSize + 6}, ${offset + boxSize / 2})`}>HOLD</text>
-                <text x={offset + boxSize / 2} y={offset + boxSize + 16} textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7">EXHALE</text>
-                <text x={offset - 6} y={offset + boxSize / 2} textAnchor="end" fill="#3b82f6" fontSize="10" fontWeight="bold" opacity="0.7" transform={`rotate(-90, ${offset - 6}, ${offset + boxSize / 2})`}>HOLD</text>
+                <text x={offset + boxSize / 2} y={offset - 24} textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="bold" opacity="0.8" letterSpacing="0.1em">INHALE</text>
+                <text x={offset + boxSize + 24} y={offset + boxSize / 2} textAnchor="start" fill="#3b82f6" fontSize="12" fontWeight="bold" opacity="0.8" letterSpacing="0.1em" transform={`rotate(90, ${offset + boxSize + 24}, ${offset + boxSize / 2})`}>HOLD</text>
+                <text x={offset + boxSize / 2} y={offset + boxSize + 32} textAnchor="middle" fill="#3b82f6" fontSize="12" fontWeight="bold" opacity="0.8" letterSpacing="0.1em">EXHALE</text>
+                <text x={offset - 24} y={offset + boxSize / 2} textAnchor="end" fill="#3b82f6" fontSize="12" fontWeight="bold" opacity="0.8" letterSpacing="0.1em" transform={`rotate(-90, ${offset - 24}, ${offset + boxSize / 2})`}>HOLD</text>
             </svg>
             <div
                 ref={dotRef}

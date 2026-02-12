@@ -19,13 +19,28 @@ const ACHIEVEMENT_DEFINITIONS = [
     // FOCUS BADGES - Based on total focus hours
     { id: 'F001', name: 'Focus Initiate', type: 'badge', category: 'focus', tier: 1, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 10 }), display_priority: 10 },
     { id: 'F002', name: 'Focus Adept', type: 'badge', category: 'focus', tier: 2, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 50 }), display_priority: 20 },
-    { id: 'F003', name: 'A Legend', type: 'badge', category: 'focus', tier: 3, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 100 }), display_priority: 30 },
+    { id: 'F003', name: 'Aura of Arjun', type: 'badge', category: 'focus', tier: 3, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 100 }), display_priority: 30 },
     { id: 'F004', name: 'The Finisher', type: 'badge', category: 'focus', tier: 4, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 250 }), display_priority: 40 },
     { id: 'F005', name: 'Dhurandhar', type: 'badge', category: 'focus', tier: 5, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 500 }), display_priority: 50 },
 
     // CHECK-IN STREAK BADGES - Based on check-in streak
     { id: 'S001', name: 'Unstoppable Sigma', type: 'badge', category: 'streak', tier: 1, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 7 }), display_priority: 17 },
     { id: 'S002', name: 'Jeet Express', type: 'badge', category: 'streak', tier: 2, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 30 }), display_priority: 27 },
+
+    // EMOTIONAL / SPECIAL BADGES
+    { id: 'ET006', name: 'Flow Seeker', type: 'badge', category: 'emotional', tier: 1, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 2 }), display_priority: 55 },
+
+    // PERMANENT TITLES - Goal Completion
+    { id: 'T005', name: 'Goal Getter', type: 'title', category: 'goals', tier: 1, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 10 }), display_priority: 60 },
+    { id: 'T006', name: 'Ambition Master', type: 'title', category: 'goals', tier: 2, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 50 }), display_priority: 61 },
+    { id: 'T007', name: 'Dream Chaser', type: 'title', category: 'goals', tier: 3, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 100 }), display_priority: 62 },
+    { id: 'T008', name: 'Legendary Achiever', type: 'title', category: 'goals', tier: 4, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 500 }), display_priority: 63 },
+
+    // PERMANENT TITLES - Login Streaks
+    { id: 'T001', name: 'The Regular', type: 'title', category: 'streak', tier: 1, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 3 }), display_priority: 70 },
+    { id: 'T002', name: 'Dedicated Soul', type: 'title', category: 'streak', tier: 2, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 7 }), display_priority: 71 },
+    { id: 'T003', name: 'Consistency King', type: 'title', category: 'streak', tier: 3, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 14 }), display_priority: 72 },
+    { id: 'T004', name: 'Unstoppable Force', type: 'title', category: 'streak', tier: 4, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 30 }), display_priority: 73 },
 ];
 
 // ========================================
@@ -38,7 +53,6 @@ const EMOTIONAL_TITLES = [
     { id: 'ET003', name: 'Quiet Consistency', description: 'Focused every day this week', trigger: 'consistent_focus' },
     { id: 'ET004', name: 'Survived Bad Week', description: 'Kept focusing despite a challenging week', trigger: 'bad_week_focus' },
     { id: 'ET005', name: 'Pushed Through Overwhelm', description: 'Stayed focused during stressful times', trigger: 'overwhelm_focus' },
-    { id: 'ET006', name: 'Flow Seeker', description: 'Achieved a long deep work session (2+ hours)', trigger: 'long_session' },
 ];
 
 // ========================================
@@ -62,15 +76,17 @@ async function getUserStats(userId: string) {
 
     // Get check-in streak
     const streakResult = await db.execute({
-        sql: 'SELECT check_in_streak FROM streaks WHERE user_id = ?',
+        sql: 'SELECT check_in_streak, login_streak FROM streaks WHERE user_id = ?',
         args: [userId]
     });
     const checkInStreak = (streakResult.rows[0] as any)?.check_in_streak || 0;
+    const loginStreak = (streakResult.rows[0] as any)?.login_streak || 0;
 
     return {
         total_focus_hours: totalFocusHours,
         goals_completed: goalsCompleted,
         check_in_streak: checkInStreak,
+        login_streak: loginStreak,
     };
 }
 
@@ -78,7 +94,7 @@ async function getWeeklyMoodData(userId: string) {
     // Get moods from last 7 days
     const moodsResult = await db.execute({
         sql: `SELECT mood, intensity, notes, timestamp FROM moods 
-              WHERE user_id = ? AND timestamp >= datetime('now', '-7 days')
+              WHERE user_id = ? AND timestamp >= NOW() - INTERVAL '7 days'
               ORDER BY timestamp DESC`,
         args: [userId]
     });
@@ -118,7 +134,7 @@ async function getWeeklyMoodData(userId: string) {
     // Check journal for struggle keywords
     const journalResult = await db.execute({
         sql: `SELECT content FROM journal 
-              WHERE user_id = ? AND timestamp >= datetime('now', '-7 days')`,
+              WHERE user_id = ? AND timestamp >= NOW() - INTERVAL '7 days'`,
         args: [userId]
     });
     const struggleKeywords = ['stress', 'overwhelm', 'tired', 'exhausted', 'burnout', 'sad', 'anxious', 'difficult'];
@@ -303,7 +319,7 @@ router.get('/active-title', requireAuth, async (req: any, res) => {
             sql: `SELECT ad.name, ad.type, ad.rarity, ua.achievement_id
                   FROM user_achievements ua
                   JOIN achievement_definitions ad ON ua.achievement_id = ad.id
-                  WHERE ua.user_id = ? AND ua.is_active = 1
+                  WHERE ua.user_id = ? AND ua.is_active = TRUE
                   ORDER BY ad.display_priority DESC
                   LIMIT 1`,
             args: [userId]
@@ -340,7 +356,7 @@ router.post('/select', requireAuth, async (req: any, res) => {
         const userAchievement = await db.execute({
             sql: `SELECT ua.*, ad.name, ad.type FROM user_achievements ua 
                   JOIN achievement_definitions ad ON ua.achievement_id = ad.id
-                  WHERE ua.user_id = ? AND ua.achievement_id = ? AND ua.is_active = 1`,
+                  WHERE ua.user_id = ? AND ua.achievement_id = ? AND ua.is_active = TRUE`,
             args: [userId, achievementId]
         });
 
@@ -364,6 +380,22 @@ router.post('/select', requireAuth, async (req: any, res) => {
     } catch (error) {
         console.error('Select achievement error:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// TEMPORARY DEBUG ROUTE
+router.get('/debug/duplicates', async (req, res) => {
+    try {
+        const result = await db.execute({
+            sql: `SELECT name, COUNT(*) as count, array_agg(id) as ids 
+                  FROM achievement_definitions 
+                  GROUP BY name 
+                  HAVING COUNT(*) > 1`,
+            args: []
+        });
+        res.json(result.rows);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
     }
 });
 
@@ -421,6 +453,10 @@ router.get('/all', requireAuth, async (req: any, res) => {
                 case 'check_in_streak':
                     currentValue = stats.check_in_streak;
                     requirementText = `${targetValue}-day check-in streak`;
+                    break;
+                case 'login_streak':
+                    currentValue = stats.login_streak;
+                    requirementText = `${targetValue}-day login streak`;
                     break;
                 default:
                     requirementText = 'Special achievement';
