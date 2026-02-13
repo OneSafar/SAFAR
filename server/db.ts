@@ -314,6 +314,64 @@ export async function initDatabase() {
         )
     `);
 
+        // Mehfil comments table
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS mehfil_comments (
+            id TEXT PRIMARY KEY,
+            thought_id TEXT NOT NULL REFERENCES mehfil_thoughts(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+    `);
+
+        // Mehfil saves table (Bookmarks)
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS mehfil_saves (
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            thought_id TEXT NOT NULL REFERENCES mehfil_thoughts(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            PRIMARY KEY (user_id, thought_id)
+        )
+    `);
+
+        // Mehfil reports table
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS mehfil_reports (
+            id TEXT PRIMARY KEY,
+            thought_id TEXT NOT NULL REFERENCES mehfil_thoughts(id) ON DELETE CASCADE,
+            reporter_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            reason TEXT NOT NULL,
+            status TEXT DEFAULT 'pending', 
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+    `);
+
+        // Mehfil shares table (Audit/Tracking)
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS mehfil_shares (
+            id TEXT PRIMARY KEY,
+            thought_id TEXT NOT NULL REFERENCES mehfil_thoughts(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            platform TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )
+    `);
+
+        // Mehfil friendships/connections table
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS mehfil_friendships (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            friend_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            status TEXT CHECK(status IN ('pending', 'accepted', 'rejected')) DEFAULT 'pending',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            accepted_at TIMESTAMP WITH TIME ZONE,
+            UNIQUE(user_id, friend_id),
+            CHECK(user_id != friend_id)
+        )
+    `);
+
         // Indexes for performance
         await pool.query(`
         CREATE INDEX IF NOT EXISTS idx_mehfil_thoughts_user_id 
@@ -333,6 +391,26 @@ export async function initDatabase() {
         await pool.query(`
         CREATE INDEX IF NOT EXISTS idx_mehfil_reactions_user_id 
         ON mehfil_reactions(user_id)
+    `);
+
+        await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_mehfil_comments_thought_id 
+        ON mehfil_comments(thought_id)
+    `);
+
+        await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_mehfil_saves_user_id 
+        ON mehfil_saves(user_id)
+    `);
+
+        await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_mehfil_friendships_user_id 
+        ON mehfil_friendships(user_id)
+    `);
+
+        await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_mehfil_friendships_friend_id 
+        ON mehfil_friendships(friend_id)
     `);
 
         // ═══════════════════════════════════════════════════════════

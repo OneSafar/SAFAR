@@ -17,6 +17,8 @@ import { initDatabase, fixAchievementSchema } from "./db";
 import { setupMehfilSocket } from "./routes/mehfil-socket";
 import { paymentRoutes } from "./routes/payments";
 import { uploadRoutes, imageServeRouter } from "./routes/uploads";
+import { mehfilInteractionsRouter } from "./routes/mehfil-interactions";
+import mehfilSocialRouter from "./routes/mehfil-social";
 
 export async function createServer() {
   const app = express();
@@ -73,6 +75,8 @@ export async function createServer() {
   app.use("/api/payments", paymentRoutes);
   app.use("/api/upload", uploadRoutes);
   app.use("/api/images", imageServeRouter);
+  app.use("/api/mehfil/interactions", mehfilInteractionsRouter);
+  app.use("/api/mehfil", mehfilSocialRouter);
 
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";

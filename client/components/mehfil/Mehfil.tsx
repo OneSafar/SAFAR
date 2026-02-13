@@ -5,7 +5,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { authService } from '@/utils/authService';
 import ThoughtCard from './ThoughtCard';
 import Composer from './Composer';
-import { Contrast, Search, Settings, LogOut, Home, HelpCircle } from 'lucide-react';
+import MehfilSidebar from './MehfilSidebar';
+import { Contrast, Search, Settings, LogOut, Home, HelpCircle, Menu } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -30,6 +31,7 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl }) => {
     const [user, setUser] = useState<any>(null);
     const { theme, toggleTheme } = useTheme();
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const {
         thoughts,
@@ -162,15 +164,9 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl }) => {
 
             <nav className="fixed top-4 left-4 right-4 h-16 glass-2-0 rounded-2xl z-50 px-6 flex items-center justify-between border border-white/40 dark:border-white/10 shadow-lg shadow-black/5">
                 <Link to="/landing" className="flex items-center gap-3 group cursor-pointer text-inherit no-underline">
-                    <div className="relative flex items-center justify-center">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-500 transform transition-transform group-hover:rotate-6 shadow-lg shadow-teal-500/30 flex items-center justify-center text-white font-black text-lg">
-                            M
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
-                        </div>
+                    <div className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-purple-500 transform transition-transform group-hover:scale-105 shadow-lg shadow-rose-500/30 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg tracking-tight">Mehfil</span>
                     </div>
-                    <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">Mehfil</span>
                 </Link>
 
                 <div className="relative hidden md:block">
@@ -188,6 +184,14 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl }) => {
                     <Link to="/landing" className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Home">
                         <Home className="w-5 h-5" />
                     </Link>
+
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
+                        title="Mehfil Hub"
+                    >
+                        <Menu className="w-5 h-5" />
+                    </button>
 
                     <Button
                         variant="ghost"
@@ -261,6 +265,9 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl }) => {
                     </div>
                 </main>
             </div>
+
+            {/* Sidebar */}
+            <MehfilSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             <TourPrompt tour={mehfilTour} featureName="Mehfil" />
         </div>
