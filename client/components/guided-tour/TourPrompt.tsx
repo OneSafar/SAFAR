@@ -10,7 +10,7 @@ interface TourPromptProps {
 }
 
 export default function TourPrompt({ tour, featureName }: TourPromptProps) {
-    const { startTour, hasSeenTour, markTourSeen } = useGuidedTour();
+    const { startTour, hasSeenTour, markTourSeen, isActive } = useGuidedTour();
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -31,9 +31,26 @@ export default function TourPrompt({ tour, featureName }: TourPromptProps) {
         markTourSeen(tour.id);
     };
 
-    if (!isVisible) return null;
+    if (isActive) return null;
 
     const description = tourDescriptions[tour.id] || `Learn how to use ${featureName} effectively.`;
+
+    // If tour has been seen, show a persistent small helper button
+    if (hasSeenTour(tour.id)) {
+        return (
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => startTour(tour)}
+                className="fixed bottom-6 right-6 z-40 rounded-full w-10 h-10 p-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl hover:scale-105 transition-all text-indigo-500 dark:text-indigo-400"
+                title={`Start ${featureName} Tour`}
+            >
+                <Sparkles className="w-5 h-5" />
+            </Button>
+        );
+    }
+
+    if (!isVisible) return null;
 
     return (
         /* Full-screen modal overlay */
@@ -56,7 +73,7 @@ export default function TourPrompt({ tour, featureName }: TourPromptProps) {
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
                             <Sparkles className="w-8 h-8" />
                         </div>
-                        <div className="absolute inset-0 rounded-2xl bg-indigo-500/30 animate-ping" />
+                        <div className="absolute inset-0 rounded-2xl bg-indigo-500/30 animate-ping" style={{ animationDuration: '4s' }} />
                     </div>
 
                     {/* About badge */}
@@ -78,6 +95,7 @@ export default function TourPrompt({ tour, featureName }: TourPromptProps) {
                     <Button
                         onClick={handleStartTour}
                         className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all animate-pulse py-3 text-base font-semibold rounded-xl"
+                        style={{ animationDuration: '8s' }}
                     >
                         <Play className="w-4 h-4 mr-2 fill-white" />
                         Start Tour

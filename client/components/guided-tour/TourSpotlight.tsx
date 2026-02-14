@@ -140,9 +140,10 @@ export default function TourSpotlight({
                         }}
                     />
                     {/* Pulsing circle */}
-                    <div className="w-4 h-4 rounded-full bg-indigo-500 animate-pulse" />
+                    <div className="w-4 h-4 rounded-full bg-indigo-500 animate-pulse" style={{ animationDuration: '8s' }} />
                     <div
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-indigo-500/30 animate-ping"
+                        style={{ animationDuration: '4s' }}
                     />
                 </div>
             </div>

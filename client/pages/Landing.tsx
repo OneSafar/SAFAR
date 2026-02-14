@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { authService } from '../utils/authService';
 import AuthModal from '../components/AuthModal';
+import ThemeToggle from '../components/ui/theme-toggle';
 
 // Import extracted components
 import HeroSection from '../components/landing/HeroSection';
@@ -40,6 +41,11 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen font-sans text-slate-800 dark:text-slate-100 selection:bg-brand-accent selection:text-black bg-slate-50 dark:bg-midnight">
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed top-6 right-6 z-50">
+        <ThemeToggle variant="icon-with-bg" />
+      </div>
+      
       <main className="w-full min-h-screen relative">
         <HeroSection user={user} setIsAuthModalOpen={setIsAuthModalOpen} />
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/contexts/ThemeContext";
 import { authService } from "@/utils/authService";
 import { Moon, Sun, Plus, Home, Settings, Play, Pause, RotateCcw, Leaf, Sparkles, LogOut, ArrowRight, BarChart2, Clock, Zap, Target, Flame, Calendar, Palette, ChevronLeft, ChevronRight, Trees, Waves, Sunset, MoonStar, Sparkle, HelpCircle, Volume2, VolumeX, Music } from "lucide-react";
 import TasksSidebar from "./TasksSidebar";
 import FocusAnalytics from "./FocusAnalytics";
 import { focusService } from "@/utils/focusService";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ThemeToggle from "@/components/ui/theme-toggle";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -88,7 +88,6 @@ const focusThemes: FocusTheme[] = [
 
 export default function StudyWithMe() {
     const navigate = useNavigate();
-    const { theme, toggleTheme } = useTheme();
     const [user, setUser] = useState<any>(null);
     const [mode, setMode] = useState<"Timer" | "short" | "long">("Timer");
     const [sliderValue, setSliderValue] = useState(25);
@@ -801,6 +800,9 @@ export default function StudyWithMe() {
 
             {/* Floating Controls - Music & Profile */}
             <div className="fixed top-6 right-8 z-[60] flex items-center gap-3">
+                {/* Theme Toggle */}
+                <ThemeToggle variant="icon" className="text-white hover:text-white/80" />
+                
                 {/* Music Control */}
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-3 py-2">
                     <button

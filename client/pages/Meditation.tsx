@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import BreathingVisualizer from "@/components/meditation/BreathingVisualizer";
 import { useNavigate } from "react-router-dom";
 import meditationBg from "@/assets/meditation-bg.jpg";
-import { useTheme } from "@/contexts/ThemeContext";
 import { authService } from "@/utils/authService";
+import ThemeToggle from "@/components/ui/theme-toggle";
 import {
     ArrowLeft,
     Play,
@@ -269,6 +269,11 @@ export default function Meditation() {
 
     return (
         <div className="h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 dark:from-[#0a0a0f] dark:to-[#0f0f17] transition-colors duration-500 font-sans overflow-hidden">
+            {/* Theme Toggle - Fixed Top Right */}
+            <div className="fixed top-6 right-6 z-50">
+                <ThemeToggle variant="icon-with-bg" />
+            </div>
+            
             {/* Header */}
             <header className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b border-slate-200/50 dark:border-white/5">
                 <button

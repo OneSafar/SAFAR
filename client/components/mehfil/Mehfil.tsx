@@ -1,12 +1,12 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useMehfilStore } from '@/store/mehfilStore';
-import { useTheme } from '@/contexts/ThemeContext';
 import { authService } from '@/utils/authService';
 import ThoughtCard from './ThoughtCard';
 import Composer from './Composer';
 import MehfilSidebar from './MehfilSidebar';
-import { Contrast, Search, Settings, LogOut, Home, HelpCircle, Menu } from 'lucide-react';
+import { ThemeToggleContrast } from '@/components/ui/theme-toggle';
+import { Search, Settings, LogOut, Home, HelpCircle, Menu } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -29,7 +29,6 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl }) => {
     const navigate = useNavigate();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [user, setUser] = useState<any>(null);
-    const { theme, toggleTheme } = useTheme();
     const [searchTerm, setSearchTerm] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -201,12 +200,7 @@ const Mehfil: React.FC<MehfilProps> = ({ backendUrl }) => {
                     >
                         <HelpCircle className="w-5 h-5" />
                     </Button>
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-                    >
-                        <Contrast className="w-5 h-5" />
-                    </button>
+                    <ThemeToggleContrast />
 
                     <div className="flex items-center gap-3 pl-2 ml-2 border-l border-slate-200 dark:border-slate-800">
                         <DropdownMenu>

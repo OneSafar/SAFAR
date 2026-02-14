@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { authService } from "@/utils/authService";
 import { User } from "@shared/api";
 import { toast } from "sonner";
+import GlobalPageFooter from "@/components/GlobalPageFooter";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -371,6 +372,9 @@ export default function Profile() {
             <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
           </div>
         </main>
+        
+        {/* Footer */}
+        <GlobalPageFooter />
       </div>
     </>
   );
