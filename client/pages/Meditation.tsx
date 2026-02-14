@@ -114,22 +114,6 @@ const sessions: Session[] = [
         ],
         cycle: { inhale: 4, holdIn: 7, exhale: 8, holdOut: 0 }
     },
-    {
-        id: "5",
-        title: "Alternate Nostril Breathing",
-        duration: 5,
-        description: "Balance left and right brain hemispheres.",
-        longDescription: "An ancient yogic technique (Nadi Shodhana) that calms the mind, reduces anxiety, and balances the nervous system by alternating airflow through each nostril.",
-        type: "breathing",
-        steps: [
-            "Sit comfortably with your spine straight.",
-            "Close your right nostril with your thumb.",
-            "Inhale slowly through your left nostril.",
-            "Close your left nostril with your ring finger, release your thumb.",
-            "Exhale slowly through your right nostril. Repeat alternating."
-        ],
-        cycle: { inhale: 4, holdIn: 0, exhale: 4, holdOut: 0 }
-    },
 ];
 
 const exercises = sessions; // Alias for mobile view compatibility
@@ -267,12 +251,12 @@ export default function Meditation() {
     const progress = ((selectedSession.duration * 60 - timeLeft) / (selectedSession.duration * 60)) * 100;
 
     return (
-        <div className="h-screen flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 dark:from-[#0a0a0f] dark:to-[#0f0f17] transition-colors duration-500 font-sans overflow-hidden">
+        <div className="h-[100dvh] flex flex-col bg-gradient-to-b from-slate-50 to-slate-100 dark:from-[#0a0a0f] dark:to-[#0f0f17] transition-colors duration-500 font-sans overflow-hidden">
             {/* Theme Toggle - Fixed Top Right */}
-            <div className="fixed top-6 right-6 z-50">
+            <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50">
                 <ThemeToggle variant="icon-with-bg" />
             </div>
-            
+
             {/* Header */}
             <header className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-b border-slate-200/50 dark:border-white/5">
                 <button
@@ -297,7 +281,7 @@ export default function Meditation() {
             {/* ═══════════════════════════════════════════════════════ */}
             {/* 3-COLUMN LAYOUT                                       */}
             {/* ═══════════════════════════════════════════════════════ */}
-            <main className="flex-1 flex overflow-hidden">
+            <main className="flex-1 flex overflow-y-auto overflow-x-hidden">
 
                 {/* Active Session Modal Overlay - Full Screen Adaptive */}
                 {isModalOpen && (
@@ -325,25 +309,12 @@ export default function Meditation() {
                                 <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-lg mx-auto line-clamp-2 md:line-clamp-none px-4">{selectedSession.description}</p>
                             </div>
 
-                            {/* Flexible Layout Container: Switches to Row for Nostril Breathing */}
-                            <div className={`flex-1 w-full flex relative z-10 min-h-0 transition-all duration-500 
-                                ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
-                                    ? 'flex-col md:flex-row items-center justify-center gap-8 md:gap-16 lg:gap-24 px-4 md:px-12'
-                                    : 'flex-col items-center justify-between'}`}
-                            >
+                            <div className="flex-1 w-full flex relative z-10 min-h-0 transition-all duration-500 flex-col items-center justify-between">
 
                                 {/* 2. Visualizer Section */}
-                                <div className={`flex items-center justify-center transition-all duration-500
-                                    ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
-                                        ? 'flex-1 w-full md:w-1/2 md:justify-end order-1'
-                                        : 'flex-1 w-full order-1'}`}
-                                >
+                                <div className="flex items-center justify-center transition-all duration-500 flex-1 w-full order-1">
                                     {/* Wrapper for scaling */}
-                                    <div className={`transform transition-transform duration-500 
-                                        ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
-                                            ? 'scale-75 md:scale-80' // Reduced size by ~20% as requested
-                                            : 'scale-90 sm:scale-100 md:scale-125 lg:scale-150 origin-center'}`} // Scaled up for others
-                                    >
+                                    <div className="transform transition-transform duration-500 scale-90 sm:scale-100 md:scale-125 lg:scale-150 origin-center">
                                         <BreathingVisualizer
                                             sessionId={selectedSession.id}
                                             breathPhase={breathPhase}
@@ -354,11 +325,7 @@ export default function Meditation() {
                                 </div>
 
                                 {/* 3. Controls Section */}
-                                <div className={`flex flex-col items-center gap-4 md:gap-6 w-full max-w-md transition-all duration-500
-                                    ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril'))
-                                        ? 'flex-none md:flex-1 w-full md:w-1/2 md:items-start order-2 pb-0'
-                                        : 'flex-none order-2 pb-4 md:pb-8'}`}
-                                >
+                                <div className="flex flex-col items-center gap-4 md:gap-6 w-full max-w-md transition-all duration-500 flex-none order-2 pb-4 md:pb-8">
 
                                     {/* Phase Label */}
                                     <div className="text-center w-full md:w-auto">
@@ -371,10 +338,7 @@ export default function Meditation() {
                                         </span>
                                     </div>
 
-                                    {/* Timer */}
-                                    <div className={`text-5xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-widest tabular-nums w-full md:w-auto text-center md:text-left
-                                        ${(selectedSession.id === '5' || selectedSession.title.includes('Nostril')) ? 'md:text-8xl' : ''}`}
-                                    >
+                                    <div className="text-5xl md:text-7xl font-light text-slate-800 dark:text-white font-mono tracking-widest tabular-nums w-full md:w-auto text-center md:text-left">
                                         {formatTime(timeLeft)}
                                     </div>
 
@@ -417,8 +381,8 @@ export default function Meditation() {
                     </div>
                 )}
 
-                {/* ═══════ LEFT SIDEBAR ═══════ */}
-                <aside className="hidden lg:flex flex-col w-[406px] min-w-[406px] border-r border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 gap-4">
+                {/* ═══ LEFT SIDEBAR ═══════ */}
+                <div className="hidden lg:flex flex-col w-[406px] min-w-[406px] border-r border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4 gap-4">
                     {/* Course Banner with In-App Payment */}
                     <CourseBanner
                         user={user ? { name: user.name, email: user.email } : null}
@@ -435,10 +399,10 @@ export default function Meditation() {
                             <p className="text-xs text-slate-300 dark:text-slate-600 mt-1">Coming Soon</p>
                         </div>
                     </div>
-                </aside>
+                </div>
 
-                {/* ═══════ CENTER CONTENT ═══════ */}
-                <section className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-6">
+                {/* ═══ CENTER CONTENT ═══════ */}
+                <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-6">
                     {/* Background Image — very subtle */}
                     <div className="absolute inset-0 opacity-[0.06] dark:opacity-[0.03] pointer-events-none select-none">
                         <img src={meditationBg} alt="" className="w-full h-full object-cover" />
@@ -462,7 +426,7 @@ export default function Meditation() {
                             />
                         </div>
 
-                        {/* Dhyan Section Description */}
+                        {/* Session Section Description */}
                         <div className="text-center mt-2">
                             <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-2">Dhyan</h2>
                             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">A mindful space to breathe, relax, and restore inner calm through guided breathing techniques.</p>
@@ -474,7 +438,7 @@ export default function Meditation() {
                                 {formatTime(timeLeft)}
                             </div>
                             <p className="text-slate-400 dark:text-slate-500 text-sm font-medium mt-2 tracking-wide">
-                                Select a technique & press play
+                                Select a technique &amp; press play
                             </p>
                         </div>
 
@@ -495,7 +459,6 @@ export default function Meditation() {
                             >
                                 <RotateCcw className="w-5 h-5" />
                             </button>
-
                             <button
                                 data-tour="play-button"
                                 onClick={() => setIsActive(true)}
@@ -503,7 +466,6 @@ export default function Meditation() {
                             >
                                 <Play className="w-9 h-9 fill-current ml-0.5" />
                             </button>
-
                             <button
                                 onClick={() => setIsMuted(!isMuted)}
                                 className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all hover:scale-105 ring-1 ring-slate-200/50 dark:ring-white/5"
@@ -512,10 +474,10 @@ export default function Meditation() {
                             </button>
                         </div>
                     </div>
-                </section>
+                </div>
 
-                {/* ═══════ RIGHT SIDEBAR — Breathing Techniques ═══════ */}
-                <aside className="hidden md:flex flex-col w-[300px] min-w-[300px] border-l border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4">
+                {/* ═══ RIGHT SIDEBAR — Breathing Techniques ═══════ */}
+                <div className="hidden md:flex flex-col w-[300px] min-w-[300px] border-l border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-[#0d0d14]/60 backdrop-blur-sm p-4">
                     <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Breathing Techniques</h3>
 
                     <div data-tour="session-cards" className="flex flex-col gap-3">
@@ -557,7 +519,7 @@ export default function Meditation() {
                             </div>
                         ))}
                     </div>
-                </aside>
+                </div>
             </main>
 
             {/* Instruction Modal */}
@@ -569,7 +531,7 @@ export default function Meditation() {
                             className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors"
                         >
                             <span className="sr-only">Close</span>
-                            ✕
+                            <X className="w-5 h-5" />
                         </button>
 
                         <div className="text-center mb-8">
@@ -584,16 +546,16 @@ export default function Meditation() {
 
                         <div data-tour="session-info" className="bg-slate-50 dark:bg-black/20 rounded-xl p-6 mb-8 text-left">
                             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">How to perform</h3>
-                            <ul className="space-y-3">
+                            <div className="space-y-3">
                                 {selectedSession.steps.map((step, idx) => (
-                                    <li key={idx} className="flex gap-3 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
+                                    <div key={idx} className="flex gap-3 text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
                                         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">
                                             {idx + 1}
                                         </span>
                                         {step}
-                                    </li>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         </div>
 
                         <button

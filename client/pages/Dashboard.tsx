@@ -249,7 +249,7 @@ export default function Dashboard() {
 
                         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 md:gap-12">
                             {/* Left Side: Greeting & Quote */}
-                            <div className="flex-1 text-center md:text-left space-y-4">
+                            <div className="flex-1 text-center md:text-left space-y-4 w-full">
                                 <div className="space-y-1">
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-md mb-2">
                                         <span className="relative flex h-2 w-2">
@@ -262,7 +262,7 @@ export default function Dashboard() {
                                         Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">{user.name.split(' ')[0]}</span>
                                     </h1>
                                 </div>
-                                <div className="max-w-xl">
+                                <div className="max-w-xl mx-auto md:mx-0">
                                     <Quote className="w-5 h-5 text-indigo-400 mb-2 mx-auto md:mx-0 opacity-50" />
                                     <p className="text-lg text-slate-600 dark:text-slate-300 font-medium italic leading-relaxed">
                                         "{getDailyQuote()}"
@@ -281,17 +281,17 @@ export default function Dashboard() {
 
                             {/* Right Side: Identity Badge */}
                             {(activeTitleId && achievementImages[activeTitleId]) || activeTitle ? (
-                                <div className="relative flex-shrink-0 group/badge">
+                                <div className="relative flex-shrink-0 group/badge w-full md:w-auto flex justify-center">
                                     <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent rounded-full blur-2xl transform translate-y-4 group-hover/badge:translate-y-2 transition-transform duration-500"></div>
 
-                                    <div 
+                                    <div
                                         onClick={() => {
                                             if (activeTitleData) {
                                                 setSelectedAchievement(activeTitleData);
                                                 setShowAchievementModal(true);
                                             }
                                         }}
-                                        className="relative flex flex-col items-center p-6 rounded-2xl bg-black dark:bg-black/40 border border-slate-800 dark:border-white/5 backdrop-blur-md shadow-xl transition-transform hover:scale-[1.02] duration-300 cursor-pointer"
+                                        className="relative flex flex-col items-center p-6 rounded-2xl bg-black dark:bg-black/40 border border-slate-800 dark:border-white/5 backdrop-blur-md shadow-xl transition-transform hover:scale-[1.02] duration-300 cursor-pointer w-full md:w-auto"
                                     >
                                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-200 dark:text-slate-500 mb-2">Current Title</div>
 
@@ -408,7 +408,7 @@ export default function Dashboard() {
                             <div className="relative z-10 text-center">
                                 <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-muted-foreground mb-6">Current Badge</p>
                                 {activeBadge ? (
-                                    <div 
+                                    <div
                                         onClick={() => {
                                             setSelectedAchievement(activeBadge);
                                             setShowAchievementModal(true);

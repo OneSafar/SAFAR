@@ -250,7 +250,7 @@ export default function Journal() {
 
   return (
     <NishthaLayout userName={user.name} userAvatar={user.avatar}>
-      <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden bg-slate-50 dark:bg-[#0a0a0f] font-sans text-slate-800 dark:text-slate-200 transition-colors duration-500">
+      <div className="relative min-h-[calc(100dvh-64px)] w-full bg-slate-50 dark:bg-[#0a0a0f] font-sans text-slate-800 dark:text-slate-200 transition-colors duration-500">
 
         {/* Ambient Glow Effects */}
         <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />

@@ -334,7 +334,7 @@ export default function StudyWithMe() {
 
     return (
         <div
-            className="flex h-screen overflow-hidden bg-background text-foreground font-sans transition-colors duration-300"
+            className="flex h-[100dvh] overflow-hidden bg-background text-foreground font-sans transition-colors duration-300"
             style={{ '--theme-accent': currentTheme.accent, '--theme-accent-rgb': currentTheme.accentRgb } as React.CSSProperties}
         >
             {/* Video Background */}
@@ -559,7 +559,7 @@ export default function StudyWithMe() {
                     />
                 </div>
             ) : (
-                <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 min-h-screen">
+                <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-4">
                     {/* Timer Card */}
                     <div
                         className="w-full max-w-2xl rounded-3xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden transition-all duration-300 border-4 bg-white/20 dark:bg-slate-900/50 backdrop-blur-md"
@@ -696,7 +696,7 @@ export default function StudyWithMe() {
                     </div>
 
                     {/* Mobile Controls */}
-                    <div className="lg:hidden fixed bottom-4 left-4 right-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl p-4">
+                    <div className="lg:hidden fixed bottom-4 left-4 right-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                         <div className="flex items-center justify-between">
 
                             <div className="flex-1 mx-4">

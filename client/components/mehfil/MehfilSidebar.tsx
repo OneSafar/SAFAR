@@ -181,7 +181,7 @@ const MehfilSidebar: React.FC<MehfilSidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+        <div className="flex items-center gap-2 p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 overflow-x-auto scrollbar-hide">
           <Button
             variant={activeView === 'friends' ? 'default' : 'ghost'}
             size="sm"

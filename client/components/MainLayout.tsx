@@ -22,19 +22,21 @@ export default function MainLayout({
   homeRoute = "/landing",
 }: MainLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300 overflow-x-hidden">
       {/* Theme Toggle - Fixed Position */}
-      <div className="fixed top-6 right-6 z-50">
+      <div className="fixed top-4 right-4 md:top-6 md:right-6 z-50">
         <ThemeToggle variant="icon-with-bg" />
       </div>
-      
+
       <div className="flex flex-1 overflow-hidden relative">
         {!hideSidebar && <LeftSidebar homeRoute={homeRoute} />}
         <div className="flex flex-col flex-1 relative z-10 w-full overflow-hidden">
           <TopNavbar userName={userName} userAvatar={userAvatar} onLogout={onLogout} homeRoute={homeRoute} />
-          <main className="flex-1 overflow-y-auto text-slate-800 dark:text-slate-100">
-            {children}
-            <GlobalPageFooter />
+          <main className="flex-1 overflow-y-auto overflow-x-hidden text-slate-800 dark:text-slate-100">
+            <div className="pb-20 lg:pb-0">
+              {children}
+              <GlobalPageFooter />
+            </div>
           </main>
         </div>
       </div>
