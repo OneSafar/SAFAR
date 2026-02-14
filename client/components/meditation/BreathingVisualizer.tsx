@@ -458,12 +458,12 @@ const NostrilViz: React.FC<{ breathPhase: string; isActive: boolean }> = () => {
                         <div className="w-4 h-56 bg-gradient-to-b from-slate-200 to-slate-100 dark:from-slate-700 dark:to-slate-800 rounded-full overflow-hidden shadow-inner relative">
                             <motion.div
                                 animate={{
-                                    height: current.side === 'left' || current.side === 'both'
-                                        ? (current.action === 'inhale' || current.action === 'hold' ? '100%' : '0%')
+                                    height: current.side === 'left'
+                                        ? (current.action === 'inhale' ? '100%' : '0%')
                                         : '0%',
                                 }}
                                 transition={{ duration: duration / 1000, ease: "easeInOut" }}
-                                className={`absolute bottom-0 w-full bg-gradient-to-t ${current.side === 'left' ? 'from-blue-500 to-blue-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
+                                className={`absolute bottom-0 w-full bg-gradient-to-t from-blue-500 to-blue-400 shadow-lg`}
                             />
                             {(current.side === 'left' && current.action === 'inhale') && (
                                 <motion.div
@@ -528,12 +528,12 @@ const NostrilViz: React.FC<{ breathPhase: string; isActive: boolean }> = () => {
                         <div className="w-4 h-56 bg-gradient-to-b from-slate-200 to-slate-100 dark:from-slate-700 dark:to-slate-800 rounded-full overflow-hidden shadow-inner relative">
                             <motion.div
                                 animate={{
-                                    height: current.side === 'right' || current.side === 'both'
-                                        ? (current.action === 'inhale' || current.action === 'hold' ? '100%' : '0%')
+                                    height: current.side === 'right'
+                                        ? (current.action === 'inhale' ? '100%' : '0%')
                                         : '0%',
                                 }}
                                 transition={{ duration: duration / 1000, ease: "easeInOut" }}
-                                className={`absolute bottom-0 w-full bg-gradient-to-t ${current.side === 'right' ? 'from-teal-500 to-teal-400' : 'from-purple-500 to-purple-400'} shadow-lg`}
+                                className={`absolute bottom-0 w-full bg-gradient-to-t from-teal-500 to-teal-400 shadow-lg`}
                             />
                             {(current.side === 'right' && current.action === 'inhale') && (
                                 <motion.div

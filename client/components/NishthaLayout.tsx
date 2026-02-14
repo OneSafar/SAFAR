@@ -34,7 +34,7 @@ export default function NishthaLayout({
     };
 
     return (
-        <div className="flex flex-col h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300 relative">
+        <div className="flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300 relative">
             {showWelcome && <WelcomeDialog onClose={handleCloseWelcome} userName={userName} />}
             
             {/* Theme Toggle - Fixed Position */}
@@ -46,12 +46,12 @@ export default function NishthaLayout({
                 <LeftSidebar />
                 <div className="flex flex-col flex-1 relative z-10 w-full overflow-hidden">
                     <TopNavbar userName={userName} userAvatar={userAvatar} onLogout={onLogout} showMobileMenu={false} />
-                    <main className="flex-1 overflow-y-auto pb-20 lg:pb-0 text-slate-800 dark:text-slate-100">
+                    <main className="flex-1 overflow-y-auto text-slate-800 dark:text-slate-100">
                         {children}
+                        <GlobalPageFooter />
                     </main>
                 </div>
             </div>
-            <GlobalPageFooter />
         </div>
     );
 }

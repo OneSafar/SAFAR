@@ -21,7 +21,8 @@ import {
     Award,
     Sparkles,
     Medal,
-    Home
+    Home,
+    Users
 } from "lucide-react";
 import youtubeImg from "@/assets/youtube-thumbnail.png";
 import courseImg from "@/assets/course-thumbnail.png";
@@ -58,22 +59,24 @@ const achievementImages: Record<string, string> = {
     'S002': '/Achievments/Badges/Special_Badge (1).png',
     'ET006': '/Achievments/Badges/Special_Badge (3).png',
 
-    // Titles
-    'T005': '/Achievments/Titles/Title (5).png',
-    'T006': '/Achievments/Titles/Title (6).png',
-    'T007': '/Achievments/Titles/Title (7).png',
-    'T008': '/Achievments/Titles/Title (8).png',
-    'T001': '/Achievments/Titles/Title (1).png',
-    'T002': '/Achievments/Titles/Title (2).png',
-    'T003': '/Achievments/Titles/Title (3).png',
-    'T004': '/Achievments/Titles/Title (4).png',
+    // Titles - Goal Completion (image text matches code name)
+    'T005': '/Achievments/Titles/Title (5).png', // Heavy Heart High Effort
+    'T006': '/Achievments/Titles/Title (3).png', // Mindset of a Warrior
+    'T007': '/Achievments/Titles/Title (7).png', // Exhaustion to Excellence
+    'T008': '/Achievments/Titles/Title (6).png', // High Energy Ace
 
-    // Emotional Titles
-    'ET001': '/Achievments/Titles/Special_Title (3).png',
-    'ET002': '/Achievments/Titles/Special_Title (2).png',
-    'ET003': '/Achievments/Titles/Special_Title (1).png',
-    'ET004': '/Achievments/Titles/Special_Title (4).png',
-    'ET005': '/Achievments/Titles/Special_Title (5).png',
+    // Titles - Login Streaks (image text matches code name)
+    'T001': '/Achievments/Titles/Title (4).png', // Tired But Triumphant
+    'T002': '/Achievments/Titles/Title (2).png', // Restless Yet Relentless
+    'T003': '/Achievments/Titles/Title (1).png', // Strong Comeback
+    'T004': '/Achievments/Titles/Title (8).png', // Top Tier Energy
+
+    // Emotional Titles (image text matches code name)
+    'ET001': '/Achievments/Titles/Special_Title (3).png', // Showed Up Tired
+    'ET002': '/Achievments/Titles/Special_Title (2).png', // Did It Anyway
+    'ET003': '/Achievments/Titles/Special_Title (1).png', // Quiet Consistency
+    'ET004': '/Achievments/Titles/Special_Title (4).png', // Survived Bad Week
+    'ET005': '/Achievments/Titles/Special_Title (5).png', // Pushed Through Overwhelm
 };
 
 export default function Dashboard() {
@@ -87,6 +90,9 @@ export default function Dashboard() {
     const [activeTitle, setActiveTitle] = useState<string | null>(null);
     const [activeTitleId, setActiveTitleId] = useState<string | null>(null);
     const [activeBadge, setActiveBadge] = useState<any | null>(null);
+    const [activeTitleData, setActiveTitleData] = useState<any | null>(null);
+    const [showAchievementModal, setShowAchievementModal] = useState(false);
+    const [selectedAchievement, setSelectedAchievement] = useState<any | null>(null);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -177,6 +183,10 @@ export default function Dashboard() {
                     // Check if user's selected achievement is a badge
                     const selectedId = titleData.selectedId;
                     const selectedBadge = selectedId ? allAchievements.find(a => a.id === selectedId && a.type === 'badge' && a.earned) : null;
+
+                    // Store full title data for modal
+                    const selectedTitle = titleData.selectedId ? allAchievements.find(a => a.id === titleData.selectedId && a.type === 'title' && a.earned) : null;
+                    setActiveTitleData(selectedTitle);
 
                     if (selectedBadge) {
                         setActiveBadge(selectedBadge);
@@ -274,7 +284,15 @@ export default function Dashboard() {
                                 <div className="relative flex-shrink-0 group/badge">
                                     <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 to-transparent rounded-full blur-2xl transform translate-y-4 group-hover/badge:translate-y-2 transition-transform duration-500"></div>
 
-                                    <div className="relative flex flex-col items-center p-6 rounded-2xl bg-black dark:bg-black/40 border border-slate-800 dark:border-white/5 backdrop-blur-md shadow-xl transition-transform hover:scale-[1.02] duration-300">
+                                    <div 
+                                        onClick={() => {
+                                            if (activeTitleData) {
+                                                setSelectedAchievement(activeTitleData);
+                                                setShowAchievementModal(true);
+                                            }
+                                        }}
+                                        className="relative flex flex-col items-center p-6 rounded-2xl bg-black dark:bg-black/40 border border-slate-800 dark:border-white/5 backdrop-blur-md shadow-xl transition-transform hover:scale-[1.02] duration-300 cursor-pointer"
+                                    >
                                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-200 dark:text-slate-500 mb-2">Current Title</div>
 
                                         {activeTitleId && achievementImages[activeTitleId] ? (
@@ -390,7 +408,13 @@ export default function Dashboard() {
                             <div className="relative z-10 text-center">
                                 <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-muted-foreground mb-6">Current Badge</p>
                                 {activeBadge ? (
-                                    <div className="relative inline-block group">
+                                    <div 
+                                        onClick={() => {
+                                            setSelectedAchievement(activeBadge);
+                                            setShowAchievementModal(true);
+                                        }}
+                                        className="relative inline-block group cursor-pointer"
+                                    >
                                         {/* Glow effect behind the badge */}
                                         <div className="absolute inset-0 bg-teal-500/20 dark:bg-teal-500/10 blur-[40px] rounded-full animate-pulse" />
 
@@ -698,6 +722,86 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Achievement Detail Modal */}
+            {showAchievementModal && selectedAchievement && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-[#1A1A1A] w-full max-w-md rounded-3xl shadow-2xl p-8 relative animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-white/10">
+                        <button
+                            onClick={() => setShowAchievementModal(false)}
+                            className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors"
+                        >
+                            <span className="sr-only">Close</span>
+                            ✕
+                        </button>
+
+                        <div className="text-center mb-6">
+                            {/* Achievement Image */}
+                            {achievementImages[selectedAchievement.id] && (
+                                <div className="w-32 h-32 mx-auto mb-4 relative">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-purple-500/20 rounded-full blur-xl"></div>
+                                    <img
+                                        src={achievementImages[selectedAchievement.id]}
+                                        alt={selectedAchievement.name}
+                                        className="relative w-full h-full object-contain drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Achievement Type Badge */}
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-xs font-semibold uppercase tracking-wider mb-3">
+                                {selectedAchievement.type === 'badge' ? (
+                                    <>
+                                        <Medal className="w-3.5 h-3.5 text-teal-500" />
+                                        <span className="text-teal-600 dark:text-teal-400">Badge</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-3.5 h-3.5 text-red-500" />
+                                        <span className="text-red-600 dark:text-red-400">Title</span>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Achievement Name */}
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                                {selectedAchievement.name}
+                            </h2>
+
+                            {/* Achievement Description/Requirement */}
+                            <div className="bg-slate-50 dark:bg-black/20 rounded-xl p-4 mt-4 text-left">
+                                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                    Why You Earned This
+                                </h3>
+                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                    {selectedAchievement.requirement || selectedAchievement.description || 'Awarded for exceptional achievement'}
+                                </p>
+                            </div>
+
+                            {/* Additional Stats */}
+                            {selectedAchievement.holderCount > 0 && (
+                                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                                    <Users className="w-4 h-4" />
+                                    <span>{selectedAchievement.holderCount} {selectedAchievement.holderCount === 1 ? 'person has' : 'people have'} earned this</span>
+                                </div>
+                            )}
+
+                            {selectedAchievement.tier && (
+                                <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                    Tier {selectedAchievement.tier}
+                                </div>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => setShowAchievementModal(false)}
+                            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.02] transition-all"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
 
         </MainLayout>
     );

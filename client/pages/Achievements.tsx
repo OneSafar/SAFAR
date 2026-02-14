@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/MainLayout';
 import { authService } from '@/utils/authService';
 import { Award, Target, Clock, Heart, Users, CheckCircle2, Lock, Check, Sparkles, RefreshCw, Medal } from 'lucide-react';
 import { toast } from 'sonner';
+import CelebrationModal from '@/components/CelebrationModal';
 
 interface Achievement {
     id: string;
@@ -55,38 +56,38 @@ const categoryIcons: Record<string, any> = {
 // Achievement badge images - mythological theme mapping
 const achievementImages: Record<string, string> = {
     // Goals - Completion themed
-    'G001': '/Achievments/Badges/Badge (1).png', // Alpha Finisher - Om
-    'G002': '/Achievments/Badges/Badge (2).png', // Finish Line - Vortex
-    'G003': '/Achievments/Badges/Badge (3).png', // Goal Slayer - Cornucopia
-    'G004': '/Achievments/Badges/Badge (4).png', // The Closer - Tree of Life
+    'G001': '/Achievments/Badges/Badge (1).png', // First Steps
+    'G002': '/Achievments/Badges/Badge (2).png', // Goal Crusher
+    'G003': '/Achievments/Badges/Badge (3).png', // Unstoppable
+    'G004': '/Achievments/Badges/Badge (4).png', // The Centurion
 
     // Focus - Power and mastery themed
-    'F001': '/Achievments/Badges/Special_Badge (2).png', // Focus Initiate
-    'F002': '/Achievments/Badges/Special_Badge (5).png', // Focus Adept
-    'F003': '/Achievments/Badges/Special_Badge (4).png', // Aura of Arjun
-    'F004': '/Achievments/Badges/Badge (6).png', // The Finisher - Fire
-    'F005': '/Achievments/Badges/Badge (7).png', // Dhurandhar - Trishul
+    'F001': '/Achievments/Badges/Special_Badge (2).png', // Deep Diver
+    'F002': '/Achievments/Badges/Special_Badge (5).png', // Focus Master
+    'F003': '/Achievments/Badges/Special_Badge (4).png', // Zone Warrior
+    'F004': '/Achievments/Badges/Badge (6).png', // Monk Mode
+    'F005': '/Achievments/Badges/Badge (7).png', // Legendary Focus
 
     // Streak - Consistency themed
-    'S001': '/Achievments/Badges/Badge (8).png', // Unstoppable Sigma - Compass
-    'S002': '/Achievments/Badges/Special_Badge (1).png', // Jeet Express
+    'S001': '/Achievments/Badges/Badge (8).png', // Streak Starter
+    'S002': '/Achievments/Badges/Special_Badge (1).png', // Iron Will
 
     // Emotional / Flow
-    'ET006': '/Achievments/Badges/Special_Badge (3).png', // Flow Seeker
+    'ET006': '/Achievments/Badges/Special_Badge (3).png', // Flow State
 
-    // Titles - Goal Completion
-    'T005': '/Achievments/Titles/Title (5).png', // Goal Getter
-    'T006': '/Achievments/Titles/Title (6).png', // Ambition Master
-    'T007': '/Achievments/Titles/Title (7).png', // Dream Chaser
-    'T008': '/Achievments/Titles/Title (8).png', // Legendary Achiever
+    // Titles - Goal Completion (image text matches code name)
+    'T005': '/Achievments/Titles/Title (5).png', // Heavy Heart High Effort
+    'T006': '/Achievments/Titles/Title (3).png', // Mindset of a Warrior
+    'T007': '/Achievments/Titles/Title (7).png', // Exhaustion to Excellence
+    'T008': '/Achievments/Titles/Title (6).png', // High Energy Ace
 
-    // Titles - Login Streaks
-    'T001': '/Achievments/Titles/Title (1).png', // The Regular
-    'T002': '/Achievments/Titles/Title (2).png', // Dedicated Soul
-    'T003': '/Achievments/Titles/Title (3).png', // Consistency King
-    'T004': '/Achievments/Titles/Title (4).png', // Unstoppable Force
+    // Titles - Login Streaks (image text matches code name)
+    'T001': '/Achievments/Titles/Title (4).png', // Tired But Triumphant
+    'T002': '/Achievments/Titles/Title (2).png', // Restless Yet Relentless
+    'T003': '/Achievments/Titles/Title (1).png', // Strong Comeback
+    'T004': '/Achievments/Titles/Title (8).png', // Top Tier Energy
 
-    // Weekly Emotional Titles
+    // Weekly Emotional Titles (image text matches code name)
     'ET001': '/Achievments/Titles/Special_Title (3).png', // Showed Up Tired
     'ET002': '/Achievments/Titles/Special_Title (2).png', // Did It Anyway
     'ET003': '/Achievments/Titles/Special_Title (1).png', // Quiet Consistency
@@ -104,6 +105,13 @@ export default function Achievements() {
     const [selecting, setSelecting] = useState(false);
     const [evaluating, setEvaluating] = useState(false);
     const [weekTitle, setWeekTitle] = useState<{ title: string | null, description: string | null }>({ title: null, description: null });
+    const [showCelebration, setShowCelebration] = useState(false);
+    const [celebrationAchievement, setCelebrationAchievement] = useState<Achievement | null>(null);
+    const [celebrationQueue, setCelebrationQueue] = useState<Achievement[]>([]);
+    const celebrationShownRef = useRef(false);
+    // Detail modal state (clicking any earned achievement)
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [detailAchievement, setDetailAchievement] = useState<Achievement | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -121,6 +129,29 @@ export default function Achievements() {
                 ]);
                 setAchievements(allData.achievements || []);
                 setSelectedId(titleData.selectedId || null);
+
+                // Check for earned achievements to celebrate
+                if (!celebrationShownRef.current) {
+                    const earned = (allData.achievements || []).filter((a: Achievement) => a.earned);
+                    // Check localStorage for previously seen achievements
+                    const seenKey = 'achievements_seen';
+                    const seenRaw = localStorage.getItem(seenKey);
+                    const seenIds: string[] = seenRaw ? JSON.parse(seenRaw) : [];
+                    const newlyEarned = earned.filter((a: Achievement) => !seenIds.includes(a.id));
+
+                    if (newlyEarned.length > 0) {
+                        // Mark all as seen now
+                        const allSeenIds = [...seenIds, ...newlyEarned.map((a: Achievement) => a.id)];
+                        localStorage.setItem(seenKey, JSON.stringify(allSeenIds));
+                        // Queue celebration for each new achievement
+                        setCelebrationQueue(newlyEarned);
+                        setCelebrationAchievement(newlyEarned[0]);
+                        setShowCelebration(true);
+                        celebrationShownRef.current = true;
+                    } else {
+                        celebrationShownRef.current = true;
+                    }
+                }
             } catch (error) {
                 console.error('Failed to fetch achievements:', error);
             } finally {
@@ -184,6 +215,26 @@ export default function Achievements() {
     const filteredAchievements = filter === 'all' ? achievements : achievements.filter(a => a.type === filter);
     const badges = achievements.filter(a => a.type === 'badge');
     const titles = achievements.filter(a => a.type === 'title');
+
+    const handleCelebrationClose = () => {
+        const remaining = celebrationQueue.slice(1);
+        if (remaining.length > 0) {
+            setCelebrationQueue(remaining);
+            setCelebrationAchievement(remaining[0]);
+            // Keep showCelebration true for next
+        } else {
+            setShowCelebration(false);
+            setCelebrationAchievement(null);
+            setCelebrationQueue([]);
+        }
+    };
+
+    const handleAchievementClick = (achievement: Achievement) => {
+        if (achievement.earned) {
+            setDetailAchievement(achievement);
+            setShowDetailModal(true);
+        }
+    };
 
     if (!user) return null;
 
@@ -267,7 +318,9 @@ export default function Achievements() {
                                 return (
                                     <div
                                         key={achievement.id}
+                                        onClick={() => handleAchievementClick(achievement)}
                                         className={`relative group flex flex-col items-center justify-center p-4 transition-all duration-500 rounded-2xl
+                                            ${achievement.earned ? 'cursor-pointer' : ''}
                                             ${achievement.type === 'title' ? 'bg-black dark:bg-black/40 border border-slate-800 dark:border-white/5 shadow-xl' : ''}
                                             ${achievement.earned ? 'opacity-100' : 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100'}`}
                                     >
@@ -338,7 +391,7 @@ export default function Achievements() {
                                         {/* Action Button (Set Active) */}
                                         {achievement.earned && !isSelected && (
                                             <button
-                                                onClick={() => handleSelect(achievement.id)}
+                                                onClick={(e) => { e.stopPropagation(); handleSelect(achievement.id); }}
                                                 disabled={selecting}
                                                 className="mt-4 px-4 py-1.5 rounded-full bg-slate-200/50 dark:bg-white/10 text-xs font-medium 
                                                     opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300
@@ -361,6 +414,82 @@ export default function Achievements() {
                     )}
                 </div>
             </div>
+
+            {/* Celebration Modal - pops up for newly earned achievements */}
+            <CelebrationModal
+                isOpen={showCelebration}
+                onClose={handleCelebrationClose}
+                achievement={celebrationAchievement}
+                achievementImage={celebrationAchievement ? achievementImages[celebrationAchievement.id] : undefined}
+            />
+
+            {/* Detail Modal - when clicking any earned achievement */}
+            {showDetailModal && detailAchievement && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-[#1A1A1A] w-full max-w-md rounded-3xl shadow-2xl p-8 relative animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-white/10">
+                        <button
+                            onClick={() => setShowDetailModal(false)}
+                            className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors"
+                        >
+                            <span className="sr-only">Close</span>
+                            ✕
+                        </button>
+
+                        <div className="text-center mb-6">
+                            {achievementImages[detailAchievement.id] && (
+                                <div className="w-32 h-32 mx-auto mb-4 relative">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-purple-500/20 rounded-full blur-xl"></div>
+                                    <img
+                                        src={achievementImages[detailAchievement.id]}
+                                        alt={detailAchievement.name}
+                                        className="relative w-full h-full object-contain drop-shadow-[0_0_20px_rgba(20,184,166,0.6)]"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-xs font-semibold uppercase tracking-wider mb-3">
+                                {detailAchievement.type === 'badge' ? (
+                                    <>
+                                        <Medal className="w-3.5 h-3.5 text-teal-500" />
+                                        <span className="text-teal-600 dark:text-teal-400">Badge</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-3.5 h-3.5 text-red-500" />
+                                        <span className="text-red-600 dark:text-red-400">Title</span>
+                                    </>
+                                )}
+                            </div>
+
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                                {detailAchievement.name}
+                            </h2>
+
+                            <div className="bg-slate-50 dark:bg-black/20 rounded-xl p-4 mt-4 text-left">
+                                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                    Why You Earned This
+                                </h3>
+                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                    {detailAchievement.requirement || detailAchievement.description || 'Awarded for exceptional achievement'}
+                                </p>
+                            </div>
+
+                            {detailAchievement.tier && (
+                                <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                                    {'★'.repeat(detailAchievement.tier)} Tier {detailAchievement.tier}
+                                </div>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => setShowDetailModal(false)}
+                            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 hover:scale-[1.02] transition-all"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </MainLayout>
     );
 }

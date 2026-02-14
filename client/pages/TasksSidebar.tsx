@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, CheckCircle, Circle } from 'lucide-react';
 
 interface Task {
@@ -10,14 +10,39 @@ interface Task {
 interface TasksSidebarProps {
     isOpen: boolean;
     onClose: () => void;
+    onTasksChange?: (tasks: Task[]) => void;
 }
 
-const TasksSidebar: React.FC<TasksSidebarProps> = ({ isOpen, onClose }) => {
-    const [tasks, setTasks] = useState<Task[]>([
-        { id: 1, text: "Read Chapter 4", completed: false },
-        { id: 2, text: "Review Notes", completed: true }
-    ]);
+// Load tasks from localStorage
+const loadTasks = (): Task[] => {
+    try {
+        const saved = localStorage.getItem('focus-tasks');
+        return saved ? JSON.parse(saved) : [
+            { id: 1, text: "Read Chapter 4", completed: false },
+            { id: 2, text: "Review Notes", completed: true }
+        ];
+    } catch {
+        return [
+            { id: 1, text: "Read Chapter 4", completed: false },
+            { id: 2, text: "Review Notes", completed: true }
+        ];
+    }
+};
+
+// Save tasks to localStorage
+const saveTasks = (tasks: Task[]) => {
+    localStorage.setItem('focus-tasks', JSON.stringify(tasks));
+};
+
+const TasksSidebar: React.FC<TasksSidebarProps> = ({ isOpen, onClose, onTasksChange }) => {
+    const [tasks, setTasks] = useState<Task[]>(loadTasks);
     const [newTask, setNewTask] = useState("");
+
+    // Save to localStorage and notify parent whenever tasks change
+    useEffect(() => {
+        saveTasks(tasks);
+        onTasksChange?.(tasks);
+    }, [tasks, onTasksChange]);
 
     const handleAddTask = () => {
         if (newTask.trim()) {
@@ -93,3 +118,4 @@ const TasksSidebar: React.FC<TasksSidebarProps> = ({ isOpen, onClose }) => {
 };
 
 export default TasksSidebar;
+export type { Task };

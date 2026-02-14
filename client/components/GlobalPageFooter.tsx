@@ -2,7 +2,7 @@ import React from 'react';
 
 const GlobalPageFooter = () => {
     return (
-        <footer className="bg-midnight px-4 md:px-12 py-8 border-t border-slate-800/50 mt-auto">
+        <footer className="bg-midnight px-4 md:px-12 py-8 border-t border-slate-800/50">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
 
                 {/* Write to us Section */}

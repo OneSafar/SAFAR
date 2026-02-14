@@ -10,37 +10,43 @@ const router = Router();
 // ========================================
 
 const ACHIEVEMENT_DEFINITIONS = [
-    // GOAL COMPLETION BADGES - Based on total goals completed
-    { id: 'G001', name: 'Alpha Finisher', type: 'badge', category: 'goals', tier: 1, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 10 }), display_priority: 15 },
-    { id: 'G002', name: 'Finish Line', type: 'badge', category: 'goals', tier: 2, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 25 }), display_priority: 25 },
-    { id: 'G003', name: 'Goal Slayer', type: 'badge', category: 'goals', tier: 3, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 50 }), display_priority: 35 },
-    { id: 'G004', name: 'The Closer', type: 'badge', category: 'goals', tier: 4, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 100 }), display_priority: 45 },
+    // ── GOAL COMPLETION BADGES ──────────────────────────────────
+    // Earned by completing cumulative goals across all time
+    { id: 'G001', name: 'First Steps',      type: 'badge', category: 'goals', tier: 1, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 5 }),   display_priority: 15 },
+    { id: 'G002', name: 'Goal Crusher',     type: 'badge', category: 'goals', tier: 2, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 25 }),  display_priority: 25 },
+    { id: 'G003', name: 'Unstoppable',      type: 'badge', category: 'goals', tier: 3, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 50 }),  display_priority: 35 },
+    { id: 'G004', name: 'The Centurion',    type: 'badge', category: 'goals', tier: 4, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 100 }), display_priority: 45 },
 
-    // FOCUS BADGES - Based on total focus hours
-    { id: 'F001', name: 'Focus Initiate', type: 'badge', category: 'focus', tier: 1, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 10 }), display_priority: 10 },
-    { id: 'F002', name: 'Focus Adept', type: 'badge', category: 'focus', tier: 2, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 50 }), display_priority: 20 },
-    { id: 'F003', name: 'Aura of Arjun', type: 'badge', category: 'focus', tier: 3, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 100 }), display_priority: 30 },
-    { id: 'F004', name: 'The Finisher', type: 'badge', category: 'focus', tier: 4, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 250 }), display_priority: 40 },
-    { id: 'F005', name: 'Dhurandhar', type: 'badge', category: 'focus', tier: 5, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 500 }), display_priority: 50 },
+    // ── FOCUS SESSION BADGES ────────────────────────────────────
+    // Earned by accumulating total focus hours in Ekagra mode
+    { id: 'F001', name: 'Deep Diver',       type: 'badge', category: 'focus', tier: 1, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 5 }),   display_priority: 10 },
+    { id: 'F002', name: 'Focus Master',     type: 'badge', category: 'focus', tier: 2, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 25 }),  display_priority: 20 },
+    { id: 'F003', name: 'Zone Warrior',     type: 'badge', category: 'focus', tier: 3, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 75 }),  display_priority: 30 },
+    { id: 'F004', name: 'Monk Mode',        type: 'badge', category: 'focus', tier: 4, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 200 }), display_priority: 40 },
+    { id: 'F005', name: 'Legendary Focus',  type: 'badge', category: 'focus', tier: 5, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 500 }), display_priority: 50 },
 
-    // CHECK-IN STREAK BADGES - Based on check-in streak
-    { id: 'S001', name: 'Unstoppable Sigma', type: 'badge', category: 'streak', tier: 1, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 7 }), display_priority: 17 },
-    { id: 'S002', name: 'Jeet Express', type: 'badge', category: 'streak', tier: 2, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 30 }), display_priority: 27 },
+    // ── CHECK-IN STREAK BADGES ──────────────────────────────────
+    // Earned by maintaining consecutive daily mood check-ins
+    { id: 'S001', name: 'Streak Starter',   type: 'badge', category: 'streak', tier: 1, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 7 }),  display_priority: 17 },
+    { id: 'S002', name: 'Iron Will',        type: 'badge', category: 'streak', tier: 2, criteria_json: JSON.stringify({ field: 'check_in_streak', operator: '>=', value: 30 }), display_priority: 27 },
 
-    // EMOTIONAL / SPECIAL BADGES
-    { id: 'ET006', name: 'Flow Seeker', type: 'badge', category: 'emotional', tier: 1, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 2 }), display_priority: 55 },
+    // ── SPECIAL BADGE ───────────────────────────────────────────
+    // Earned by reaching a quick focus milestone
+    { id: 'ET006', name: 'Flow State',      type: 'badge', category: 'emotional', tier: 1, criteria_json: JSON.stringify({ field: 'total_focus_hours', operator: '>=', value: 2 }), display_priority: 55 },
 
-    // PERMANENT TITLES - Goal Completion
-    { id: 'T005', name: 'Goal Getter', type: 'title', category: 'goals', tier: 1, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 10 }), display_priority: 60 },
-    { id: 'T006', name: 'Ambition Master', type: 'title', category: 'goals', tier: 2, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 50 }), display_priority: 61 },
-    { id: 'T007', name: 'Dream Chaser', type: 'title', category: 'goals', tier: 3, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 100 }), display_priority: 62 },
-    { id: 'T008', name: 'Legendary Achiever', type: 'title', category: 'goals', tier: 4, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 500 }), display_priority: 63 },
+    // ── TITLES: GOAL COMPLETION ─────────────────────────────────
+    // Permanent titles earned by cumulative goal completions
+    { id: 'T005', name: 'Heavy Heart High Effort', type: 'title', category: 'goals', tier: 1, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 10 }),  display_priority: 60 },
+    { id: 'T006', name: 'Mindset of a Warrior',    type: 'title', category: 'goals', tier: 2, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 50 }),  display_priority: 61 },
+    { id: 'T007', name: 'Exhaustion to Excellence', type: 'title', category: 'goals', tier: 3, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 100 }), display_priority: 62 },
+    { id: 'T008', name: 'High Energy Ace',          type: 'title', category: 'goals', tier: 4, criteria_json: JSON.stringify({ field: 'goals_completed', operator: '>=', value: 500 }), display_priority: 63 },
 
-    // PERMANENT TITLES - Login Streaks
-    { id: 'T001', name: 'The Regular', type: 'title', category: 'streak', tier: 1, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 3 }), display_priority: 70 },
-    { id: 'T002', name: 'Dedicated Soul', type: 'title', category: 'streak', tier: 2, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 7 }), display_priority: 71 },
-    { id: 'T003', name: 'Consistency King', type: 'title', category: 'streak', tier: 3, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 14 }), display_priority: 72 },
-    { id: 'T004', name: 'Unstoppable Force', type: 'title', category: 'streak', tier: 4, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 30 }), display_priority: 73 },
+    // ── TITLES: LOGIN STREAKS ───────────────────────────────────
+    // Permanent titles earned by maintaining consecutive daily logins
+    { id: 'T001', name: 'Tired But Triumphant',     type: 'title', category: 'streak', tier: 1, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 3 }),  display_priority: 70 },
+    { id: 'T002', name: 'Restless Yet Relentless',   type: 'title', category: 'streak', tier: 2, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 7 }),  display_priority: 71 },
+    { id: 'T003', name: 'Strong Comeback',            type: 'title', category: 'streak', tier: 3, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 14 }), display_priority: 72 },
+    { id: 'T004', name: 'Top Tier Energy',            type: 'title', category: 'streak', tier: 4, criteria_json: JSON.stringify({ field: 'login_streak', operator: '>=', value: 30 }), display_priority: 73 },
 ];
 
 // ========================================
@@ -48,11 +54,11 @@ const ACHIEVEMENT_DEFINITIONS = [
 // ========================================
 
 const EMOTIONAL_TITLES = [
-    { id: 'ET001', name: 'Showed Up Tired', description: 'Checked in with low energy but still focused for over 30 mins', trigger: 'low_mood_focus' },
-    { id: 'ET002', name: 'Did It Anyway', description: 'Multiple low mood days with high focus hours', trigger: 'low_mood_high_focus' },
-    { id: 'ET003', name: 'Quiet Consistency', description: 'Focused every day this week', trigger: 'consistent_focus' },
-    { id: 'ET004', name: 'Survived Bad Week', description: 'Kept focusing despite a challenging week', trigger: 'bad_week_focus' },
-    { id: 'ET005', name: 'Pushed Through Overwhelm', description: 'Stayed focused during stressful times', trigger: 'overwhelm_focus' },
+    { id: 'ET001', name: 'Showed Up Tired',           description: 'Checked in feeling low but still focused for over 30 minutes — true resilience', trigger: 'low_mood_focus' },
+    { id: 'ET002', name: 'Did It Anyway',             description: 'Faced multiple tough days this week but kept your focus hours high', trigger: 'low_mood_high_focus' },
+    { id: 'ET003', name: 'Quiet Consistency',         description: 'Showed up and focused for 5 or more days this week — quiet consistency wins', trigger: 'consistent_focus' },
+    { id: 'ET004', name: 'Survived Bad Week',         description: 'Kept focusing through a challenging week when your mood was low', trigger: 'bad_week_focus' },
+    { id: 'ET005', name: 'Pushed Through Overwhelm',  description: 'Your journal showed struggle, but you pushed through and stayed focused', trigger: 'overwhelm_focus' },
 ];
 
 // ========================================
@@ -227,27 +233,27 @@ async function evaluateEmotionalMilestone(userId: string): Promise<{ title: stri
 
     // Priority order
     if (weekData.avgMood < 2.5 && weekData.weeklyFocusHours > 5) {
-        return { title: 'Survived Bad Week', description: 'You kept focusing despite a challenging week.' };
+        return { title: 'Survived Bad Week', description: 'You kept focusing through a challenging week when your mood was low.' };
     }
 
     if (maxSessionMinutes >= 120) {
-        return { title: 'Flow Seeker', description: 'You achieved a massive 2+ hour deep work session!' };
+        return { title: 'Flow State', description: 'You achieved a massive 2+ hour deep work session!' };
     }
 
     if (weekData.lowMoodDays >= 3 && weekData.weeklyFocusHours >= 5) {
-        return { title: 'Did It Anyway', description: 'Multiple tough days, but you still focused.' };
+        return { title: 'Did It Anyway', description: 'Multiple tough days, but you still showed up and focused.' };
     }
 
     if (focusDays >= 5) {
-        return { title: 'Quiet Consistency', description: 'You showed up and focused for 5+ days this week.' };
+        return { title: 'Quiet Consistency', description: 'You showed up and focused for 5+ days this week. Quiet consistency wins.' };
     }
 
     if (weekData.lowMoodDays >= 1 && weekData.weeklyFocusHours >= 1) {
-        return { title: 'Showed Up Tired', description: 'You checked in tired but still focused for an hour.' };
+        return { title: 'Showed Up Tired', description: 'You checked in feeling low but still focused — true resilience.' };
     }
 
     if (weekData.hasStruggleJournal && weekData.weeklyFocusHours >= 2) {
-        return { title: 'Pushed Through Overwhelm', description: 'Your journal shows struggle, but you stayed focused!' };
+        return { title: 'Pushed Through Overwhelm', description: 'Your journal showed struggle, but you pushed through and stayed focused!' };
     }
 
     return { title: null, description: null };
@@ -444,22 +450,22 @@ router.get('/all', requireAuth, async (req: any, res) => {
             switch (criteria.field) {
                 case 'total_focus_hours':
                     currentValue = Math.floor(stats.total_focus_hours);
-                    requirementText = `${targetValue} hours of focus time`;
+                    requirementText = `Focus for ${targetValue} total hours in Ekagra mode`;
                     break;
                 case 'goals_completed':
                     currentValue = stats.goals_completed;
-                    requirementText = `${targetValue} goals completed`;
+                    requirementText = `Complete ${targetValue} goals across all time`;
                     break;
                 case 'check_in_streak':
                     currentValue = stats.check_in_streak;
-                    requirementText = `${targetValue}-day check-in streak`;
+                    requirementText = `Maintain a ${targetValue}-day daily check-in streak`;
                     break;
                 case 'login_streak':
                     currentValue = stats.login_streak;
-                    requirementText = `${targetValue}-day login streak`;
+                    requirementText = `Log in for ${targetValue} consecutive days`;
                     break;
                 default:
-                    requirementText = 'Special achievement';
+                    requirementText = 'Awarded based on your weekly emotional journey';
             }
 
             return {

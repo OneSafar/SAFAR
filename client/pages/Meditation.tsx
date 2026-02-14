@@ -136,7 +136,6 @@ const exercises = sessions; // Alias for mobile view compatibility
 
 export default function Meditation() {
     const navigate = useNavigate();
-    const { theme, toggleTheme } = useTheme();
     const [user, setUser] = useState<any>(null);
     const [selectedSession, setSelectedSession] = useState<Session>(sessions[0]);
     const [isActive, setIsActive] = useState(false);
@@ -634,9 +633,8 @@ export default function Meditation() {
                         <button
                             key={session.id}
                             onClick={() => {
-                                setSelectedSession(session);
-                                setTimeLeft(session.duration * 60);
                                 setShowSessionList(false);
+                                handleCardClick(session);
                             }}
                             className={`w-full p-4 rounded-xl border-2 transition-all text-left ${selectedSession.id === session.id
                                 ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'

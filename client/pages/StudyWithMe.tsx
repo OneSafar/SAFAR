@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "@/utils/authService";
 import { Moon, Sun, Plus, Home, Settings, Play, Pause, RotateCcw, Leaf, Sparkles, LogOut, ArrowRight, BarChart2, Clock, Zap, Target, Flame, Calendar, Palette, ChevronLeft, ChevronRight, Trees, Waves, Sunset, MoonStar, Sparkle, HelpCircle, Volume2, VolumeX, Music } from "lucide-react";
-import TasksSidebar from "./TasksSidebar";
+import TasksSidebar, { type Task } from "./TasksSidebar";
 import FocusAnalytics from "./FocusAnalytics";
 import { focusService } from "@/utils/focusService";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,6 +106,10 @@ export default function StudyWithMe() {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showThemeSelector, setShowThemeSelector] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [tasks, setTasks] = useState<Task[]>([]);
+
+    // Get current task (first uncompleted)
+    const currentTask = tasks.find(task => !task.completed);
 
     // Audio/Video refs and states
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -130,8 +134,7 @@ export default function StudyWithMe() {
     }, [isRunning]);
 
     // Log session when timer completes naturally
-    useEffect(() => {
-        if (remainingSeconds === 0 && !isRunning && mode === 'Timer' && !sessionLoggedRef.current) {
+    useEffect(() => {        if (remainingSeconds === 0 && !isRunning && mode === 'Timer' && !sessionLoggedRef.current) {
             sessionLoggedRef.current = true;
 
             const duration = sliderValue;
@@ -142,8 +145,17 @@ export default function StudyWithMe() {
             }).then(() => {
                 console.log('Session logged successfully');
             }).catch(e => console.error('Log failed', e));
+
+            // Auto-complete current task
+            if (currentTask) {
+                const updatedTasks = tasks.map(task => 
+                    task.id === currentTask.id ? { ...task, completed: true } : task
+                );
+                setTasks(updatedTasks);
+                localStorage.setItem('focus-tasks', JSON.stringify(updatedTasks));
+            }
         }
-    }, [remainingSeconds, isRunning, mode, sliderValue]);
+    }, [remainingSeconds, isRunning, mode, sliderValue, currentTask, tasks]);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -532,7 +544,11 @@ export default function StudyWithMe() {
             )}
 
             {/* Tasks Sidebar */}
-            <TasksSidebar isOpen={isTasksOpen} onClose={() => setIsTasksOpen(false)} />
+            <TasksSidebar 
+                isOpen={isTasksOpen} 
+                onClose={() => setIsTasksOpen(false)}
+                onTasksChange={setTasks}
+            />
 
             {/* Main Content or Analytics */}
             {showAnalytics ? (
@@ -577,6 +593,17 @@ export default function StudyWithMe() {
                         <div data-tour="timer-display" className="text-6xl md:text-8xl lg:text-9xl leading-none font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-foreground to-muted-foreground tracking-tight mb-8 md:mb-12 drop-shadow-xl font-['Poppins']">
                             {formatTime(minutes, seconds)}
                         </div>
+
+                        {/* Current Task Display */}
+                        {currentTask && (
+                            <div className="mb-6 md:mb-8 px-4 py-3 rounded-xl bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm border-2 border-white/20 max-w-md mx-auto">
+                                <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wide font-semibold">Current Task</div>
+                                <div className="text-sm md:text-base font-medium text-foreground flex items-center gap-2">
+                                    <Target className="w-4 h-4" style={{ color: currentTheme.accent }} />
+                                    {currentTask.text}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Control Buttons */}
                         <div className="flex items-center justify-center gap-4">
