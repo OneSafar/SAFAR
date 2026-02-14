@@ -145,7 +145,7 @@ export default function StudyWithMe() {
                     task.id === currentTask.id ? { ...task, completed: true } : task
                 );
                 setTasks(updatedTasks);
-                localStorage.setItem('focus-tasks', JSON.stringify(updatedTasks));
+                localStorage.setItem(user?.id ? `focus-tasks-${user.id}` : 'focus-tasks', JSON.stringify(updatedTasks));
             }
         }
     }, [remainingSeconds, isRunning, mode, sliderValue, currentTask, tasks]);
@@ -541,6 +541,7 @@ export default function StudyWithMe() {
                 isOpen={isTasksOpen}
                 onClose={() => setIsTasksOpen(false)}
                 onTasksChange={setTasks}
+                userId={user?.id}
             />
 
             {/* Main Content or Analytics */}

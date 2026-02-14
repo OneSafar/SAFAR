@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { authService } from "./utils/authService";
 import { GuidedTourProvider } from "@/contexts/GuidedTourContext";
 import { GuidedTour } from "@/components/guided-tour";
+import PersistentFocusOverlay from "@/components/focus/PersistentFocusOverlay";
 
 
 import Test from "./pages/Test";
@@ -83,6 +84,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <GuidedTourProvider>
+          <PersistentFocusOverlay />
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />

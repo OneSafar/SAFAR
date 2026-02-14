@@ -36,6 +36,10 @@ export const collections = {
     passwordResetTokens: () => getDb().collection('password_reset_tokens'),
     loginHistory: () => getDb().collection('login_history'),
     focusSessions: () => getDb().collection('focus_sessions'),
+    focusOverlayState: () => getDb().collection('focus_overlay_state'),
+    focusOverlaySessions: () => getDb().collection('focus_overlay_sessions'),
+    sectionActivity: () => getDb().collection('section_activity'),
+    dailyAggregates: () => getDb().collection('daily_aggregates'),
     perkDefinitions: () => getDb().collection('perk_definitions'),
     userPerks: () => getDb().collection('user_perks'),
     achievementDefinitions: () => getDb().collection('achievement_definitions'),
@@ -101,6 +105,13 @@ export async function initDatabase(): Promise<void> {
         await db.collection('goals').createIndex({ user_id: 1, created_at: -1 });
         await db.collection('journal').createIndex({ user_id: 1, timestamp: -1 });
         await db.collection('focus_sessions').createIndex({ user_id: 1, completed_at: -1 });
+        await db.collection('focus_overlay_state').createIndex({ user_id: 1 }, { unique: true });
+        await db.collection('focus_overlay_state').createIndex({ updated_at: -1 });
+        await db.collection('focus_overlay_sessions').createIndex({ user_id: 1, updated_at: -1 });
+        await db.collection('focus_overlay_sessions').createIndex({ user_id: 1, session_id: 1 }, { unique: true });
+        await db.collection('section_activity').createIndex({ chunk_key: 1 }, { unique: true });
+        await db.collection('section_activity').createIndex({ user_id: 1, date: 1 });
+        await db.collection('daily_aggregates').createIndex({ user_id: 1, date: 1 }, { unique: true });
         await db.collection('perk_definitions').createIndex({ id: 1 }, { unique: true });
         await db.collection('user_perks').createIndex({ user_id: 1, perk_id: 1 }, { unique: true });
         await db.collection('achievement_definitions').createIndex({ id: 1 }, { unique: true });

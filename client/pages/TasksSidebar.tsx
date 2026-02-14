@@ -11,36 +11,38 @@ interface TasksSidebarProps {
     isOpen: boolean;
     onClose: () => void;
     onTasksChange?: (tasks: Task[]) => void;
+    userId?: string;
 }
 
-// Load tasks from localStorage
-const loadTasks = (): Task[] => {
+// Load tasks from localStorage (scoped per user)
+const loadTasks = (userId?: string): Task[] => {
     try {
-        const saved = localStorage.getItem('focus-tasks');
-        return saved ? JSON.parse(saved) : [
-            { id: 1, text: "Read Chapter 4", completed: false },
-            { id: 2, text: "Review Notes", completed: true }
-        ];
+        const key = userId ? `focus-tasks-${userId}` : 'focus-tasks';
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : [];
     } catch {
-        return [
-            { id: 1, text: "Read Chapter 4", completed: false },
-            { id: 2, text: "Review Notes", completed: true }
-        ];
+        return [];
     }
 };
 
-// Save tasks to localStorage
-const saveTasks = (tasks: Task[]) => {
-    localStorage.setItem('focus-tasks', JSON.stringify(tasks));
+// Save tasks to localStorage (scoped per user)
+const saveTasks = (tasks: Task[], userId?: string) => {
+    const key = userId ? `focus-tasks-${userId}` : 'focus-tasks';
+    localStorage.setItem(key, JSON.stringify(tasks));
 };
 
-const TasksSidebar: React.FC<TasksSidebarProps> = ({ isOpen, onClose, onTasksChange }) => {
-    const [tasks, setTasks] = useState<Task[]>(loadTasks);
+const TasksSidebar: React.FC<TasksSidebarProps> = ({ isOpen, onClose, onTasksChange, userId }) => {
+    const [tasks, setTasks] = useState<Task[]>(() => loadTasks(userId));
     const [newTask, setNewTask] = useState("");
+
+    // Reload tasks when userId changes
+    useEffect(() => {
+        setTasks(loadTasks(userId));
+    }, [userId]);
 
     // Save to localStorage and notify parent whenever tasks change
     useEffect(() => {
-        saveTasks(tasks);
+        saveTasks(tasks, userId);
         onTasksChange?.(tasks);
     }, [tasks, onTasksChange]);
 

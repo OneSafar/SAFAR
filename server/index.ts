@@ -13,6 +13,7 @@ import { journalRoutes } from "./routes/journal";
 import { goalRoutes } from "./routes/goals";
 import { streakRoutes } from "./routes/streaks";
 import { focusSessionRoutes } from "./routes/focus-sessions";
+import { focusOverlayRoutes } from "./routes/focus-overlay";
 import { achievementRoutes, seedAchievementDefinitions } from "./routes/achievements";
 import { connectMongo, initDatabase } from "./db";
 import { setupMehfilSocket } from "./routes/mehfil-socket";
@@ -121,6 +122,7 @@ export async function createServer() {
   app.use("/api/goals", goalRoutes);
   app.use("/api/streaks", streakRoutes);
   app.use("/api/focus-sessions", focusSessionRoutes);
+  app.use("/api/focus-overlay", focusOverlayRoutes);
   app.use("/api/achievements", achievementRoutes);
   app.use("/api/payments", paymentRoutes);
   app.use("/api/upload", uploadRoutes);
